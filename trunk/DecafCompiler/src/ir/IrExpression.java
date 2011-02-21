@@ -1,5 +1,5 @@
 package ir;
 
-public class IrExpression {
+public abstract class IrExpression extends Ir {
 
 }
