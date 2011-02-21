@@ -1,4 +1,4 @@
-package ir;
+package ir.ast;
 
 public enum BinOpType {
 	PLUS,
