@@ -1,5 +1,7 @@
 package ir.ast;
 
-public class Type extends AST {
-
+public enum Type {
+	INT,
+	BOOLEAN,
+	VOID
 }

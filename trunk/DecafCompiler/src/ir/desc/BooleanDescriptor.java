@@ -1,5 +1,5 @@
 package ir.desc;
 
-public class BooleanDescriptor extends Descriptor {
+public class BooleanDescriptor extends FieldDescriptor {
 
 }

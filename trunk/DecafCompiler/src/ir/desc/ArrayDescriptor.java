@@ -1,5 +1,5 @@
 package ir.desc;
 
-public class ArrayDescriptor extends Descriptor {
+public class ArrayDescriptor extends FieldDescriptor {
 
 }

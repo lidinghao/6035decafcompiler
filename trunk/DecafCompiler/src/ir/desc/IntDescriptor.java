@@ -1,5 +1,5 @@
 package ir.desc;
 
-public class IntDescriptor extends Descriptor {
+public class IntDescriptor extends FieldDescriptor {
 
 }

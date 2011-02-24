@@ -1,5 +1,5 @@
 package ir.ast;
 
-public class VarDecl extends AST{
+public class VarDecl extends AST {
 
 }
