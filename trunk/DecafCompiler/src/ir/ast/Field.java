@@ -6,11 +6,25 @@ public class Field {
 	private boolean isArray;
 	private int arraySize;
 	
+	public Field(String i) {
+		type = null;
+		id = i;
+		isArray = false;
+		arraySize = -1;
+	}
+	
 	public Field(Type t, String i) {
 		type = t;
 		id = i;
 		isArray = false;
 		arraySize = -1;
+	}
+	
+	public Field(String i, boolean array, int arrSize) {
+		type = null;
+		id = i;
+		isArray = array;
+		arraySize = arrSize;	
 	}
 	
 	public Field(Type t, String i, boolean array, int arrSize) {
