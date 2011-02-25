@@ -12,6 +12,11 @@ public class MethodCallExpr extends CallExpr {
 		this.args = new ArrayList<Expression>();
 	}
 
+	public MethodCallExpr(String name, List<Expression> a) {
+		this.name = name;
+		this.args = a;
+	}
+	
 	public String getName() {
 		return name;
 	}

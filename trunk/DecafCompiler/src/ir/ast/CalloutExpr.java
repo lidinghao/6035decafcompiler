@@ -7,8 +7,9 @@ public class CalloutExpr extends CallExpr {
 	private String methodName;
 	private List<CalloutArg> args;
 	
-	public CalloutExpr(String name) {
+	public CalloutExpr(String name, List<CalloutArg> a) {
 		this.methodName = name;
+		this.args = a;
 	}
 	
 	public void addArgument(String arg) {

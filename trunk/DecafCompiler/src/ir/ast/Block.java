@@ -11,7 +11,12 @@ public class Block extends Statement {
 		statements = new ArrayList<Statement>();
 		fieldDeclarations = new ArrayList<FieldDecl>();
 	}
-
+	
+	public Block(List<Statement> s, List<FieldDecl> f) {
+		statements = s;
+		fieldDeclarations = f;
+	}
+	
 	public void addStatement(Statement s) {
 		this.statements.add(s);
 	}
