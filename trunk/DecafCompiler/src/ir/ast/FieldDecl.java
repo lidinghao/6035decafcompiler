@@ -1,9 +1,10 @@
 package ir.ast;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class FieldDecl extends MemberDecl {
-	private ArrayList<Field> fields;
+	private List<Field> fields;
 	private Type type;
 	
 	public FieldDecl() {
@@ -16,7 +17,7 @@ public class FieldDecl extends MemberDecl {
 		addField(f);
 	}
 	
-	public FieldDecl(ArrayList<Field> f, Type t) {
+	public FieldDecl(List<Field> f, Type t) {
 		if (f != null)
 			fields = f;
 		else
@@ -33,7 +34,7 @@ public class FieldDecl extends MemberDecl {
 		fields = f;
 	}
 	
-	public ArrayList<Field> getFields() {
+	public List<Field> getFields() {
 		return fields;
 	}
 
