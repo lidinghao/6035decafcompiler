@@ -15,9 +15,6 @@ public class AssignStmt extends Statement {
 		this.location = loc;
 	}
 	
-    /*
-     * @return Left hand side of the assignment statement
-     */
 	public Location getLocation() {
 		return this.location;
 	}
@@ -26,18 +23,15 @@ public class AssignStmt extends Statement {
 		this.expr = e;
 	}
 	
+	public Expression getExrpression() {
+		return this.expr;
+	}
+	
 	public AssignOpType getOperator() {
 		return operator;
 	}
 
 	public void setOperator(AssignOpType operator) {
 		this.operator = operator;
-	}
-	
-	/*
-     * @return Right hand side of the assignment statement
-     */
-	public Expression getExrpression() {
-		return this.expr;
 	}
 }
