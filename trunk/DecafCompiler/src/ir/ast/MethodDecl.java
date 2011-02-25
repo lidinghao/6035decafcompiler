@@ -1,11 +1,16 @@
 package ir.ast;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class MethodDecl extends MemberDecl {
 	private Type returnType;
 	private String id;
-	private ArrayList<Parameter> parameters;
+	private List<Parameter> parameters;
+	private Block block;
+	
+	public MethodDecl() {
+	}
 	
 	public MethodDecl(Type t, String i) {
 		returnType = t;
@@ -20,7 +25,7 @@ public class MethodDecl extends MemberDecl {
 		addParameter(p);
 	}
 	
-	public MethodDecl(Type t, String i, ArrayList<Parameter> p) {
+	public MethodDecl(Type t, String i, List<Parameter> p) {
 		returnType = t;
 		id = i;
 		if (p != null)
@@ -49,14 +54,22 @@ public class MethodDecl extends MemberDecl {
 		parameters.add(param);
 	}
 	
-	public void setParameters(ArrayList<Parameter> p) {
+	public void setParameters(List<Parameter> p) {
 		parameters = p;
 	}
 	
-	public ArrayList<Parameter> getParamters() {
+	public List<Parameter> getParamters() {
 		return parameters;
 	}
 	
+	public Block getBlock() {
+		return block;
+	}
+
+	public void setBlock(Block block) {
+		this.block = block;
+	}
+
 	@Override
 	public String toString() {
 		return returnType + " " + id + "(" + parameters + ")";

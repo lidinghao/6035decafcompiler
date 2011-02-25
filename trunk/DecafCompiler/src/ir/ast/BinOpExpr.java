@@ -11,6 +11,12 @@ public class BinOpExpr extends Expression {
 		rOperand = r;
 	}
 	
+	public BinOpExpr(Expression e, TempExpression t) {
+		lOperand = e;
+		operator = t.getOperator();
+		rOperand = t.getRightOperand();
+	}
+	
 	public BinOpType getOperator() {
 		return operator;
 	}
