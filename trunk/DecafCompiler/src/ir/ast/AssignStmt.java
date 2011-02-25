@@ -22,7 +22,4 @@ public class AssignStmt extends Statement {
 	public Expression getExrpression() {
 		return this.rhs;
 	}
-	
-
-
 }
