@@ -3,9 +3,9 @@ package ir.ast;
 public class AssignStmt extends Statement {
 	private Location location;
 	private Expression expr;
-	private BinOpType operator;
+	private AssignOpType operator;
 
-	public AssignStmt(Location loc, BinOpType op, Expression e) {
+	public AssignStmt(Location loc, AssignOpType op, Expression e) {
 		this.location = loc;
 		this.expr = e;
 		this.operator = op;
@@ -26,11 +26,11 @@ public class AssignStmt extends Statement {
 		this.expr = e;
 	}
 	
-	public BinOpType getOperator() {
+	public AssignOpType getOperator() {
 		return operator;
 	}
 
-	public void setOperator(BinOpType operator) {
+	public void setOperator(AssignOpType operator) {
 		this.operator = operator;
 	}
 	

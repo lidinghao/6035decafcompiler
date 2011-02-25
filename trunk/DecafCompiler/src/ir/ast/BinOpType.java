@@ -12,6 +12,7 @@ public enum BinOpType {
 	GEQ,
 	EQ,
 	NEQ,
+	CEQ,
 	AND,
 	OR
 }
