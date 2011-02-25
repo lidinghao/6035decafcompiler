@@ -72,6 +72,9 @@ public class MethodDecl extends MemberDecl {
 
 	@Override
 	public String toString() {
-		return returnType + " " + id + "(" + parameters + ")";
+		String rtn = returnType + " " + id + "(" + parameters + ")\n";
+		rtn += block.toString();
+		
+		return rtn;
 	}
 }
