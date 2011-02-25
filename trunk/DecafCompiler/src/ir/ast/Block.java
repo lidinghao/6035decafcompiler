@@ -1,42 +1,30 @@
 package ir.ast;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class Block extends Statement {
-	private ArrayList<Statement> statements;
-	private ArrayList<FieldDecl> fieldDeclarations;
+	private List<Statement> statements;
+	private List<FieldDecl> fieldDeclarations;
 	
 	public Block() {
 		statements = new ArrayList<Statement>();
 		fieldDeclarations = new ArrayList<FieldDecl>();
-	}
-	
-	public Block(ArrayList<Statement> s, ArrayList<FieldDecl> f) {
-		if (s == null) {
-			this.statements = new ArrayList<Statement>();
-		} else {
-			this.statements = s;
-		}
-		if (f == null) {
-			this.fieldDeclarations = new ArrayList<FieldDecl>();
-		} else {
-			this.fieldDeclarations = f;
-		}
 	}
 
 	public void addStatement(Statement s) {
 		this.statements.add(s);
 	}
 	
-	public void addFieldDecl(FieldDecl f) {
+	public void addFieldDeclaration(FieldDecl f) {
 		this.fieldDeclarations.add(f);
 	}
 	
-	public ArrayList<Statement> getStatements() {
+	public List<Statement> getStatements() {
 		return this.statements;
 	} 
 	
-	public ArrayList<FieldDecl> getFieldDeclarations() {
+	public List<FieldDecl> getFieldDeclarations() {
 		return this.fieldDeclarations;
 	}
 	

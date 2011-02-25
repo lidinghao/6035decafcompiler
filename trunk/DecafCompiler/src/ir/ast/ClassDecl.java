@@ -1,25 +1,15 @@
 package ir.ast;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class ClassDecl extends AST {
-	private ArrayList<FieldDecl> fieldDeclarations;
-	private ArrayList<MethodDecl> methodDeclarations;
+	private List<FieldDecl> fieldDeclarations;
+	private List<MethodDecl> methodDeclarations;
 	
 	public ClassDecl() {
 		fieldDeclarations = new ArrayList<FieldDecl>();
 		methodDeclarations = new ArrayList<MethodDecl>();
-	}
-	
-	public ClassDecl(ArrayList<FieldDecl> f, ArrayList<MethodDecl> m) {
-		if (f != null)
-			fieldDeclarations = f;
-		else
-			fieldDeclarations = new ArrayList<FieldDecl>();
-		if (m != null)
-			methodDeclarations = m;
-		else
-			methodDeclarations = new ArrayList<MethodDecl>();
 	}
 	
 	public void addFieldDecl(FieldDecl f) {
@@ -30,19 +20,11 @@ public class ClassDecl extends AST {
 		methodDeclarations.add(m);
 	}
 	
-	public void setFieldDeclarations(ArrayList<FieldDecl> f) {
-		fieldDeclarations = f;
-	}
-	
-	public void setMethodDeclarations(ArrayList<MethodDecl> m) {
-		methodDeclarations = m;
-	}
-	
-	public ArrayList<FieldDecl> getFieldDeclarations() {
+	public List<FieldDecl> getFieldDeclarations() {
 		return fieldDeclarations;
 	}
 	
-	public ArrayList<MethodDecl> getMethodDeclarations() {
+	public List<MethodDecl> getMethodDeclarations() {
 		return methodDeclarations;
 	}
 }

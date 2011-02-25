@@ -1,8 +1,8 @@
 package ir.ast;
 
 public abstract class AST {
-	private int lineNumber;
-	private int colNumber;
+	protected int lineNumber;
+	protected int colNumber;
 	
 	public int getLineNumber() {
 		return lineNumber;

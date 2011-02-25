@@ -1,9 +1,9 @@
 package ir.ast;
 
 public class IfStmt extends Statement {
-	private final Expression condition;
-	private final Block ifBlock;
-	private final Block elseBlock;
+	private Expression condition;
+	private Block ifBlock;
+	private Block elseBlock;
 	
 	public IfStmt(Expression cond, Block ifBl) {
 		this.condition = cond;
@@ -16,20 +16,28 @@ public class IfStmt extends Statement {
 		this.ifBlock = ifBl;
 		this.elseBlock = elseBl;
 	}
-	
-	public Expression getCondition() {
-		return this.condition;
-	}
-	
-	public Block getIfBlock() {
-		return this.ifBlock;
-	}
-	
-	public Block getElseBlock() {
-		return this.elseBlock;
-	}
- 	
-	
-	
 
+	public Expression getCondition() {
+		return condition;
+	}
+
+	public void setCondition(Expression condition) {
+		this.condition = condition;
+	}
+
+	public Block getIfBlock() {
+		return ifBlock;
+	}
+
+	public void setIfBlock(Block ifBlock) {
+		this.ifBlock = ifBlock;
+	}
+
+	public Block getElseBlock() {
+		return elseBlock;
+	}
+
+	public void setElseBlock(Block elseBlock) {
+		this.elseBlock = elseBlock;
+	}
 }

@@ -1,16 +1,17 @@
 package ir.ast;
 
 public class InvokeStmt extends Statement {
-	private final MethodCallExpr MethodCall;
+	private MethodCallExpr methodCall;
 	
 	public InvokeStmt(MethodCallExpr e) {
-		this.MethodCall = e;
+		this.methodCall = e;
 	}
-	
-	/*
-	 * @return The method call of the statement
-	 */
+
 	public MethodCallExpr getMethodCall() {
-		return this.MethodCall;
+		return methodCall;
+	}
+
+	public void setMethodCall(MethodCallExpr methodCall) {
+		this.methodCall = methodCall;
 	}
 }

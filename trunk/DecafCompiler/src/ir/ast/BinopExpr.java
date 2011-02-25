@@ -1,63 +1,65 @@
 package ir.ast;
 
 public class BinopExpr extends Expression {
+	private BinOpType operator; //operator in the expr = expr operator expr
+	private Expression lOperand; //left expression
+	private Expression rOperand; //right expression
 	
-	private final BinOpType operator; //operator in the expr = expr operator expr
-	private final Expression lhs; //left expression
-	private final Expression rhs; //right expression
-	
-	public BinopExpr(Expression l, String operatorString, Expression r){
-		if(operatorString == "+")
+	public BinopExpr(Expression l, String opToken, Expression r){
+		if(opToken.equals("+"))
 			operator = BinOpType.PLUS;
-		else if (operatorString == "-")
+		else if (opToken.equals("-"))
 			operator = BinOpType.MINUS;
-		else if (operatorString == "*")
+		else if (opToken.equals("*"))
 			operator = BinOpType.MULTIPLY;
-		else if (operatorString == "/")
+		else if (opToken.equals("/"))
 			operator = BinOpType.DIVIDE;
-		else if (operatorString == "%")
+		else if (opToken.equals("%"))
 			operator = BinOpType.MOD;
-		else if (operatorString == "<")
+		else if (opToken.equals("<"))
 			operator = BinOpType.LE;
-		else if (operatorString == "<=")
+		else if (opToken.equals("<="))
 			operator = BinOpType.LEQ;
-		else if (operatorString == ">")
+		else if (opToken.equals(">"))
 			operator = BinOpType.GE;
-		else if (operatorString == ">=")
+		else if (opToken.equals(">="))
 			operator = BinOpType.GEQ;
-		else if (operatorString == "==")
+		else if (opToken.equals("=="))
 			operator = BinOpType.EQ;
-		else if (operatorString == "!=")
+		else if (opToken.equals("!="))
 			operator = BinOpType.NEQ;
-		else if (operatorString == "&&")
+		else if (opToken.equals("&&"))
 			operator = BinOpType.AND;
-		else if (operatorString == "||")
+		else if (opToken.equals("||"))
 			operator = BinOpType.OR;	
 		else
 			operator = null;
-		lhs = l;
-		rhs = r;
+		
+		lOperand = l;
+		rOperand = r;
 	}
 	
-	/*
-	 * @return returns left child of the expression
-	 */
-	public Expression getLeftSubExpression(){
-		return lhs;
-	}
-	
-	/*
-	 * @return returns right child of the expression
-	 */
-	public Expression getRightSubExpression(){
-		return rhs;
-	}
-	
-	/*
-	 * @return binary operator used in the binoopexpr
-	 */
-	public BinOpType getOperatorType(){
+	public BinOpType getOperator() {
 		return operator;
 	}
 
+	public void setOperator(BinOpType operator) {
+		this.operator = operator;
+	}
+
+	public Expression getLeftOperand() {
+		return lOperand;
+	}
+
+	public void setLeftOperand(Expression lOperand) {
+		this.lOperand = lOperand;
+	}
+
+	public Expression getRightOperand() {
+		return rOperand;
+	}
+
+	public void setRightOperand(Expression rOperand) {
+		this.rOperand = rOperand;
+	}
 }

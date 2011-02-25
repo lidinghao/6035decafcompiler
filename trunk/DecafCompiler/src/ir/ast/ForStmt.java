@@ -1,31 +1,47 @@
 package ir.ast;
 
 public class ForStmt extends Statement {
-	private final String id;
-	private final Expression initialVal;
-	private final Expression finalVal;
-	private final Block block;
+	private String id;
+	private Expression initialValue;
+	private Expression finalValue;
+	private Block block;
 	
 	public ForStmt(String i, Expression init, Expression fin, Block bl) {
 		this.id = i;
-		this.initialVal = init;
-		this.finalVal = fin;
+		this.initialValue = init;
+		this.finalValue = fin;
 		this.block = bl;
 	}
-	
+
 	public String getId() {
-		return this.id;
+		return id;
 	}
-	
-	public Expression getInitialVal() {
-		return this.initialVal;
+
+	public void setId(String id) {
+		this.id = id;
 	}
-	
-	public Expression getFinalVal() {
-		return this.finalVal;
+
+	public Expression getInitialValue() {
+		return initialValue;
 	}
-	
+
+	public void setInitialValue(Expression initialValue) {
+		this.initialValue = initialValue;
+	}
+
+	public Expression getFinalValue() {
+		return finalValue;
+	}
+
+	public void setFinalValue(Expression finalValue) {
+		this.finalValue = finalValue;
+	}
+
 	public Block getBlock() {
-		return this.block;
+		return block;
+	}
+
+	public void setBlock(Block block) {
+		this.block = block;
 	}
 }

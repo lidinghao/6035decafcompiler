@@ -1,34 +1,36 @@
 package ir.ast;
 
 public class UnaryOpExpr extends Expression {
-	private UnaryOpType unaryEnum;
-	private Expression expr;
+	private UnaryOpType operator;
+	private Expression expression;
 	
 	/*
 	 * @param: String enumValue should be either '-' or '!'. Expression expr is an expression
 	 */
-	public UnaryOpExpr(String enumValue, Expression expr){
-		if(enumValue == "!")
-			unaryEnum = UnaryOpType.NOT;
-		else
-			unaryEnum = UnaryOpType.MINUS;
-		this.expr = expr;
+	public UnaryOpExpr(String operator, Expression expr){
+		if(operator == "!") {
+			this.operator = UnaryOpType.NOT;
+		}
+		else {
+			this.operator = UnaryOpType.MINUS;
+		}
+		
+		this.expression = expr;
 	}
-	
-	/*
-	 * @return: returns expression in the UnaryOpExpr
-	 */
-	public Expression getExpression(){
-		return this.expr;
-	}
-	
-	/*
-	 * @return: returns UnaryOpType of the UnaryOpExpr
-	 */
-	public UnaryOpType getOperatorType(){
-		return unaryEnum;
-	}
-	
-	
 
+	public UnaryOpType getOperator() {
+		return operator;
+	}
+
+	public void setOperator(UnaryOpType operator) {
+		this.operator = operator;
+	}
+
+	public Expression getExpression() {
+		return expression;
+	}
+
+	public void setExpression(Expression expression) {
+		this.expression = expression;
+	}
 }

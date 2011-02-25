@@ -1,26 +1,21 @@
 package ir.ast;
 
 public class ReturnStmt extends Statement {
-	private Expression expr; // the return expression
+	private Expression expression; // the return expression
 	
 	public ReturnStmt(Expression e) {
-		this.expr = e;
+		this.expression = e;
 	}
 	
 	public ReturnStmt() {
-		
-	}
-	
-	/*
-	 * @return the return expression of the statement
-	 */
-	public Expression getExpression() {
-		if (this.expr != null) {
-			return this.expr;
-		} else {
-			return null;
-		}
-		
+		this.expression = null;
 	}
 
+	public Expression getExpression() {
+		return expression;
+	}
+
+	public void setExpression(Expression expression) {
+		this.expression = expression;
+	}
 }

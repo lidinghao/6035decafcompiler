@@ -1,12 +1,8 @@
 package ir.ast;
 
 public abstract class Literal extends Expression {
-	protected String value;
-	
 	/*
-	 * @return: returns string value of int literal
+	 * @return: returns Type of Literal instance
 	 */
-	public String getIntLiteral(){
-		return value;
-	}
+	public abstract Type getType();
 }

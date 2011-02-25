@@ -20,17 +20,17 @@ public class Field {
 		arraySize = -1;
 	}
 	
-	public Field(String i, boolean array, int arrSize) {
+	public Field(String i, int arrSize) {
 		type = null;
 		id = i;
-		isArray = array;
+		isArray = true;
 		arraySize = arrSize;	
 	}
 	
-	public Field(Type t, String i, boolean array, int arrSize) {
+	public Field(Type t, String i, int arrSize) {
 		type = t;
 		id = i;
-		isArray = array;
+		isArray = true;
 		arraySize = arrSize;
 	}
 	
@@ -63,9 +63,6 @@ public class Field {
 	}
 	
 	public int getArraySize() {
-		if (isArray) {
-			return arraySize;
-		}
-		return -1;
+		return arraySize;
 	}
 }
