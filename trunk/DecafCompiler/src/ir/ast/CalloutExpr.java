@@ -3,18 +3,6 @@ package ir.ast;
 import java.util.List;
 
 public class CalloutExpr extends CallExpr {
-	private class CalloutArg {
-		private String stringArg = null;
-		private Expression exprArg = null;
-		
-		public CalloutArg(String arg) {
-			this.stringArg = arg;
-		}
-		
-		public CalloutArg(Expression expr) {
-			this.exprArg = expr;
-		}
-	}
 	
 	private String methodName;
 	private List<CalloutArg> args;
