@@ -24,4 +24,9 @@ public class Parameter {
 	public String getId() {
 		return id;
 	}
+	
+	@Override
+	public String toString() {
+		return type + " " + id;
+	}
 }

@@ -56,4 +56,9 @@ public class MethodDecl extends MemberDecl {
 	public ArrayList<Parameter> getParamters() {
 		return parameters;
 	}
+	
+	@Override
+	public String toString() {
+		return returnType + " " + id + "(" + parameters + ")";
+	}
 }

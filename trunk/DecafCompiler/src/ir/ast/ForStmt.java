@@ -44,4 +44,12 @@ public class ForStmt extends Statement {
 	public void setBlock(Block block) {
 		this.block = block;
 	}
+	
+	@Override
+	public String toString() {
+		String rtn = "for " + id + "=" + initialValue + ", " + finalValue + '\n';
+		rtn += block.toString();
+		
+		return rtn;
+	}
 }

@@ -32,4 +32,9 @@ public class MethodCallExpr extends CallExpr {
 	public void setArgs(List<Expression> args) {
 		this.args = args;
 	}
+	
+	@Override
+	public String toString() {
+		return name + "(" + args + ")";
+	}
 }

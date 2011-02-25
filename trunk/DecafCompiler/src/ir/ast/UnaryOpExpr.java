@@ -27,4 +27,9 @@ public class UnaryOpExpr extends Expression {
 	public void setExpression(Expression expression) {
 		this.expression = expression;
 	}
+	
+	@Override
+	public String toString() {
+		return operator.toString() + expression;
+	}
 }

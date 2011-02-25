@@ -32,4 +32,9 @@ public class VarDecl extends AST {
 	public Type getType() {
 		return type;
 	}
+	
+	@Override
+	public String toString() {
+		return type + ids.toString();
+	}
 }

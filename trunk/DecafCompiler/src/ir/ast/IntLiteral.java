@@ -32,4 +32,9 @@ public class IntLiteral extends Literal {
 	public void setValue(int value) {
 		this.value = value;
 	}
+	
+	@Override
+	public String toString() {
+		return stringValue;
+	}
 }

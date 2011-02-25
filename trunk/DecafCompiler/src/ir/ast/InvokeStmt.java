@@ -14,4 +14,9 @@ public class InvokeStmt extends Statement {
 	public void setMethodCall(MethodCallExpr methodCall) {
 		this.methodCall = methodCall;
 	}
+	
+	@Override
+	public String toString() {
+		return methodCall.toString();
+	}
 }

@@ -40,4 +40,15 @@ public class IfStmt extends Statement {
 	public void setElseBlock(Block elseBlock) {
 		this.elseBlock = elseBlock;
 	}
+	
+	@Override
+	public String toString() {
+		String rtn = "if " + condition + '\n' + ifBlock.toString();
+		
+		if (elseBlock != null) {
+			rtn += "else \n" + elseBlock;
+		}
+		
+		return rtn;
+	}
 }
