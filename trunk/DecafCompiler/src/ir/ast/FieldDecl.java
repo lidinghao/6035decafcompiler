@@ -16,11 +16,13 @@ public class FieldDecl extends MemberDecl {
 		addField(f);
 	}
 	
-	public FieldDecl(ArrayList<Field> f) {
+	public FieldDecl(ArrayList<Field> f, Type t) {
 		if (f != null)
 			fields = f;
 		else
 			fields = new ArrayList<Field>();
+		
+		type = t;
 	}
 	
 	public void addField(Field f) {
