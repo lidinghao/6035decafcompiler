@@ -11,10 +11,10 @@ public class Field {
 		arraySize = -1;
 	}
 	
-	public Field(String i, int arrSize) {
+	public Field(String i, String arrSize) {
 		id = i;
 		isArray = true;
-		arraySize = arrSize;	
+		arraySize = Integer.parseInt(arrSize);	
 	}
 	
 	public void setId(String i) {
