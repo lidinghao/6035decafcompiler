@@ -42,4 +42,17 @@ public class BooleanLiteral extends Literal {
 	public Type getType() {
 		return Type.BOOLEAN;
 	}
+	
+	@Override
+	public String toString() {
+		if (value == 1) {
+			return "true";
+		}
+		else if (value == 0) {
+			return "false";
+		}
+		else {
+			return "invalid_bool";
+		}
+	}
 }

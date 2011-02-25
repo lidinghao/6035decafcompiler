@@ -34,4 +34,10 @@ public class AssignStmt extends Statement {
 	public void setOperator(AssignOpType operator) {
 		this.operator = operator;
 	}
+	
+	@Override
+	public String toString() {
+		return location + " " + operator + " " + expr;
+		
+	}
 }

@@ -11,4 +11,14 @@ public class CalloutArg {
 	public CalloutArg(Expression expr) {
 		this.exprArg = expr;
 	}
+	
+	@Override
+	public String toString() {
+		if (stringArg == null) {
+			return exprArg.toString();
+		}
+		else {
+			return stringArg;
+		}
+	}
 }

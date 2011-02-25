@@ -27,4 +27,9 @@ public class CalloutExpr extends CallExpr {
 	public void setMethodName(String methodName) {
 		this.methodName = methodName;
 	}
+	
+	@Override
+	public String toString() {
+		return "callout (" + methodName + ", " + args + ")";
+	}
 }

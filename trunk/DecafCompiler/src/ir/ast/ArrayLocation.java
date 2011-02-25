@@ -15,4 +15,10 @@ public class ArrayLocation extends Location {
 	public Expression getExpr() {
 		return expr;
 	}
+	
+	@Override
+	public String toString() {
+		return id + "[" + expr + "]";
+		
+	}
 }

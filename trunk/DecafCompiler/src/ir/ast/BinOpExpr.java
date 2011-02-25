@@ -34,4 +34,9 @@ public class BinOpExpr extends Expression {
 	public void setRightOperand(Expression rOperand) {
 		this.rOperand = rOperand;
 	}
+	
+	@Override
+	public String toString() {
+		return lOperand + " " + operator + " " + rOperand;
+	}
 }
