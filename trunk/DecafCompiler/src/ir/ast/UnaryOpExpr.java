@@ -7,14 +7,8 @@ public class UnaryOpExpr extends Expression {
 	/*
 	 * @param: String enumValue should be either '-' or '!'. Expression expr is an expression
 	 */
-	public UnaryOpExpr(String operator, Expression expr){
-		if(operator == "!") {
-			this.operator = UnaryOpType.NOT;
-		}
-		else {
-			this.operator = UnaryOpType.MINUS;
-		}
-		
+	public UnaryOpExpr(UnaryOpType op, Expression expr){
+		this.operator = op;
 		this.expression = expr;
 	}
 
