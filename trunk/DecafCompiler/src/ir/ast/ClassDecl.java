@@ -12,6 +12,11 @@ public class ClassDecl extends AST {
 		methodDeclarations = new ArrayList<MethodDecl>();
 	}
 	
+	public ClassDecl(List<FieldDecl> f, List<MethodDecl> m) {
+		fieldDeclarations = f;
+		methodDeclarations = m;
+	}
+	
 	public void addFieldDecl(FieldDecl f) {
 		fieldDeclarations.add(f);
 	}
