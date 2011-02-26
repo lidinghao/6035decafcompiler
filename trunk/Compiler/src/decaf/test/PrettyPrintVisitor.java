@@ -69,7 +69,7 @@ public class PrettyPrintVisitor implements ASTVisitor<Integer> {
 	public Integer visit(Block block) {
 		indent();
 		
-		List<FieldDecl> fDecls = block.getFieldDeclarations();
+		List<VarDecl> fDecls = block.getVarDeclarations();
 		
 		for (int i = 0; i < fDecls.size(); i++) {
 			fDecls.get(i).accept(this);

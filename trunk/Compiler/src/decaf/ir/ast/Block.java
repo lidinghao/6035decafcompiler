@@ -6,39 +6,39 @@ import decaf.ir.ASTVisitor;
 
 public class Block extends Statement {
 	private List<Statement> statements;
-	private List<FieldDecl> fieldDeclarations;
+	private List<VarDecl> variableDeclarations;
 	
 	public Block() {
 		statements = new ArrayList<Statement>();
-		fieldDeclarations = new ArrayList<FieldDecl>();
+		variableDeclarations = new ArrayList<VarDecl>();
 	}
 	
-	public Block(List<Statement> s, List<FieldDecl> f) {
+	public Block(List<Statement> s, List<VarDecl> f) {
 		statements = s;
-		fieldDeclarations = f;
+		variableDeclarations = f;
 	}
 	
 	public void addStatement(Statement s) {
 		this.statements.add(s);
 	}
 	
-	public void addFieldDeclaration(FieldDecl f) {
-		this.fieldDeclarations.add(f);
+	public void addFieldDeclaration(VarDecl f) {
+		this.variableDeclarations.add(f);
 	}
 	
 	public List<Statement> getStatements() {
 		return this.statements;
 	} 
 	
-	public List<FieldDecl> getFieldDeclarations() {
-		return this.fieldDeclarations;
+	public List<VarDecl> getVarDeclarations() {
+		return this.variableDeclarations;
 	}
 	
 	@Override
 	public String toString() {
 		String rtn = "";
 		
-		for (FieldDecl f: fieldDeclarations) {
+		for (VarDecl f: variableDeclarations) {
 			rtn += f.toString() + '\n';
 		}
 		
