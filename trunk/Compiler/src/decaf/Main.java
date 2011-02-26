@@ -3,6 +3,7 @@ package decaf;
 import java.io.*;
 
 import decaf.ir.ast.ClassDecl;
+import decaf.test.PrettyPrintVisitor;
 
 import antlr.CommonAST;
 import antlr.Token;
@@ -66,7 +67,8 @@ class Main {
         		DecafParser parser = new DecafParser (lexer);
             ClassDecl cd = parser.program();
             
-            System.out.println(cd.toString());
+            PrettyPrintVisitor pv = new PrettyPrintVisitor();
+            cd.accept(pv);
         	}
         	
         } catch(Exception e) {

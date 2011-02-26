@@ -1,11 +1,13 @@
 package decaf.test;
 
 import java.io.PrintStream;
+import java.util.List;
 
 import decaf.ir.ASTVisitor;
 import decaf.ir.ast.*;
 
 public class PrettyPrintVisitor implements ASTVisitor<Integer> {
+	public static String INDENT = "   ";
 	int tabSize;
 	PrintStream out;
 	
@@ -26,7 +28,7 @@ public class PrettyPrintVisitor implements ASTVisitor<Integer> {
 		
 		indent();
 		loc.getExpr().accept(this); // Print index expression
-		unindent();
+		dedent();
 		
 		return 0;
 	}
@@ -35,14 +37,14 @@ public class PrettyPrintVisitor implements ASTVisitor<Integer> {
 	public Integer visit(AssignStmt stmt) {
 		indent();
 		stmt.getLocation().accept(this);
-		unindent();
+		dedent();
 		
 		newLineAndIndent();
 		out.print(stmt.getOperator().toString());
 		
 		indent();	
 		stmt.getExrpression().accept(this);
-		unindent();
+		dedent();
 		
 		return 0;
 	}
@@ -51,14 +53,14 @@ public class PrettyPrintVisitor implements ASTVisitor<Integer> {
 	public Integer visit(BinOpExpr expr) {
 		indent();
 		expr.getLeftOperand().accept(this);
-		unindent();
+		dedent();
 		
 		newLineAndIndent();
 		out.print(expr.getOperator().toString());
 		
 		indent();		
 		expr.getRightOperand().accept(this);
-		unindent();
+		dedent();
 		
 		return 0;
 	}
@@ -67,11 +69,16 @@ public class PrettyPrintVisitor implements ASTVisitor<Integer> {
 	public Integer visit(Block block) {
 		indent();
 		
-		for (Statement s: block.getStatements()) {
-			s.accept(this);
+		List<Statement> stmts = block.getStatements();
+		
+		for (int i = 0; i < stmts.size(); i++) {
+			stmts.get(i).accept(this);
+			if (i < stmts.size() - 1) {
+				newLine();
+			}
 		}
 		
-		unindent();
+		dedent();
 		
 		return 0;
 	}
@@ -115,7 +122,7 @@ public class PrettyPrintVisitor implements ASTVisitor<Integer> {
 			arg.accept(this);
 		}
 		
-		unindent();
+		dedent();
 		
 		newLineAndIndent();
 		out.print("callout");
@@ -123,7 +130,7 @@ public class PrettyPrintVisitor implements ASTVisitor<Integer> {
 		indent();
 		newLineAndIndent();
 		out.print(expr.getMethodName());
-		unindent();
+		dedent();
 		
 		return 0;
 	}
@@ -143,16 +150,20 @@ public class PrettyPrintVisitor implements ASTVisitor<Integer> {
 		indent();
 		for (FieldDecl fd: cd.getFieldDeclarations()) {
 			fd.accept(this);
+			newLine();
 		}
 		
-		unindent();
+		dedent();
 		
 		indent();
 		for (MethodDecl md: cd.getMethodDeclarations()) {
 			md.accept(this);
+			newLine();
 		}
 		
-		unindent();
+		dedent();
+		
+		newLine();
 		
 		return 0;
 	}
@@ -190,7 +201,7 @@ public class PrettyPrintVisitor implements ASTVisitor<Integer> {
 			f.accept(this);
 		}
 		
-		unindent();
+		dedent();
 		
 		return 0;
 	}
@@ -205,7 +216,7 @@ public class PrettyPrintVisitor implements ASTVisitor<Integer> {
 		indent();
 		stmt.getInitialValue().accept(this);
 		stmt.getFinalValue().accept(this);
-		unindent();
+		dedent();
 		
 		newLineAndIndent();
 		out.print("for");
@@ -220,7 +231,7 @@ public class PrettyPrintVisitor implements ASTVisitor<Integer> {
 	public Integer visit(IfStmt stmt) {
 		indent();
 		stmt.getCondition().accept(this);
-		unindent();
+		dedent();
 		
 		newLineAndIndent();
 		out.print("if");
@@ -229,9 +240,10 @@ public class PrettyPrintVisitor implements ASTVisitor<Integer> {
 		
 		if (stmt.getElseBlock() != null) {
 			indent();
+			newLineAndIndent();
 			out.print("else");
 			stmt.getElseBlock().accept(this);
-			unindent();
+			dedent();
 		}
 		
 		return 0;
@@ -255,27 +267,30 @@ public class PrettyPrintVisitor implements ASTVisitor<Integer> {
 	@Override
 	public Integer visit(MethodCallExpr expr) {
 		newLineAndIndent();
-		out.print(expr.getName());
+		out.print(expr.getName() + "()");
 		
 		indent();
 		for (Expression arg: expr.getArgs()) {
 			arg.accept(this);
 		}
 		
-		unindent();
+		dedent();
 		
 		return 0;
 	}
 
 	@Override
 	public Integer visit(MethodDecl md) {
-		newLineAndIndent();
-		out.print(md.getId());
-		
 		indent();
 		for (Parameter p: md.getParamters()) {
 			p.accept(this);
 		}
+		dedent();
+		
+		newLineAndIndent();
+		out.print(md.getId() + "()");
+		
+		md.getBlock().accept(this);
 		
 		return 0;
 	}
@@ -286,8 +301,9 @@ public class PrettyPrintVisitor implements ASTVisitor<Integer> {
 		out.print(param.getType().toString());
 		
 		indent();
+		newLineAndIndent();
 		out.print(param.getId());
-		unindent();
+		dedent();
 		
 		return 0;
 	}
@@ -300,7 +316,7 @@ public class PrettyPrintVisitor implements ASTVisitor<Integer> {
 		if (stmt.getExpression() != null) {
 			indent();
 			stmt.getExpression().accept(this);
-			unindent();
+			dedent();
 		}
 		
 		return 0;
@@ -313,7 +329,7 @@ public class PrettyPrintVisitor implements ASTVisitor<Integer> {
 		
 		indent();
 		expr.getExpression().accept(this);
-		unindent();
+		dedent();
 		
 		return 0;
 	}
@@ -329,22 +345,24 @@ public class PrettyPrintVisitor implements ASTVisitor<Integer> {
 			out.print(v);
 		}
 		
-		unindent();
+		dedent();
 		
 		return 0;
 	}
 
 	@Override
 	public Integer visit(VarLocation loc) {
-		// TODO Auto-generated method stub
-		return null;
+		newLineAndIndent();
+		out.print(loc.getId());
+		
+		return 0;
 	}
 	
 	private String getIndent() {
 		String rtn = "";
 		
 		for (int i = 0; i < tabSize; i++) {
-			rtn += "  ";
+			rtn += PrettyPrintVisitor.INDENT;
 		}
 		
 		return rtn;
@@ -363,7 +381,7 @@ public class PrettyPrintVisitor implements ASTVisitor<Integer> {
 		tabSize++;
 	}
 	
-	private void unindent() {
+	private void dedent() {
 		tabSize--;
 	}
 
