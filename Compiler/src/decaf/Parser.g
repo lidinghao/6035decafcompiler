@@ -1,14 +1,50 @@
 header {
-  package decaf;
-  import decaf.ir.ast.*;
-  import java.util.List;
-  import java.util.ArrayList;
+  	package decaf;
+  	import decaf.ir.ast.*;
+  	import java.util.List;
+  	import java.util.ArrayList;
 }
 
 options
 {
   mangleLiteralPrefix = "TK_";
   language = "Java";
+}
+
+{ 
+	class StringToken {
+		private String str;
+		private int lineNumber;
+		private int colNumber;
+		
+		public StringToken(String s) {
+			str = s;
+		}
+		
+		public String getString() {
+			return str;
+		}
+		
+		public void setString(String str) {
+			this.str = str;
+		}
+		
+		public int getLineNumber() {
+			return lineNumber;
+		}
+		
+		public void setLineNumber(int ln) {
+			lineNumber = ln;
+		}
+		
+		public int getColumnNumber() {
+			return colNumber;
+		}
+		
+		public void setColumnNumber(int cn) {
+			colNumber = cn;
+		}
+	}
 }
 
 class DecafParser extends Parser;
@@ -21,26 +57,51 @@ options {
 }
 
 // Rename Tokens
-id returns [String s] {
+id returns [StringToken s] { 
+	s = null; 
+} : 
+(myid:ID 
+{ 
+	s = new StringToken(myid.getText()); 
+	s.setLineNumber(myid.getLine());
+	s.setColumnNumber(myid.getColumn());
+}) | 
+(pt:TK_Program
+{
+	s = new StringToken("Program"); 
+	s.setLineNumber(pt.getLine());
+	s.setColumnNumber(pt.getColumn());
+}) ;
+
+intLit returns [StringToken s] {
 	s = null;	
 } : 
-(myid:ID { s = myid.getText(); })  | 
-(TK_Program { s = "Program"; }) ;
+(myint:INTLIT 
+{ 
+	s = new StringToken(myint.getText()); 
+	s.setLineNumber(myint.getLine());
+	s.setColumnNumber(myint.getColumn());
+}) ;
 
-intLit returns [String s] {
+charLit returns [StringToken s] {
 	s = null;	
 } : 
-(myint:INTLIT { s = myint.getText(); }) ;
+(c:CHAR 
+{ 
+	s = new StringToken(c.getText()); 
+	s.setLineNumber(c.getLine());
+	s.setColumnNumber(c.getColumn());
+}) ;
 
-charLit returns [String s] {
-	s = null;	
-} : 
-(c:CHAR { s = c.getText(); }) ;
-
-str returns [String s] {
+str returns [StringToken s] {
 	s = null;
 } : 
-(st:STRING { s=st.getText(); }) ;
+(st:STRING 
+{ 
+	s = new StringToken(st.getText());
+	s.setLineNumber(st.getLine());
+	s.setColumnNumber(st.getColumn());
+}) ;
 
 // Program
 program returns [ClassDecl classDecl] { 
@@ -50,16 +111,28 @@ program returns [ClassDecl classDecl] {
 	FieldDecl f;
 	MethodDecl m;
 } : 
-(TK_class TK_Program LCURLY (f=field_decl { fieldDecls.add(f); })* (m=method_decl { methodDecls.add(m); })* RCURLY EOF) ;
+(cl:TK_class TK_Program LCURLY (f=field_decl { fieldDecls.add(f); })* (m=method_decl { methodDecls.add(m); })* RCURLY EOF) 
+{
+	classDecl.setLineNumber(cl.getLine());
+	classDecl.setColumnNumber(cl.getColumn());
+} ;
 
 // Field declaration group
 field_decl_group returns [Field f] {
-	String i;
-	String l;
+	StringToken i;
+	StringToken l;
 	f = null;
 } : 
-(i=id { f = new Field(i); }) | 
-(i=id LSQUARE l=intLit RSQUARE { f = new Field(i,l); }) ;
+(i=id { 
+	f = new Field(i.getString()); 
+	f.setLineNumber(i.getLineNumber());
+	f.setColumnNumber(i.getColumnNumber());
+}) |
+(i=id LSQUARE l=intLit RSQUARE { 
+	f = new Field(i.getString(),l.getString()); 
+	f.setLineNumber(i.getLineNumber());
+	f.setColumnNumber(i.getColumnNumber());
+}) ;
 
 // Field declaration group (CSL)
 field_decl_group_list returns [List<Field> fields] { 
@@ -74,15 +147,24 @@ field_decl returns [FieldDecl fDecl] {
 	List<Field> fList;
 	fDecl = null;
 } :
-(t=type fList=field_decl_group_list { fDecl = new FieldDecl(fList,t); } SEMI) ;
+(t=type fList=field_decl_group_list { fDecl = new FieldDecl(fList,t); } s:SEMI) 
+{
+	fDecl.setLineNumber(s.getLine());
+	fDecl.setLineNumber(s.getColumn());
+} ;
 
 // Method declaration group
 method_decl_group returns [Parameter p] {
 	Type t;
-	String i;
+	StringToken i;
 	p = null;
 } : 
-(t=type i=id { p = new Parameter(t,i); }) ;
+(t=type i=id 
+{ 
+	p = new Parameter(t,i.getString());
+	p.setLineNumber(i.getLineNumber());
+	p.setColumnNumber(i.getColumnNumber());
+}) ;
 
 // Method declaration group CSL
 method_decl_group_list returns [List<Parameter> parameters] { 
@@ -97,13 +179,15 @@ method_decl returns [MethodDecl mDecl] {
 	Type rt;
 	List<Parameter> params;
 	Block b;
-	String i;
+	StringToken i;
 } :
-((rt=type { mDecl.setReturnType(rt); }) | (TK_void { mDecl.setReturnType(Type.VOID); })) (i=id LPAREN params=method_decl_group_list RPAREN b=block 
+((rt=type { mDecl.setReturnType(rt); }) | (TK_void { mDecl.setReturnType(Type.VOID); })) (i=id lp:LPAREN params=method_decl_group_list RPAREN b=block 
 {
-	mDecl.setId(i);
+	mDecl.setId(i.getString());
 	mDecl.setParameters(params);
 	mDecl.setBlock(b);	
+	mDecl.setLineNumber(lp.getLine());
+	mDecl.setColumnNumber(lp.getColumn());
 }) ;
 
 // Type
@@ -117,17 +201,34 @@ type returns [Type t] {
 boolLiteral returns [BooleanLiteral bl] {
 	bl = null;	
 } : 
-(t1:TK_true { bl = new BooleanLiteral(t1.getText()); }) | 
-(t2:TK_false { bl = new BooleanLiteral(t2.getText()); });
+(t1:TK_true { 
+	bl = new BooleanLiteral(t1.getText()); 
+	bl.setLineNumber(t1.getLine());
+	bl.setColumnNumber(t1.getColumn());
+}) | 
+(t2:TK_false { 
+	bl = new BooleanLiteral(t2.getText()); 
+	bl.setLineNumber(t2.getLine());
+	bl.setColumnNumber(t2.getColumn());	
+});
 
 // Literal can be either int, char or boolean
+// TODO add line numbers
 literal returns [Literal lit] {
-	String l;	
-	String c;
+	StringToken l;	
+	StringToken c;
 	lit = null;
 } : 
-(l=intLit { lit = new IntLiteral(l); }) | 
-(c=charLit { lit = new CharLiteral(c); }) | 
+(l=intLit { 
+	lit = new IntLiteral(l.getString()); 
+	lit.setLineNumber(l.getLineNumber());
+	lit.setColumnNumber(l.getColumnNumber());
+}) | 
+(c=charLit { 
+	lit = new CharLiteral(c.getString()); 
+	lit.setLineNumber(c.getLineNumber());
+	lit.setColumnNumber(c.getColumnNumber()); 
+}) | 
 (lit=boolLiteral);
 
 // Binary operator can be either add, sub, mul, div, mod
@@ -172,11 +273,19 @@ ASSIGNEQ { a = AssignOpType.ASSIGN; });
 // Location
 location returns [Location loc] {
 	Expression e;
-	String i;
+	StringToken i;
 	loc = null;
 } : 
-(i=id { loc = new VarLocation(i); } | 
-i=id LSQUARE e=expr RSQUARE { loc = new ArrayLocation(i,e); });
+(i=id { 
+	loc = new VarLocation(i.getString()); 
+	loc.setLineNumber(i.getLineNumber());
+	loc.setColumnNumber(i.getColumnNumber());
+} | 
+i=id LSQUARE e=expr RSQUARE { 
+	loc = new ArrayLocation(i.getString(),e); 
+	loc.setLineNumber(i.getLineNumber());
+	loc.setColumnNumber(i.getColumnNumber());
+});
 
 // Expression argument CSL
 expr_argument_list returns [List<Expression> exprs] { 
@@ -188,10 +297,21 @@ expr_argument_list returns [List<Expression> exprs] {
 // Callout argument
 callout_argument returns [CalloutArg arg] {
 	Expression e;
-	String s;
+	StringToken s;
 	arg = null;
 } : 
-(e=expr { arg=new CalloutArg(e); } | s=str { arg=new CalloutArg(s); }) ;
+(e=expr 
+{ 
+	arg = new CalloutArg(e); 
+	arg.setLineNumber(e.getLineNumber());
+	arg.setColumnNumber(e.getColumnNumber());
+} | 
+s=str 
+{ 
+	arg = new CalloutArg(s.getString()); 
+	arg.setLineNumber(s.getLineNumber());
+	arg.setColumnNumber(s.getColumnNumber());
+}) ;
 
 // Callout argument CSL
 callout_argument_list returns [List<CalloutArg> args] { 
@@ -204,12 +324,22 @@ callout_argument_list returns [List<CalloutArg> args] {
 method_call returns [CallExpr callExpr] {
 	List<CalloutArg> args;
 	List<Expression> exprs;
-	String i;
-	String s;
+	StringToken i;
+	StringToken s;
 	callExpr = null;
 } : 
-(i=id LPAREN exprs=expr_argument_list RPAREN { callExpr = new MethodCallExpr(i,exprs); } |
-TK_callout LPAREN s=str args=callout_argument_list RPAREN { callExpr = new CalloutExpr(s,args); });
+(i=id lp:LPAREN exprs=expr_argument_list RPAREN 
+{ 
+	callExpr = new MethodCallExpr(i.getString(),exprs); 
+	callExpr.setLineNumber(lp.getLine());
+	callExpr.setColumnNumber(lp.getColumn());
+}) |
+(co:TK_callout LPAREN s=str args=callout_argument_list RPAREN 
+{ 
+	callExpr = new CalloutExpr(s.getString(),args); 
+	callExpr.setLineNumber(co.getLine());
+	callExpr.setColumnNumber(co.getColumn());
+});
 
 // Block
 block returns [Block b] {
@@ -219,7 +349,12 @@ block returns [Block b] {
 	Statement s;	
 	b = null;
 } : 
-LCURLY (f=field_decl { fields.add(f); })* (s=statement { stmts.add(s); })* RCURLY { b=new Block(stmts,fields); } ;
+(lc:LCURLY (f=field_decl { fields.add(f); })* (s=statement { stmts.add(s); })* RCURLY 
+{ 
+	b=new Block(stmts,fields); 
+	b.setLineNumber(lc.getLine());
+	b.setColumnNumber(lc.getColumn());
+}) ;
 
 // Statement
 statement returns [Statement s] {
@@ -228,16 +363,50 @@ statement returns [Statement s] {
 	Expression e, e1, e2;
 	CallExpr m;
 	Block b, b1, b2;
-	String i;
+	StringToken i;
 	s = null;
 } : 
-(l=location a=assign_op e=expr { s = new AssignStmt(l,a,e); } SEMI) | 
-(m=method_call { s = new InvokeStmt((CallExpr)m); } SEMI) | 
-(TK_if LPAREN e=expr RPAREN b1=block { s = new IfStmt(e,b1); } (TK_else b2=block { ((IfStmt)s).setElseBlock(b2); })?) | 
-(TK_for i=id ASSIGNEQ e1=expr COMMA e2=expr b=block { s = new ForStmt(i,e1,e2,b); }) | 
-((TK_return { s = new ReturnStmt(); } (e=expr { ((ReturnStmt)s).setExpression(e); })?) SEMI) | 
-(TK_break { s = new BreakStmt(); } SEMI) | 
-(TK_continue { s = new ContinueStmt(); } SEMI) | 
+(l=location a=assign_op e=expr semi1:SEMI 
+{ 
+	s = new AssignStmt(l,a,e); 
+	s.setLineNumber(semi1.getLine());
+	s.setColumnNumber(semi1.getColumn());	
+}) | 
+(m=method_call semi2:SEMI 
+{ 
+	s = new InvokeStmt((CallExpr)m); 
+	s.setLineNumber(semi2.getLine());
+	s.setColumnNumber(semi2.getColumn());
+}) | 
+(ift:TK_if LPAREN e=expr RPAREN b1=block 
+{ 
+	s = new IfStmt(e,b1); 
+	s.setLineNumber(ift.getLine());
+	s.setColumnNumber(ift.getColumn());
+} (TK_else b2=block { ((IfStmt)s).setElseBlock(b2); })?) | 
+(fort:TK_for i=id ASSIGNEQ e1=expr COMMA e2=expr b=block 
+{ 
+	s = new ForStmt(i.getString(),e1,e2,b);
+	s.setLineNumber(fort.getLine());
+	s.setColumnNumber(fort.getColumn());
+}) | 
+((rett:TK_return 
+{ 
+	s = new ReturnStmt(); 
+	s.setLineNumber(rett.getLine());
+	s.setColumnNumber(rett.getColumn());
+} (e=expr { ((ReturnStmt)s).setExpression(e); })?) SEMI) | 
+(breakt:TK_break { 
+	s = new BreakStmt(); 
+	s.setLineNumber(breakt.getLine());
+	s.setColumnNumber(breakt.getColumn());
+} SEMI) | 
+(cont:TK_continue 
+{ 
+	s = new ContinueStmt(); 
+	s.setLineNumber(cont.getLine());
+	s.setColumnNumber(cont.getColumn());
+} SEMI) |
 s=block ;
 		   
 // Expression
@@ -245,13 +414,21 @@ s=block ;
 unary_minus_term returns [Expression e] {
 	e = null;	
 } : 
-(MINUS e=expr_static { e = new UnaryOpExpr(UnaryOpType.MINUS,e); }) | e=expr_static;
+(mt:MINUS e=expr_static { 
+	e = new UnaryOpExpr(UnaryOpType.MINUS,e); 
+	e.setLineNumber(mt.getLine());
+	e.setColumnNumber(mt.getColumn());
+}) | e=expr_static;
 
 // Unary negation
 not_term returns [Expression e] {
 	e = null;
 } : 
-(NOT e=unary_minus_term { e = new UnaryOpExpr(UnaryOpType.NOT, e); }) | e=unary_minus_term ;
+(nt:NOT e=unary_minus_term {
+	e = new UnaryOpExpr(UnaryOpType.NOT, e); 
+	e.setLineNumber(nt.getLine());
+	e.setColumnNumber(nt.getColumn());
+}) | e=unary_minus_term ;
 
 // Multiplication
 mul_term_temp returns [TempExpression e] {
@@ -262,7 +439,9 @@ mul_term_temp returns [TempExpression e] {
 } : (bt=mul_op se=not_term te=mul_term_temp 
 { 
 	if (te == null) e = new TempExpression(bt, se);
-	else 	e = new TempExpression(bt, new BinOpExpr(se, te)); 
+	else e = new TempExpression(bt, new BinOpExpr(se, te));
+	e.setLineNumber(se.getLineNumber());
+	e.setColumnNumber(se.getColumnNumber()); 
 }) | 
 ({ e = null; }) ;
 
@@ -273,7 +452,9 @@ mul_term returns [Expression e] {
 } : se=not_term te=mul_term_temp 
 { 
 	if (te == null)	e = se; 
-	else e = new BinOpExpr(se, te);		
+	else e = new BinOpExpr(se, te);	
+	e.setLineNumber(se.getLineNumber());
+	e.setColumnNumber(se.getColumnNumber()); 
 } ;
 
 // Addition
@@ -285,7 +466,9 @@ add_term_temp returns [TempExpression e] {
 } : (bt=add_op se=mul_term te=add_term_temp 
 { 
 	if (te == null) e = new TempExpression(bt, se);
-	else e = new TempExpression(bt, new BinOpExpr(se, te)); 
+	else e = new TempExpression(bt, new BinOpExpr(se, te));
+	e.setLineNumber(se.getLineNumber());
+	e.setColumnNumber(se.getColumnNumber()); 
 }) 
 | ({ e=null; }) ;
 
@@ -296,7 +479,9 @@ add_term returns [Expression e] {
 } : se=mul_term te=add_term_temp 
 { 
 	if (te == null)	e = se; 
-	else e = new BinOpExpr(se,te);		
+	else e = new BinOpExpr(se,te);
+	e.setLineNumber(se.getLineNumber());
+	e.setColumnNumber(se.getColumnNumber()); 
 } ;
 
 // Relationals
@@ -308,7 +493,9 @@ relation_term_temp returns [TempExpression e] {
 } : (bt=rel_op se=add_term te=relation_term_temp 
 { 
 	if (te == null) e = new TempExpression(bt, se);
-	else e = new TempExpression(bt, new BinOpExpr(se, te)); 
+	else e = new TempExpression(bt, new BinOpExpr(se, te));
+	e.setLineNumber(se.getLineNumber());
+	e.setColumnNumber(se.getColumnNumber()); 
 }) | 
 ({ e=null; }) ;
 
@@ -319,7 +506,9 @@ relation_term returns [Expression e] {
 } : se=add_term te=relation_term_temp 
 { 
 	if (te == null)	e = se; 
-	else e = new BinOpExpr(se,te);		
+	else e = new BinOpExpr(se,te);
+	e.setLineNumber(se.getLineNumber());
+	e.setColumnNumber(se.getColumnNumber()); 
 } ;
 
 // Equalities
@@ -331,7 +520,9 @@ equality_term_temp returns [TempExpression e] {
 } : (bt=eq_op se=relation_term te=equality_term_temp 
 { 
 	if (te == null) e = new TempExpression(bt, se);
-	else e = new TempExpression(bt, new BinOpExpr(se, te)); 
+	else e = new TempExpression(bt, new BinOpExpr(se, te));
+	e.setLineNumber(se.getLineNumber());
+	e.setColumnNumber(se.getColumnNumber()); 
 }) | 
 ({ e=null; }) ;
 
@@ -342,7 +533,9 @@ equality_term returns [Expression e] {
 } : se=relation_term te=equality_term_temp 
 { 
 	if (te == null)	e = se; 
-	else e = new BinOpExpr(se, te);		
+	else e = new BinOpExpr(se, te);
+	e.setLineNumber(se.getLineNumber());
+	e.setColumnNumber(se.getColumnNumber()); 	
 } ;
 
 // Conditional AND
@@ -351,10 +544,12 @@ cond_and_term_temp returns [TempExpression e] {
 	TempExpression te;
 	Expression se;	
 	e = null;
-} : (AND se=equality_term te=cond_and_term_temp 
+} : (at:AND se=equality_term te=cond_and_term_temp 
 { 
 	if (te == null) e = new TempExpression(BinOpType.AND, se);
 	else e = new TempExpression(BinOpType.AND, new BinOpExpr(se, te)); 
+	e.setLineNumber(at.getLine());
+	e.setColumnNumber(at.getColumn()); 
 }) | 
 ({ e=null; }) ;
 
@@ -365,7 +560,9 @@ cond_and_term returns [Expression e] {
 } : se=equality_term te=cond_and_term_temp 
 { 
 	if (te == null) e = se; 
-	else e = new BinOpExpr(se,te);		
+	else e = new BinOpExpr(se,te);	
+	e.setLineNumber(se.getLineNumber());
+	e.setColumnNumber(se.getColumnNumber()); 	
 } ;
 
 // Conditional OR
@@ -374,10 +571,12 @@ cond_or_term_temp returns [TempExpression e] {
 	TempExpression te;
 	Expression se;	
 	e = null;
-} : (OR se=cond_and_term te=cond_or_term_temp 
+} : (ot:OR se=cond_and_term te=cond_or_term_temp 
 { 
 	if (te == null) e = new TempExpression(BinOpType.OR, se);
 	else e = new TempExpression(BinOpType.OR, new BinOpExpr(se, te)); 
+	e.setLineNumber(ot.getLine());
+	e.setColumnNumber(ot.getColumn()); 
 }) | 
 ({ e=null; }) ;
 
@@ -388,7 +587,9 @@ cond_or_term returns [Expression e] {
 } : se=cond_and_term te=cond_or_term_temp 
 { 
 	if (te == null)	e = se; 
-	else e = new BinOpExpr(se, te);		
+	else e = new BinOpExpr(se, te);
+	e.setLineNumber(se.getLineNumber());
+	e.setColumnNumber(se.getColumnNumber()); 
 } ;
 
 // Leaf Expressions

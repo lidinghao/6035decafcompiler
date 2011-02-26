@@ -1,6 +1,8 @@
 package decaf.ir.ast;
 
-public class TempExpression {	
+import decaf.ir.ASTVisitor;
+
+public class TempExpression extends AST {	
 	private BinOpType operator; 
 	private Expression rOperand;
 
@@ -23,5 +25,11 @@ public class TempExpression {
 
 	public void setRightOperand(Expression rOperand) {
 		this.rOperand = rOperand;
+	}
+	
+	@Override
+	public <T> T accept(ASTVisitor<T> v) {
+		// nothing
+		return null;
 	}
 }
