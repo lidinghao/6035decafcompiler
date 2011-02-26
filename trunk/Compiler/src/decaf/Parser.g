@@ -99,7 +99,7 @@ method_decl returns [MethodDecl mDecl] {
 	Block b;
 	String i;
 } :
-((rt=type { mDecl.setType(rt); }) | (TK_void { mDecl.setType(Type.VOID); })) (i=id LPAREN params=method_decl_group_list RPAREN b=block 
+((rt=type { mDecl.setReturnType(rt); }) | (TK_void { mDecl.setReturnType(Type.VOID); })) (i=id LPAREN params=method_decl_group_list RPAREN b=block 
 {
 	mDecl.setId(i);
 	mDecl.setParameters(params);
