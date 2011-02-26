@@ -1,6 +1,8 @@
 package decaf.ir.ast;
 
-public class Field {
+import decaf.ir.semcheck.ASTVisitor;
+
+public class Field extends AST {
 	private String id;
 	private boolean isArray;
 	private String rawLength;
@@ -50,5 +52,11 @@ public class Field {
 		else {
 			return id;
 		}
+	}
+
+	@Override
+	public <T> T accept(ASTVisitor<T> v) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

@@ -1,5 +1,7 @@
 package decaf.ir.ast;
 
+import decaf.ir.semcheck.ASTVisitor;
+
 public class ReturnStmt extends Statement {
 	private Expression expression; // the return expression
 	
@@ -27,5 +29,11 @@ public class ReturnStmt extends Statement {
 		else {
 			return "return " + expression;
 		}
+	}
+
+	@Override
+	public <T> T accept(ASTVisitor<T> v) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

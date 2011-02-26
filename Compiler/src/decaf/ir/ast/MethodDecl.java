@@ -3,11 +3,13 @@ package decaf.ir.ast;
 import java.util.ArrayList;
 import java.util.List;
 
+import decaf.ir.semcheck.ASTVisitor;
+
 public class MethodDecl extends MemberDecl {
 	private Type returnType;
 	private String id;
 	private List<Parameter> parameters;
-	private Block block;
+	private Block body;
 	
 	public MethodDecl() {
 	}
@@ -63,18 +65,24 @@ public class MethodDecl extends MemberDecl {
 	}
 	
 	public Block getBlock() {
-		return block;
+		return body;
 	}
 
 	public void setBlock(Block block) {
-		this.block = block;
+		this.body = block;
 	}
 
 	@Override
 	public String toString() {
 		String rtn = returnType + " " + id + "(" + parameters + ")\n";
-		rtn += block.toString();
+		rtn += body.toString();
 		
 		return rtn;
+	}
+
+	@Override
+	public <T> T accept(ASTVisitor<T> v) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

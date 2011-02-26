@@ -1,6 +1,8 @@
 package decaf.ir.ast;
 
-public class Parameter {
+import decaf.ir.semcheck.ASTVisitor;
+
+public class Parameter extends AST {
 	private Type type;
 	private String id;
 	
@@ -28,5 +30,11 @@ public class Parameter {
 	@Override
 	public String toString() {
 		return type + " " + id;
+	}
+
+	@Override
+	public <T> T accept(ASTVisitor<T> v) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

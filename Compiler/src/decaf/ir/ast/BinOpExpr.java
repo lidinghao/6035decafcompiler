@@ -1,5 +1,7 @@
 package decaf.ir.ast;
 
+import decaf.ir.semcheck.ASTVisitor;
+
 public class BinOpExpr extends Expression {
 	private BinOpType operator; //operator in the expr = expr operator expr
 	private Expression lOperand; //left expression
@@ -44,5 +46,11 @@ public class BinOpExpr extends Expression {
 	@Override
 	public String toString() {
 		return lOperand + " " + operator + " " + rOperand;
+	}
+
+	@Override
+	public <T> T accept(ASTVisitor<T> v) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

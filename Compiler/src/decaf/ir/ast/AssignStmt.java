@@ -1,5 +1,7 @@
 package decaf.ir.ast;
 
+import decaf.ir.semcheck.ASTVisitor;
+
 public class AssignStmt extends Statement {
 	private Location location;
 	private Expression expr;
@@ -39,5 +41,11 @@ public class AssignStmt extends Statement {
 	public String toString() {
 		return location + " " + operator + " " + expr;
 		
+	}
+
+	@Override
+	public <T> T accept(ASTVisitor<T> v) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

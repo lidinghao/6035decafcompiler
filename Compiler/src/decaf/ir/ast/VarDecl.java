@@ -3,6 +3,8 @@ package decaf.ir.ast;
 import java.util.ArrayList;
 import java.util.List;
 
+import decaf.ir.semcheck.ASTVisitor;
+
 public class VarDecl extends AST {
 	private Type type;
 	private List<String> ids;
@@ -36,5 +38,11 @@ public class VarDecl extends AST {
 	@Override
 	public String toString() {
 		return type + ids.toString();
+	}
+
+	@Override
+	public <T> T accept(ASTVisitor<T> v) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

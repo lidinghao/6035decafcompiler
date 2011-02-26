@@ -1,5 +1,7 @@
 package decaf.ir.ast;
 
+import decaf.ir.semcheck.ASTVisitor;
+
 public class IfStmt extends Statement {
 	private Expression condition;
 	private Block ifBlock;
@@ -50,5 +52,11 @@ public class IfStmt extends Statement {
 		}
 		
 		return rtn;
+	}
+
+	@Override
+	public <T> T accept(ASTVisitor<T> v) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

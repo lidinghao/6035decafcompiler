@@ -1,6 +1,6 @@
 package decaf.ir.ast;
 
-public class TempExpression extends AST {	
+public class TempExpression {	
 	private BinOpType operator; 
 	private Expression rOperand;
 

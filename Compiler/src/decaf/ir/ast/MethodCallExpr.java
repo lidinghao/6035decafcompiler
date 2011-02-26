@@ -3,6 +3,8 @@ package decaf.ir.ast;
 import java.util.ArrayList;
 import java.util.List;
 
+import decaf.ir.semcheck.ASTVisitor;
+
 public class MethodCallExpr extends CallExpr {
 	private String name;
 	private List<Expression> args;
@@ -36,5 +38,11 @@ public class MethodCallExpr extends CallExpr {
 	@Override
 	public String toString() {
 		return name + "(" + args + ")";
+	}
+
+	@Override
+	public <T> T accept(ASTVisitor<T> v) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

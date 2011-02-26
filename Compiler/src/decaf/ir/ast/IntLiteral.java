@@ -1,5 +1,7 @@
 package decaf.ir.ast;
 
+import decaf.ir.semcheck.ASTVisitor;
+
 public class IntLiteral extends Literal {
 	private String rawValue;
 	private int value;
@@ -36,5 +38,11 @@ public class IntLiteral extends Literal {
 	@Override
 	public String toString() {
 		return rawValue;
+	}
+
+	@Override
+	public <T> T accept(ASTVisitor<T> v) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }
