@@ -3,6 +3,7 @@ package decaf;
 import java.io.*;
 
 import decaf.ir.ast.ClassDecl;
+import decaf.ir.semcheck.TypeCheckVisitor;
 import decaf.test.PrettyPrintVisitor;
 
 import antlr.CommonAST;
@@ -69,6 +70,10 @@ class Main {
             
             PrettyPrintVisitor pv = new PrettyPrintVisitor();
             cd.accept(pv);
+            
+            TypeCheckVisitor tc = new TypeCheckVisitor();
+            cd.accept(tc);
+            System.out.println(tc.getErrors());
         	}
         	
         } catch(Exception e) {
