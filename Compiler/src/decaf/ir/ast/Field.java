@@ -5,19 +5,18 @@ import decaf.ir.ASTVisitor;
 public class Field extends AST {
 	private String id;
 	private boolean isArray;
-	private String rawLength;
-	private int length;
+	private IntLiteral arrayLength;
 	
 	public Field(String i) {
 		id = i;
 		isArray = false;
-		rawLength = "-1";
+		arrayLength = null;
 	}
 	
 	public Field(String i, String arrSize) {
 		id = i;
 		isArray = true;
-		rawLength = arrSize;	
+		arrayLength = new IntLiteral(arrSize);
 	}
 	
 	public void setId(String i) {
@@ -36,26 +35,18 @@ public class Field extends AST {
 		return isArray;
 	}
 	
-	public void setArrayLength(int size) {
-		length = size;
-	}
-	
-	public int getArrayLength() {
-		return length;
-	}
-	
-	public String getRawLength() {
-		return rawLength;
+	public void setArrayLength(IntLiteral len) {
+		arrayLength = len;
 	}
 
-	public void setRawLength(String rawLength) {
-		this.rawLength = rawLength;
+	public IntLiteral getArrayLength() {
+		return arrayLength;
 	}
 
 	@Override
 	public String toString() {
 		if (isArray) {
-			return id + "[" + rawLength + "]";
+			return id + "[" + arrayLength.toString() + "]";
 		}
 		else {
 			return id;

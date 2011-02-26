@@ -194,7 +194,7 @@ public class PrettyPrintVisitor implements ASTVisitor<Integer> {
 		newLineAndIndent();
 		
 		if (f.isArray()) {
-			out.print(f.getId() + "[" + f.getRawLength() + "]");
+			out.print(f.getId() + "[" + f.getArrayLength() + "]");
 		}
 		else {
 			out.print(f.getId());
