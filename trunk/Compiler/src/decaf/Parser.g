@@ -1,6 +1,6 @@
 header {
   package decaf;
-  import ir.ast.*;
+  import decaf.ir.ast.*;
   import java.util.List;
   import java.util.ArrayList;
 }
