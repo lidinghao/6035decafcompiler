@@ -36,16 +36,13 @@ public class ClassDecl extends AST {
 	@Override
 	public String toString() {
 		String rtn = "CLASS \n";
+		
 		for (FieldDecl f: fieldDeclarations) {
 			rtn += f.toString() + '\n';
 		}
 		
 		for (MethodDecl m: methodDeclarations) {
 			rtn += m.toString() + '\n';
-		}
-		
-		if (fieldDeclarations.size() > 0 || methodDeclarations.size() > 0) {
-			rtn = rtn.substring(0, rtn.length() - 1); // truncate last new line char
 		}
 		
 		return rtn;

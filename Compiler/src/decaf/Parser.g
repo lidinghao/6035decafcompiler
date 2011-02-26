@@ -17,6 +17,7 @@ options {
   importVocab = DecafScanner;
   k = 3;	
   buildAST = true;
+  defaultErrorHandler=false;
 }
 
 // Rename Tokens
@@ -231,7 +232,7 @@ statement returns [Statement s] {
 	s = null;
 } : 
 (l=location a=assign_op e=expr { s = new AssignStmt(l,a,e); } SEMI) | 
-(m=method_call { s = new InvokeStmt((MethodCallExpr)m); } SEMI) | 
+(m=method_call { s = new InvokeStmt((CallExpr)m); } SEMI) | 
 (TK_if LPAREN e=expr RPAREN b1=block { s = new IfStmt(e,b1); } (TK_else b2=block { ((IfStmt)s).setElseBlock(b2); })?) | 
 (TK_for i=id ASSIGNEQ e1=expr COMMA e2=expr b=block { s = new ForStmt(i,e1,e2,b); }) | 
 ((TK_return { s = new ReturnStmt(); } (e=expr { ((ReturnStmt)s).setExpression(e); })?) SEMI) | 
