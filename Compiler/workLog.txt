@@ -1,0 +1,8 @@
+TODO:
+ * Developing a test infrastructure for the compiler.
+ * Writing unit test cases to test the AST building process (JUnit).
+ * Implement descriptors and symbol tables.
+ * Implement type system for Decaf.
+ * Define a generic visitor interface.
+ * Write a visitor to pretty print the tree.
+ * Write a visitor to evaluate Int literal values and check them for 32-bit bounds.
