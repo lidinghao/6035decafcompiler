@@ -6,9 +6,9 @@ import tarfile, sys, tempfile, subprocess, os, warnings, shutil
 from os.path import isfile, isdir, join, dirname, abspath
 
 class config:
-  scanner_public_dir = join(dirname(abspath(sys.argv[0])), "../scanner/")
+  scanner_public_dir = join(dirname(abspath(sys.argv[0])), "tests/scanner/")
   scanner_hidden_dir = None
-  parser_public_dir  = join(dirname(abspath(sys.argv[0])), "../parser/")
+  parser_public_dir  = join(dirname(abspath(sys.argv[0])), "tests/parser/")
   parser_hidden_dir  = None
   verbose=True
 
