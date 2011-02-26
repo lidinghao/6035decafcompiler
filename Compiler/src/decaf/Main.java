@@ -2,6 +2,8 @@ package decaf;
 
 import java.io.*;
 
+import decaf.ir.ast.ClassDecl;
+
 import antlr.CommonAST;
 import antlr.Token;
 import antlr.debug.misc.ASTFrame;
@@ -62,14 +64,9 @@ class Main {
         	{
         		DecafScanner lexer = new DecafScanner(new DataInputStream(inputStream));
         		DecafParser parser = new DecafParser (lexer);
-            parser.program();
+            ClassDecl cd = parser.program();
             
-            // Generate AST
-            CommonAST parseTree = (CommonAST)parser.getAST();
-            System.out.println("TYPE:" + parseTree.getType() + " TEXT: " + parseTree.getText());
-            System.out.println(parseTree.toStringList());
-            ASTFrame frame = new ASTFrame("AST", parseTree);
-            frame.setVisible(true);
+            System.out.println(cd.toString());
         	}
         	
         } catch(Exception e) {
