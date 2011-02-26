@@ -36,11 +36,11 @@ public class MethodDecl extends MemberDecl {
 			parameters = new ArrayList<Parameter>();
 	}
 	
-	public void setType(Type t) {
+	public void setReturnType(Type t) {
 		returnType = t;
 	}
 	
-	public Type getType() {
+	public Type getReturnType() {
 		return returnType;
 	}
 	
