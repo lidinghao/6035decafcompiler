@@ -12,8 +12,8 @@ public class Error {
 	}
 	
 	public Error(int ln, int cn, String desc) {
-		lineNumber = ln;
-		columnNumber = cn;
+		lineNumber = ln + 1; // Remove zero index offset
+		columnNumber = cn + 1;
 		description = desc;
 	}
 
@@ -22,7 +22,7 @@ public class Error {
 	}
 
 	public void setLineNumber(int lineNumber) {
-		this.lineNumber = lineNumber;
+		this.lineNumber = lineNumber + 1;
 	}
 
 	public int getColumnNumber() {
@@ -30,7 +30,7 @@ public class Error {
 	}
 
 	public void setColumnNumber(int columnNumber) {
-		this.columnNumber = columnNumber;
+		this.columnNumber = columnNumber + 1;
 	}
 
 	public String getDescription() {
@@ -39,5 +39,10 @@ public class Error {
 
 	public void setDescription(String description) {
 		this.description = description;
+	}
+	
+	@Override
+	public String toString() {
+		return "[" + lineNumber + ", " + columnNumber + "]" + " " + description;
 	}
 }
