@@ -3,7 +3,7 @@ package decaf.ir.ast;
 import java.util.ArrayList;
 import java.util.List;
 
-import decaf.ir.semcheck.ASTVisitor;
+import decaf.ir.ASTVisitor;
 
 public class MethodDecl extends MemberDecl {
 	private Type returnType;

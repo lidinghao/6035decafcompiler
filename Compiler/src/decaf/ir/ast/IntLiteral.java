@@ -1,6 +1,6 @@
 package decaf.ir.ast;
 
-import decaf.ir.semcheck.ASTVisitor;
+import decaf.ir.ASTVisitor;
 
 public class IntLiteral extends Literal {
 	private String rawValue;

@@ -2,8 +2,7 @@ package decaf.ir.ast;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import decaf.ir.semcheck.ASTVisitor;
+import decaf.ir.ASTVisitor;
 
 public class FieldDecl extends MemberDecl {
 	private List<Field> fields;

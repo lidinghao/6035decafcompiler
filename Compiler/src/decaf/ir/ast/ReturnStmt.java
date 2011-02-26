@@ -1,6 +1,6 @@
 package decaf.ir.ast;
 
-import decaf.ir.semcheck.ASTVisitor;
+import decaf.ir.ASTVisitor;
 
 public class ReturnStmt extends Statement {
 	private Expression expression; // the return expression

@@ -1,6 +1,6 @@
 package decaf.ir.ast;
 
-import decaf.ir.semcheck.ASTVisitor;
+import decaf.ir.ASTVisitor;
 
 public class BinOpExpr extends Expression {
 	private BinOpType operator; //operator in the expr = expr operator expr

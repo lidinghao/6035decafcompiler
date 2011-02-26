@@ -1,6 +1,6 @@
 package decaf.ir.ast;
 
-import decaf.ir.semcheck.*;
+import decaf.ir.ASTVisitor;
 
 public abstract class AST {
 	protected int lineNumber;
