@@ -33,7 +33,6 @@ public class CharLiteral extends Literal {
 
 	@Override
 	public <T> T accept(ASTVisitor<T> v) {
-		// TODO Auto-generated method stub
-		return null;
+		return v.visit(this);
 	}
 }
