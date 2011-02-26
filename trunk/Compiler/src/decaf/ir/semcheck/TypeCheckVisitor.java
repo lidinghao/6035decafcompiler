@@ -245,14 +245,16 @@ public class TypeCheckVisitor implements ASTVisitor<Integer> {
 
 	@Override
 	public Integer visit(VarDecl vd) {
-		// TODO Auto-generated method stub
-		return null;
+		return 0;
 	}
 
 	@Override
 	public Integer visit(VarLocation loc) {
-		// TODO Auto-generated method stub
-		return null;
+		return 0;
+	}
+
+	public ArrayList<Error> getErrors() {
+		return errors;
 	}
 
 }
