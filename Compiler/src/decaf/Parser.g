@@ -153,6 +153,19 @@ field_decl returns [FieldDecl fDecl] {
 	fDecl.setLineNumber(s.getColumn());
 } ;
 
+// Variable declaration
+var_decl returns [VarDecl vDecl] {
+	Type t;
+	List<String> vars = new ArrayList<String>();
+	vDecl = null;
+	StringToken i1, i2;
+} : 
+(t=type { vDecl = new VarDecl(t, vars); } ((i1=id { vars.add(i1.getString()); } COMMA)* i2=id { 
+	vars.add(i2.getString()); 
+	vDecl.setLineNumber(i2.getLineNumber());
+	vDecl.setColumnNumber(i2.getColumnNumber());
+}) SEMI) ;
+
 // Method declaration group
 method_decl_group returns [Parameter p] {
 	Type t;
@@ -344,12 +357,12 @@ method_call returns [CallExpr callExpr] {
 // Block
 block returns [Block b] {
 	List<Statement> stmts = new ArrayList<Statement>();
-	List<FieldDecl> fields = new ArrayList<FieldDecl>();
-	FieldDecl f;
+	List<VarDecl> fields = new ArrayList<VarDecl>();
+	VarDecl f;
 	Statement s;	
 	b = null;
 } : 
-(lc:LCURLY (f=field_decl { fields.add(f); })* (s=statement { stmts.add(s); })* RCURLY 
+(lc:LCURLY (f=var_decl { fields.add(f); })* (s=statement { stmts.add(s); })* RCURLY 
 { 
 	b=new Block(stmts,fields); 
 	b.setLineNumber(lc.getLine());

@@ -14,9 +14,9 @@ public class VarDecl extends AST {
 		ids = new ArrayList<String>();
 	}
 	
-	public VarDecl(Type t) {
+	public VarDecl(Type t, List<String> vars) {
 		type = t;
-		ids = new ArrayList<String>();
+		ids = vars;
 	}
 	
 	public void addVariable(String id) {
