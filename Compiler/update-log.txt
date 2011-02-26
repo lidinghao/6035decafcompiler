@@ -1,3 +1,7 @@
 2/26:
 * Fixed AST bugs
 * You can test against Project 1 test files by running "./run-tests.py ." from the Compiler/ folder. Use same naming convention as already used (illegal-xx, legal-xx).
+
+2/27:
+* Added pretty print
+* Parser now sets ln, col numbers
