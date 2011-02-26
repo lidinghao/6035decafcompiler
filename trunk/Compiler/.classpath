@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" output="classes" path="java"/>
+	<classpathentry kind="src" output="classes" path="src"/>
+	<classpathentry kind="var" path="JRE_LIB" sourcepath="JRE_SRC"/>
+	<classpathentry kind="con" path="/home/usmanm/workspace/Compiler/lib"/>
+	<classpathentry kind="lib" path="/home/usmanm/workspace/Compiler/lib/antlr.jar"/>
+	<classpathentry kind="lib" path="/usr/lib/eclipse/plugins/org.eclipse.equinox.launcher_1.0.201.R35x_v20090715.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
