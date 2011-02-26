@@ -1,5 +1,7 @@
 package ir.ast;
 
+import ir.semcheck.*;
+
 public abstract class AST {
 	protected int lineNumber;
 	protected int colNumber;
@@ -19,4 +21,6 @@ public abstract class AST {
 	public void setColumnNumber(int cn) {
 		colNumber = cn;
 	}
+	
+	public abstract <T> T accept(ASTVisitor<T> v);
 }
