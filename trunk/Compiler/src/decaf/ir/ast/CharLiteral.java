@@ -1,5 +1,7 @@
 package decaf.ir.ast;
 
+import decaf.ir.semcheck.ASTVisitor;
+
 public class CharLiteral extends Literal {
 	private String value;
 
@@ -27,5 +29,11 @@ public class CharLiteral extends Literal {
 	@Override
 	public String toString() {
 		return value;
+	}
+
+	@Override
+	public <T> T accept(ASTVisitor<T> v) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

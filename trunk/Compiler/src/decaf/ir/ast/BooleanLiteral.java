@@ -1,5 +1,7 @@
 package decaf.ir.ast;
 
+import decaf.ir.semcheck.ASTVisitor;
+
 public class BooleanLiteral extends Literal {
 	public static int TRUE = 1;
 	public static int FALSE = 0;
@@ -54,5 +56,11 @@ public class BooleanLiteral extends Literal {
 		else {
 			return "invalid_bool";
 		}
+	}
+
+	@Override
+	public <T> T accept(ASTVisitor<T> v) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

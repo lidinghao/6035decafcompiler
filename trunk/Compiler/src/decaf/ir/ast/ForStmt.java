@@ -1,5 +1,7 @@
 package decaf.ir.ast;
 
+import decaf.ir.semcheck.ASTVisitor;
+
 public class ForStmt extends Statement {
 	private String id;
 	private Expression initialValue;
@@ -51,5 +53,11 @@ public class ForStmt extends Statement {
 		rtn += block.toString();
 		
 		return rtn;
+	}
+
+	@Override
+	public <T> T accept(ASTVisitor<T> v) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

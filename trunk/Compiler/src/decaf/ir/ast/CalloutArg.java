@@ -1,6 +1,8 @@
 package decaf.ir.ast;
 
-public class CalloutArg {
+import decaf.ir.semcheck.ASTVisitor;
+
+public class CalloutArg extends AST {
 	private String stringArg = null;
 	private Expression exprArg = null;
 	
@@ -20,5 +22,11 @@ public class CalloutArg {
 		else {
 			return stringArg;
 		}
+	}
+
+	@Override
+	public <T> T accept(ASTVisitor<T> v) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

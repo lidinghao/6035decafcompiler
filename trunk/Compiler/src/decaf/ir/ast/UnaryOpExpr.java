@@ -1,5 +1,7 @@
 package decaf.ir.ast;
 
+import decaf.ir.semcheck.ASTVisitor;
+
 public class UnaryOpExpr extends Expression {
 	private UnaryOpType operator;
 	private Expression expression;
@@ -31,5 +33,11 @@ public class UnaryOpExpr extends Expression {
 	@Override
 	public String toString() {
 		return operator.toString() + expression;
+	}
+
+	@Override
+	public <T> T accept(ASTVisitor<T> v) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

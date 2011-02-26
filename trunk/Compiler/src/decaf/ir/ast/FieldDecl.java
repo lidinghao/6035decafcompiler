@@ -3,6 +3,8 @@ package decaf.ir.ast;
 import java.util.ArrayList;
 import java.util.List;
 
+import decaf.ir.semcheck.ASTVisitor;
+
 public class FieldDecl extends MemberDecl {
 	private List<Field> fields;
 	private Type type;
@@ -58,5 +60,11 @@ public class FieldDecl extends MemberDecl {
 		}
 		
 		return rtn;
+	}
+
+	@Override
+	public <T> T accept(ASTVisitor<T> v) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }
