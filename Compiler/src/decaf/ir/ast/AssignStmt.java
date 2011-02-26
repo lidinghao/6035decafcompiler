@@ -45,7 +45,6 @@ public class AssignStmt extends Statement {
 
 	@Override
 	public <T> T accept(ASTVisitor<T> v) {
-		// TODO Auto-generated method stub
-		return null;
+		return v.visit(this);
 	}
 }

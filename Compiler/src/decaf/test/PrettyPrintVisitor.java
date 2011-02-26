@@ -1,32 +1,23 @@
 package decaf.test;
 
+import java.io.PrintStream;
+
 import decaf.ir.ASTVisitor;
-import decaf.ir.ast.ArrayLocation;
-import decaf.ir.ast.AssignStmt;
-import decaf.ir.ast.BinOpExpr;
-import decaf.ir.ast.Block;
-import decaf.ir.ast.BooleanLiteral;
-import decaf.ir.ast.BreakStmt;
-import decaf.ir.ast.CalloutArg;
-import decaf.ir.ast.CalloutExpr;
-import decaf.ir.ast.CharLiteral;
-import decaf.ir.ast.ClassDecl;
-import decaf.ir.ast.ContinueStmt;
-import decaf.ir.ast.Field;
-import decaf.ir.ast.FieldDecl;
-import decaf.ir.ast.ForStmt;
-import decaf.ir.ast.IfStmt;
-import decaf.ir.ast.IntLiteral;
-import decaf.ir.ast.InvokeStmt;
-import decaf.ir.ast.MethodCallExpr;
-import decaf.ir.ast.MethodDecl;
-import decaf.ir.ast.Parameter;
-import decaf.ir.ast.ReturnStmt;
-import decaf.ir.ast.UnaryOpExpr;
-import decaf.ir.ast.VarDecl;
-import decaf.ir.ast.VarLocation;
+import decaf.ir.ast.*;
 
 public class PrettyPrintVisitor implements ASTVisitor<Void> {
+	int tabSize;
+	PrintStream out;
+	
+	public PrettyPrintVisitor() {
+		tabSize = 0;
+		out = System.out;
+	}
+	
+	public PrettyPrintVisitor(PrintStream ps) {
+		tabSize = 0;
+		out = ps;
+	}
 
 	@Override
 	public Void visit(ArrayLocation loc) {

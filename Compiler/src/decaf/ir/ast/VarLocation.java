@@ -14,7 +14,6 @@ public class VarLocation extends Location {
 
 	@Override
 	public <T> T accept(ASTVisitor<T> v) {
-		// TODO Auto-generated method stub
-		return null;
+		return v.visit(this);
 	}
 }
