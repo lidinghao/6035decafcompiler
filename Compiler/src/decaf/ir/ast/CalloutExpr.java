@@ -29,6 +29,14 @@ public class CalloutExpr extends CallExpr {
 		this.methodName = methodName;
 	}
 	
+	public List<CalloutArg> getArgs() {
+		return args;
+	}
+
+	public void setArgs(List<CalloutArg> args) {
+		this.args = args;
+	}
+
 	@Override
 	public String toString() {
 		return "callout (" + methodName + ", " + args + ")";

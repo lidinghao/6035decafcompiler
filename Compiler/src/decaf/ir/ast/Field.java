@@ -44,6 +44,14 @@ public class Field extends AST {
 		return length;
 	}
 	
+	public String getRawLength() {
+		return rawLength;
+	}
+
+	public void setRawLength(String rawLength) {
+		this.rawLength = rawLength;
+	}
+
 	@Override
 	public String toString() {
 		if (isArray) {
