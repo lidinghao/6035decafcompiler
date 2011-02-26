@@ -3,18 +3,19 @@ package decaf.ir.ast;
 public class Field {
 	private String id;
 	private boolean isArray;
-	private int arraySize;
+	private String rawLength;
+	private int length;
 	
 	public Field(String i) {
 		id = i;
 		isArray = false;
-		arraySize = -1;
+		rawLength = "-1";
 	}
 	
 	public Field(String i, String arrSize) {
 		id = i;
 		isArray = true;
-		arraySize = Integer.parseInt(arrSize);	
+		rawLength = arrSize;	
 	}
 	
 	public void setId(String i) {
@@ -33,18 +34,18 @@ public class Field {
 		return isArray;
 	}
 	
-	public void setArraySize(int size) {
-		arraySize = size;
+	public void setArrayLength(int size) {
+		length = size;
 	}
 	
-	public int getArraySize() {
-		return arraySize;
+	public int getArrayLength() {
+		return length;
 	}
 	
 	@Override
 	public String toString() {
 		if (isArray) {
-			return id + "[" + arraySize + "]";
+			return id + "[" + rawLength + "]";
 		}
 		else {
 			return id;

@@ -36,6 +36,7 @@ public class Block extends Statement {
 	@Override
 	public String toString() {
 		String rtn = "";
+		
 		for (FieldDecl f: fieldDeclarations) {
 			rtn += f.toString() + '\n';
 		}
@@ -44,7 +45,9 @@ public class Block extends Statement {
 			rtn += s.toString() + '\n';
 		}
 		
-		return rtn.substring(0, rtn.length() - 1); // remove last new line char
+		if (rtn.length() > 0) return rtn.substring(0, rtn.length() - 1); // remove last new line char
+		
+		return rtn; 
 	}
 	
 }

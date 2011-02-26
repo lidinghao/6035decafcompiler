@@ -1,17 +1,17 @@
 package decaf.ir.ast;
 
 public class InvokeStmt extends Statement {
-	private MethodCallExpr methodCall;
+	private CallExpr methodCall;
 	
-	public InvokeStmt(MethodCallExpr e) {
+	public InvokeStmt(CallExpr e) {
 		this.methodCall = e;
 	}
 
-	public MethodCallExpr getMethodCall() {
+	public CallExpr getMethodCall() {
 		return methodCall;
 	}
 
-	public void setMethodCall(MethodCallExpr methodCall) {
+	public void setMethodCall(CallExpr methodCall) {
 		this.methodCall = methodCall;
 	}
 	

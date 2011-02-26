@@ -1,15 +1,15 @@
 package decaf.ir.ast;
 
 public class IntLiteral extends Literal {
-	private String stringValue;
+	private String rawValue;
 	private int value;
 	
 	/*
 	 * Constructor for int literal that takes a string as an input
 	 * @param: String integer
 	 */
-	public IntLiteral(String inp){
-		stringValue = inp; // Will convert to int value in semantic check
+	public IntLiteral(String val){
+		rawValue = val; // Will convert to int value in semantic check
 	}
 
 	@Override
@@ -18,11 +18,11 @@ public class IntLiteral extends Literal {
 	}
 
 	public String getStringValue() {
-		return stringValue;
+		return rawValue;
 	}
 
 	public void setStringValue(String stringValue) {
-		this.stringValue = stringValue;
+		this.rawValue = stringValue;
 	}
 
 	public int getValue() {
@@ -35,6 +35,6 @@ public class IntLiteral extends Literal {
 	
 	@Override
 	public String toString() {
-		return stringValue;
+		return rawValue;
 	}
 }
