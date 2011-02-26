@@ -301,7 +301,7 @@ public class PrettyPrintVisitor implements ASTVisitor<Integer> {
 		dedent();
 		
 		newLineAndIndent();
-		out.print(md.getReturnType() + " " + md.getId() + "()");
+		out.print(md.getId() + "() [" + md.getReturnType() + "]");
 		
 		md.getBlock().accept(this);
 		
