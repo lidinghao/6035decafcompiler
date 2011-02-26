@@ -35,6 +35,14 @@ public class IntLiteral extends Literal {
 		this.value = value;
 	}
 	
+	public String getRawValue() {
+		return rawValue;
+	}
+
+	public void setRawValue(String rawValue) {
+		this.rawValue = rawValue;
+	}
+
 	@Override
 	public String toString() {
 		return rawValue;

@@ -23,10 +23,33 @@ public class CalloutArg extends AST {
 			return stringArg;
 		}
 	}
+	
+	public Expression getExpression() {
+		return exprArg;
+	}
+	
+	public void setExpression(Expression expr) {
+		exprArg = expr;
+	}
+	
+	public String getStringArg() {
+		return stringArg;
+	}
+	
+	public void setStringArg(String s) {
+		stringArg = s;
+	}
+	
+	public boolean isString() {
+		if (stringArg != null) {
+			return true;
+		}
+		
+		return false;
+	}
 
 	@Override
 	public <T> T accept(ASTVisitor<T> v) {
-		// TODO Auto-generated method stub
-		return null;
+		return v.visit(this);
 	}
 }
