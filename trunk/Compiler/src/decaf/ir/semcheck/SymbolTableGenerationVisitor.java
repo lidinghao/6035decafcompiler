@@ -44,7 +44,7 @@ public class SymbolTableGenerationVisitor implements ASTVisitor<Integer> {
 	private GenericSymbolTable currentScope;
 	private List<Error> errors;
 	private MethodDescriptor inMethod = null;
-
+	
 	public SymbolTableGenerationVisitor() {
 		setClassDescriptor(new ClassDescriptor());
 		setErrors(new ArrayList<Error>());
