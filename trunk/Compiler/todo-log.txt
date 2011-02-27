@@ -1,6 +1,6 @@
 TODO:
- * Developing a test infrastructure for the compiler.
+ * Developing a test infrastructure for the compiler (JUnit and shit).
  * Writing unit test cases to test the AST building process (JUnit).
- * Implement descriptors and symbol tables.
- * Implement type system for Decaf.
- * Write a visitor to evaluate Int literal values and check them for 32-bit bounds.
+ * Fix line/column numbers
+ * Write test cases (use existing infrastructure by adding shit under tests/{scanner, parser, semantics})
+ * Write up!

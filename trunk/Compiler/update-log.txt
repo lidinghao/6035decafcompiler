@@ -5,3 +5,6 @@
 2/27:
 * Added pretty print
 * Parser now sets ln, col numbers
+* Semantic checks done
+* './test-scanner-parser.py .' for running scanner/parser tests
+* './test-semantic.py .' for running semantic checks
