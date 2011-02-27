@@ -72,4 +72,11 @@ public class MethodDescriptor extends Descriptor {
 	public void setBody(Object body) {
 		this.body = body;
 	}
+	
+	@Override
+	public String toString() {
+		String rtn = "(" + id + ", " + returnType + ", " + parameterSymbolTable + ", " + localSymbolTable + ")";
+		
+		return rtn;
+	}
 }

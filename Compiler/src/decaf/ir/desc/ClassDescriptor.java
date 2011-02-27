@@ -36,4 +36,17 @@ public class ClassDescriptor extends Descriptor {
 	public HashMap<Integer, GenericSymbolTable> getScopeTable() {
 		return scopeTable;
 	}
+	
+	@Override
+	public String toString() {
+		String rtn = "Field Symbol Table: ";
+		rtn += "{KEY: <id>=(<id>,<type>)}\n";
+		rtn += this.fieldSymbolTable;
+		rtn += "\n\n";
+		rtn += "Method Symbol Table: ";
+		rtn += "{KEY: <id>=(<id>, <rtntype>, <paramtable>, <localtable>}\n";
+		rtn += this.methodSymbolTable;
+		
+		return rtn;
+	}
 }

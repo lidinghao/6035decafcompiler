@@ -21,4 +21,9 @@ public abstract class GenericDescriptor {
 	public void setType(Type type) {
 		this.type = type;
 	}
+	
+	@Override
+	public String toString() {
+		return "(" + id + ", " + type + ")";
+	}
 }
