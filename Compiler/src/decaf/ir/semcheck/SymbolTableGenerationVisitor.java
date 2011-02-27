@@ -89,12 +89,12 @@ public class SymbolTableGenerationVisitor implements ASTVisitor<Integer> {
 		currentScope = newScope;
 
 		classDescriptor.getScopeTable().put(block.getBlockId(), currentScope);
-
+		
 		if (inMethod != null) {
 			inMethod.setLocalSymbolTable(currentScope);
 			inMethod = null;
 		}
-
+		
 		for (VarDecl v : block.getVarDeclarations()) {
 			v.accept(this);
 		}
@@ -312,7 +312,7 @@ public class SymbolTableGenerationVisitor implements ASTVisitor<Integer> {
 		if (!isIdDeclared(loc.getId())) {
 			addError(loc, "'" + loc.getId() + "'" + " is not declared");
 		}
-
+		
 		return 0;
 	}
 
@@ -339,7 +339,7 @@ public class SymbolTableGenerationVisitor implements ASTVisitor<Integer> {
 			if (scope.containsKey(id)) {
 				return true;
 			}
-			scope = currentScope.getParent();
+			scope = scope.getParent();
 		}
 
 		return false;
