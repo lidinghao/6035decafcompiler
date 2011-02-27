@@ -194,7 +194,7 @@ public class TypeEvaluationVisitor implements ASTVisitor<Type> {
 								+ expr.getRightOperand() + "' cant be an array");
 					}
 					else {
-						myType = lhs;
+						myType = Type.BOOLEAN;
 					}
 					break;
 			}
