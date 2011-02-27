@@ -6,6 +6,7 @@ public class Field extends AST {
 	private String id;
 	private boolean isArray;
 	private IntLiteral arrayLength;
+	private Type type;
 	
 	public Field(String i) {
 		id = i;
@@ -56,5 +57,13 @@ public class Field extends AST {
 	@Override
 	public <T> T accept(ASTVisitor<T> v) {
 		return v.visit(this);
+	}
+
+	public void setType(Type type) {
+		this.type = type;
+	}
+
+	public Type getType() {
+		return type;
 	}
 }

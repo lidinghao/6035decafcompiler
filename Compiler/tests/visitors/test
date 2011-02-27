@@ -1,0 +1,5 @@
+class Program {
+	void b() {
+		b = 10;
+	}
+}

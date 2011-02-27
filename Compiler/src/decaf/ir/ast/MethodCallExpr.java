@@ -26,7 +26,7 @@ public class MethodCallExpr extends CallExpr {
 		this.name = name;
 	}
 
-	public List<Expression> getArgs() {
+	public List<Expression> getArguments() {
 		return args;
 	}
 

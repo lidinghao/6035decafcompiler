@@ -16,23 +16,33 @@ public class FieldDecl extends MemberDecl {
 		fields = new ArrayList<Field>();
 		type = t;
 		addField(f);
+		f.setType(t);
 	}
 	
 	public FieldDecl(List<Field> f, Type t) {
-		if (f != null)
+		if (f != null) {
 			fields = f;
-		else
+			for (Field field: f) {
+				field.setType(t);
+			}
+		}
+		else {
 			fields = new ArrayList<Field>();
+		}
 		
 		type = t;
 	}
 	
 	public void addField(Field f) {
 		fields.add(f);
+		f.setType(type);
 	}
 	
-	public void setFields(ArrayList<Field> f) {
+	public void setFields(List<Field> f) {
 		fields = f;
+		for (Field field: f) {
+			field.setType(type);
+		}
 	}
 	
 	public List<Field> getFields() {
@@ -45,6 +55,9 @@ public class FieldDecl extends MemberDecl {
 
 	public void setType(Type type) {
 		this.type = type;
+		for (Field field: fields) {
+			field.setType(type);
+		}
 	}
 	
 	@Override

@@ -3,13 +3,10 @@ package decaf;
 import java.io.*;
 
 import decaf.ir.ast.ClassDecl;
-import decaf.ir.semcheck.ArraySizeCheckVisitor;
-import decaf.ir.semcheck.BreakContinueStmtCheckVisitor;
+import decaf.ir.semcheck.SymbolTableGenerationVisitor;
 import decaf.test.PrettyPrintVisitor;
 
-import antlr.CommonAST;
 import antlr.Token;
-import antlr.debug.misc.ASTFrame;
 import java6035.tools.CLI.*;;
 
 class Main {
@@ -72,11 +69,7 @@ class Main {
             PrettyPrintVisitor pv = new PrettyPrintVisitor();
             cd.accept(pv);
             
-            BreakContinueStmtCheckVisitor tc = new BreakContinueStmtCheckVisitor();
-            cd.accept(tc);
-            System.out.println(tc.getErrors());
-            
-            ArraySizeCheckVisitor av = new ArraySizeCheckVisitor();
+            SymbolTableGenerationVisitor av = new SymbolTableGenerationVisitor();
             cd.accept(av);
             System.out.println(av.getErrors());
         	}
@@ -84,6 +77,7 @@ class Main {
         } catch(Exception e) {
         	// print the error:
             System.out.println(CLI.infile + " " + e);
+            e.printStackTrace();
             System.exit(-1);
         }
     }

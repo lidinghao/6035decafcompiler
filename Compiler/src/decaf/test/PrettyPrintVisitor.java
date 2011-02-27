@@ -131,7 +131,7 @@ public class PrettyPrintVisitor implements ASTVisitor<Integer> {
 		// Print args
 		indent();
 		
-		for (CalloutArg arg: expr.getArgs()) {
+		for (CalloutArg arg: expr.getArguments()) {
 			arg.accept(this);
 		}
 		
@@ -283,7 +283,7 @@ public class PrettyPrintVisitor implements ASTVisitor<Integer> {
 		out.print(expr.getName() + "()");
 		
 		indent();
-		for (Expression arg: expr.getArgs()) {
+		for (Expression arg: expr.getArguments()) {
 			arg.accept(this);
 		}
 		
@@ -295,7 +295,7 @@ public class PrettyPrintVisitor implements ASTVisitor<Integer> {
 	@Override
 	public Integer visit(MethodDecl md) {
 		indent();
-		for (Parameter p: md.getParamters()) {
+		for (Parameter p: md.getParameters()) {
 			p.accept(this);
 		}
 		dedent();
