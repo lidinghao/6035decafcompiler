@@ -1,5 +1,10 @@
 package decaf.ir.desc;
 
-public class ParameterDescriptor extends FieldDescriptor {
+import decaf.ir.ast.Type;
 
+public class ParameterDescriptor extends GenericDescriptor {
+	public ParameterDescriptor(String id, Type type) {
+		this.id = id;
+		this.type = type;
+	}
 }
