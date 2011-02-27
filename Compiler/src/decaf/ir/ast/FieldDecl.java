@@ -23,7 +23,16 @@ public class FieldDecl extends MemberDecl {
 		if (f != null) {
 			fields = f;
 			for (Field field: f) {
-				field.setType(t);
+				if (field.getArrayLength() != null) {
+					// Array
+					if (t.equals(Type.INT)) {
+						field.setType(Type.INTARRAY);
+					} else if (t.equals(Type.BOOLEAN)) {
+						field.setType(Type.BOOLEANARRAY);
+					}
+				} else {
+					field.setType(t);
+				}
 			}
 		}
 		else {
@@ -35,13 +44,31 @@ public class FieldDecl extends MemberDecl {
 	
 	public void addField(Field f) {
 		fields.add(f);
-		f.setType(type);
+		if (f.getArrayLength() != null) {
+			// Array
+			if (type.equals(Type.INT)) {
+				f.setType(Type.INTARRAY);
+			} else if (type.equals(Type.BOOLEAN)) {
+				f.setType(Type.BOOLEANARRAY);
+			}
+		} else {
+			f.setType(type);
+		}
 	}
 	
 	public void setFields(List<Field> f) {
 		fields = f;
 		for (Field field: f) {
-			field.setType(type);
+			if (field.getArrayLength() != null) {
+				// Array
+				if (type.equals(Type.INT)) {
+					field.setType(Type.INTARRAY);
+				} else if (type.equals(Type.BOOLEAN)) {
+					field.setType(Type.BOOLEANARRAY);
+				}
+			} else {
+				field.setType(type);
+			}
 		}
 	}
 	
