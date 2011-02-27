@@ -77,7 +77,6 @@ public class TypeEvaluationVisitor implements ASTVisitor<Type> {
 	public Type visit(AssignStmt stmt) {
 		Type lhs = stmt.getLocation().accept(this);
 		Type rhs = stmt.getExpression().accept(this);
-
 		if (stmt.getOperator() == AssignOpType.ASSIGN) {
 			if (lhs != rhs) {
 				if (lhs != Type.UNDEFINED && rhs != Type.UNDEFINED) {
@@ -135,7 +134,7 @@ public class TypeEvaluationVisitor implements ASTVisitor<Type> {
 			case GE:
 			case GEQ:
 				if (lhs == Type.INT && rhs == Type.INT) {
-					myType = Type.INT;
+					myType = Type.BOOLEAN;
 				}
 
 				if (lhs != Type.INT) {
@@ -249,9 +248,15 @@ public class TypeEvaluationVisitor implements ASTVisitor<Type> {
 
 	@Override
 	public Type visit(ForStmt stmt) {
-		Type idType = getTypeFromScope(stmt.getId()).getType();
+		GenericDescriptor desc = getTypeFromScope(stmt.getId());
 		
-		if (idType != Type.INT) {
+		Type idType = Type.UNDEFINED;
+		
+		if (desc != null) {
+			idType = desc.getType();
+		}
+		
+		if (idType != Type.INT && idType != Type.UNDEFINED) {
 			addError(stmt, "Loop variable '" + stmt.getId() + "' must be of type int");
 		}
 		

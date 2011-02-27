@@ -28,6 +28,7 @@ import decaf.ir.ast.MethodDecl;
 import decaf.ir.ast.Parameter;
 import decaf.ir.ast.ReturnStmt;
 import decaf.ir.ast.Statement;
+import decaf.ir.ast.Type;
 import decaf.ir.ast.UnaryOpExpr;
 import decaf.ir.ast.VarDecl;
 import decaf.ir.ast.VarLocation;
@@ -43,12 +44,15 @@ public class SymbolTableGenerationVisitor implements ASTVisitor<Integer> {
 	private ClassDescriptor classDescriptor;
 	private GenericSymbolTable currentScope;
 	private List<Error> errors;
-	private MethodDescriptor inMethod = null;
+	private MethodDescriptor inMethod;
+	private String loopId;
 	
 	public SymbolTableGenerationVisitor() {
 		setClassDescriptor(new ClassDescriptor());
 		setErrors(new ArrayList<Error>());
 		currentScope = null;
+		loopId = null;
+		inMethod = null;
 	}
 
 	@Override
@@ -90,9 +94,16 @@ public class SymbolTableGenerationVisitor implements ASTVisitor<Integer> {
 
 		classDescriptor.getScopeTable().put(block.getBlockId(), currentScope);
 		
+		// Hack to set local symbol table of method descriptor
 		if (inMethod != null) {
 			inMethod.setLocalSymbolTable(currentScope);
 			inMethod = null;
+		}
+		
+		// Hack to add loop variable into block scope
+		if (loopId != null) {
+			currentScope.put(loopId, new VariableDescriptor(loopId, Type.INT));
+			loopId = null;
 		}
 		
 		for (VarDecl v : block.getVarDeclarations()) {
@@ -188,9 +199,7 @@ public class SymbolTableGenerationVisitor implements ASTVisitor<Integer> {
 
 	@Override
 	public Integer visit(ForStmt stmt) {
-		if (!isIdDeclared(stmt.getId())) {
-			addError(stmt, "loop id " + "'" + stmt.getId() + "'" + " is not declared");
-		}
+		loopId = stmt.getId();
 
 		stmt.getInitialValue().accept(this);
 		stmt.getFinalValue().accept(this);
