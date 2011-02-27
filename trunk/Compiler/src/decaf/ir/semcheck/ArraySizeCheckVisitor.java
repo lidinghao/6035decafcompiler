@@ -26,6 +26,7 @@ import decaf.ir.ast.MethodDecl;
 import decaf.ir.ast.Parameter;
 import decaf.ir.ast.ReturnStmt;
 import decaf.ir.ast.Statement;
+import decaf.ir.ast.Type;
 import decaf.ir.ast.UnaryOpExpr;
 import decaf.ir.ast.VarDecl;
 import decaf.ir.ast.VarLocation;
@@ -124,7 +125,7 @@ public class ArraySizeCheckVisitor implements ASTVisitor<Integer> {
 	@Override
 	public Integer visit(Field f) {		
 		// checking the size of the array
-		if (f.isArray()) {
+		if (f.getType() == Type.INTARRAY || f.getType() == Type.BOOLEANARRAY) {
 			if (f.getArrayLength().getValue() < 1) {
 				int ln = f.getLineNumber();
 				int cn = f.getColumnNumber();

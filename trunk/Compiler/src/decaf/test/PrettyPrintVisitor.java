@@ -193,7 +193,7 @@ public class PrettyPrintVisitor implements ASTVisitor<Integer> {
 	public Integer visit(Field f) {
 		newLineAndIndent();
 		
-		if (f.isArray()) {
+		if (f.getType() == Type.INTARRAY || f.getType() == Type.BOOLEANARRAY) {
 			out.print(f.getId() + "[" + f.getArrayLength() + "]");
 		}
 		else {

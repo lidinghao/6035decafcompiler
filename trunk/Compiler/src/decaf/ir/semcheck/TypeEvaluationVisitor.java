@@ -25,7 +25,6 @@ import decaf.ir.ast.ForStmt;
 import decaf.ir.ast.IfStmt;
 import decaf.ir.ast.IntLiteral;
 import decaf.ir.ast.InvokeStmt;
-import decaf.ir.ast.Location;
 import decaf.ir.ast.MethodCallExpr;
 import decaf.ir.ast.MethodDecl;
 import decaf.ir.ast.Parameter;
@@ -60,14 +59,16 @@ public class TypeEvaluationVisitor implements ASTVisitor<Type> {
 		}
 
 		GenericDescriptor desc = getDescriptorFromScope(loc.getId());
-		if (desc != null && !desc.isArray()) {
-			addError(loc, "'" + loc.getId() + "' must be an array");
-		}
 
 		Type myType = Type.UNDEFINED;
 
 		if (desc != null) {
-			myType = desc.getType();
+			if (desc.getType() == Type.INTARRAY) {
+				myType = Type.INT;
+			}
+			else if (desc.getType() == Type.BOOLEANARRAY) {
+				myType = Type.BOOLEAN;
+			}
 		}
 
 		loc.setType(myType);
@@ -81,26 +82,21 @@ public class TypeEvaluationVisitor implements ASTVisitor<Type> {
 		Type rhs = stmt.getExpression().accept(this);
 
 		if (lhs != Type.UNDEFINED && rhs != Type.UNDEFINED) {
-			if (isArrayType(stmt.getLocation())) {
-				addError(stmt.getLocation(), "'" + stmt.getLocation().getId()
-						+ "' cannot be an array");
-			} else if (isArrayType(stmt.getExpression())) {
-				addError(stmt.getExpression(), "'" + stmt.getExpression()
-						+ "' cannot be an array");
-			} else if (stmt.getOperator() == AssignOpType.ASSIGN) {
+			if (stmt.getOperator() == AssignOpType.ASSIGN) {
 				if (lhs != rhs) {
 					addError(stmt, "'" + stmt.getLocation() + "' is of " + lhs
 							+ " type, but is being assigned '" + stmt.getExpression()
 							+ "' of " + rhs + " type");
-				} else {
-					if (lhs != Type.INT) {
-						addError(stmt, "'" + stmt.getLocation()
-								+ "' must be of int type");
-					}
-					if (rhs != Type.INT) {
-						addError(stmt, "'" + stmt.getExpression()
-								+ " must be of int type");
-					}
+				}
+			}
+			else {
+				if (lhs != Type.INT) {
+					addError(stmt, "'" + stmt.getLocation()
+							+ "' must be of int type");
+				}
+				if (rhs != Type.INT) {
+					addError(stmt, "'" + stmt.getExpression()
+							+ " must be of int type");
 				}
 			}
 		}
@@ -119,86 +115,84 @@ public class TypeEvaluationVisitor implements ASTVisitor<Type> {
 		// Already produced error somewhere in the child subtree (avoid multiple
 		// errors)
 		if (lhs != Type.UNDEFINED && rhs != Type.UNDEFINED) {
-			// HACK: Check is any of the expressions in an array (short circuit
-			// test)
-			if (isArrayType(expr.getLeftOperand())) {
-				addError(expr.getLeftOperand(), "'" + expr.getLeftOperand()
-						+ "' cannot be an array");
-			} else if (isArrayType(expr.getRightOperand())) {
-				addError(expr.getRightOperand(), "'" + expr.getLeftOperand()
-						+ "' cannot be an array");
-			} else {
+			switch (op) {
+				case AND: // boolean only
+				case OR:
+					if (lhs == Type.BOOLEAN && rhs == Type.BOOLEAN) {
+						myType = Type.BOOLEAN;
+					}
 
-				switch (op) {
-					case AND: // boolean only
-					case OR:
-						if (lhs == Type.BOOLEAN && rhs == Type.BOOLEAN) {
-							myType = Type.BOOLEAN;
-						}
+					if (lhs != Type.BOOLEAN) {
+						addError(expr.getLeftOperand(), "'"
+								+ expr.getLeftOperand()
+								+ "' must be of boolean type");
+					}
 
-						if (lhs != Type.BOOLEAN) {
-							addError(expr.getLeftOperand(), "'"
-									+ expr.getLeftOperand()
-									+ "' must be of boolean type");
-						}
+					if (rhs != Type.BOOLEAN) {
+						addError(expr.getRightOperand(), "'"
+								+ expr.getRightOperand()
+								+ "' must be of boolean type");
+					}
 
-						if (rhs != Type.BOOLEAN) {
-							addError(expr.getRightOperand(), "'"
-									+ expr.getRightOperand()
-									+ "' must be of boolean type");
-						}
+					break;
+				case PLUS: // int only
+				case MINUS:
+				case MULTIPLY:
+				case DIVIDE:
+				case MOD:
+					if (lhs == Type.INT && rhs == Type.INT) {
+						myType = Type.INT;
+					}
 
-						break;
-					case PLUS: // int only
-					case MINUS:
-					case MULTIPLY:
-					case DIVIDE:
-					case MOD:
-						if (lhs == Type.INT && rhs == Type.INT) {
-							myType = Type.BOOLEAN;
-						}
+					if (lhs != Type.INT) {
+						addError(expr.getLeftOperand(), "'"
+								+ expr.getLeftOperand() + "' must be of int type");
+					}
 
-						if (lhs != Type.INT) {
-							addError(expr.getLeftOperand(), "'"
-									+ expr.getLeftOperand() + "' must be of int type");
-						}
+					if (rhs != Type.INT) {
+						addError(expr.getRightOperand(), "'"
+								+ expr.getRightOperand() + "' must be of int type");
+					}
 
-						if (rhs != Type.INT) {
-							addError(expr.getRightOperand(), "'"
-									+ expr.getRightOperand() + "' must be of int type");
-						}
+					break;
+				case LE:
+				case LEQ:
+				case GE:
+				case GEQ:
+					if (lhs == Type.INT && rhs == Type.INT) {
+						myType = Type.BOOLEAN;
+					}
 
-						break;
-					case LE:
-					case LEQ:
-					case GE:
-					case GEQ:
-						if (lhs == Type.INT && rhs == Type.INT) {
-							myType = Type.BOOLEAN;
-						}
+					if (lhs != Type.INT) {
+						addError(expr.getLeftOperand(), "'"
+								+ expr.getLeftOperand() + "' must be of int type");
+					}
 
-						if (lhs != Type.INT) {
-							addError(expr.getLeftOperand(), "'"
-									+ expr.getLeftOperand() + "' must be of int type");
-						}
+					if (rhs != Type.INT) {
+						addError(expr.getRightOperand(), "'"
+								+ expr.getRightOperand() + "' must be of int type");
+					}
 
-						if (rhs != Type.INT) {
-							addError(expr.getRightOperand(), "'"
-									+ expr.getRightOperand() + "' must be of int type");
-						}
-
-						break;
-					case NEQ: // int or boolean (same type though)
-					case CEQ:
-						if (lhs != rhs) {
-							addError(expr.getLeftOperand(), "'"
-									+ expr.getLeftOperand() + "' and '"
-									+ expr.getRightOperand() + "' must be of same type");
-						} else {
-							myType = lhs;
-						}
-						break;
-				}
+					break;
+				case NEQ: // int or boolean (same type though)
+				case CEQ:
+					if (lhs != rhs) {
+						addError(expr.getLeftOperand(), "'"
+								+ expr.getLeftOperand() + "' and '"
+								+ expr.getRightOperand() + "' must be of same type");
+					}
+					else if (lhs == Type.BOOLEANARRAY || lhs == Type.INTARRAY) {
+						addError(expr.getLeftOperand(), "'"
+								+ expr.getLeftOperand() + "' cant be an array");
+					}
+					else if (rhs == Type.BOOLEANARRAY || rhs == Type.INTARRAY) {
+						addError(expr.getRightOperand(), "'"
+								+ expr.getRightOperand() + "' cant be an array");
+					}
+					else {
+						myType = lhs;
+					}
+					break;
 			}
 		}
 
@@ -387,7 +381,7 @@ public class TypeEvaluationVisitor implements ASTVisitor<Type> {
 		Type myType = Type.UNDEFINED;
 
 		if (t != Type.UNDEFINED) {
-			if (isArrayType(expr.getExpression())) {
+			if (t == Type.BOOLEANARRAY || t == Type.INTARRAY) {
 				addError(expr.getExpression(), "'" + expr.getExpression()
 						+ "' cannot be an array");
 			}
@@ -449,19 +443,6 @@ public class TypeEvaluationVisitor implements ASTVisitor<Type> {
 
 	private void addError(AST a, String desc) {
 		errors.add(new Error(a.getLineNumber(), a.getColumnNumber(), desc));
-	}
-
-	private boolean isArrayType(Expression expr) {
-		if (expr.getClass() == ArrayLocation.class
-				|| expr.getClass() == VarLocation.class) {
-			Location loc = (Location) expr;
-			GenericDescriptor desc = getDescriptorFromScope(loc.getId());
-			if (desc != null) {
-				return desc.isArray();
-			}
-		}
-
-		return false;
 	}
 
 	public List<Error> getErrors() {

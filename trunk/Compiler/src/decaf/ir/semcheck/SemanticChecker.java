@@ -12,6 +12,12 @@ public class SemanticChecker {
 	public static void performSemanticChecks(ClassDecl cd) {
 		PrettyPrintVisitor pv = new PrettyPrintVisitor();
 		cd.accept(pv);
+		
+		// Check integer overflow (must do before symbol table generation)
+		IntOverflowCheckVisitor ibv = new IntOverflowCheckVisitor();
+		cd.accept(ibv);
+		System.out.println("Integer overflow check:");
+		System.out.println(ibv.getErrors());
 
 		// Generate SymbolTables
 		SymbolTableGenerationVisitor stv = new SymbolTableGenerationVisitor();
@@ -39,12 +45,6 @@ public class SemanticChecker {
 		if (mainMethodError != null) {
 			System.out.println(mainMethodError);
 		}
-
-		// Check integer overflow
-		IntOverflowCheckVisitor ibv = new IntOverflowCheckVisitor();
-		cd.accept(ibv);
-		System.out.println("Integer overflow check:");
-		System.out.println(ibv.getErrors());
 
 		// Break Continue check
 		System.out.println("Break/continue statement check:");

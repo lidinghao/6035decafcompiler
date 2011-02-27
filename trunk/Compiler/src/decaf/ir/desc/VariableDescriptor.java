@@ -8,7 +8,6 @@ public class VariableDescriptor extends GenericDescriptor {
 	public VariableDescriptor(String id, Type type) {
 		this.id = id;
 		this.type = type;
-		this.isArray = false;
 	}
 
 	public Object getValue() {
