@@ -70,7 +70,7 @@ public class SymbolTableGenerationVisitor implements ASTVisitor<Integer> {
 	@Override
 	public Integer visit(AssignStmt stmt) {
 		stmt.getLocation().accept(this);
-		stmt.getExrpression().accept(this);
+		stmt.getExpression().accept(this);
 
 		return 0;
 	}
@@ -248,7 +248,7 @@ public class SymbolTableGenerationVisitor implements ASTVisitor<Integer> {
 			addError(md, "'" + md.getId() + "'" + " is already declared");
 		} else {
 			MethodDescriptor mDesc = new MethodDescriptor(md.getId(), md
-					.getReturnType());
+					.getReturnType(), md.getParameters());
 			methodTable.put(md.getId(), mDesc);
 
 			GenericSymbolTable pTable = new GenericSymbolTable(currentScope);

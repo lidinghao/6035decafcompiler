@@ -2,9 +2,9 @@ package decaf.ir.semcheck;
 
 import java.util.ArrayList;
 import java.util.List;
-import decaf.test.Error;
 
 import decaf.ir.ASTVisitor;
+import decaf.ir.ast.AST;
 import decaf.ir.ast.ArrayLocation;
 import decaf.ir.ast.AssignStmt;
 import decaf.ir.ast.BinOpExpr;
@@ -28,25 +28,28 @@ import decaf.ir.ast.MethodDecl;
 import decaf.ir.ast.Parameter;
 import decaf.ir.ast.ReturnStmt;
 import decaf.ir.ast.Statement;
+import decaf.ir.ast.Type;
 import decaf.ir.ast.UnaryOpExpr;
-import decaf.ir.ast.UnaryOpType;
 import decaf.ir.ast.VarDecl;
 import decaf.ir.ast.VarLocation;
+import decaf.ir.desc.ClassDescriptor;
+import decaf.ir.desc.MethodDescriptor;
+import decaf.ir.desc.MethodSymbolTable;
+import decaf.test.Error;
 
-
-/*
- * This Visitor class checks if input int is valid i.e. in the right range and has a right value
- */
-public class IntOverflowCheckVisitor implements ASTVisitor<Integer>{
+public class ProperMethodCallCheckVisitor implements ASTVisitor<Integer> {
 	private ArrayList<Error> errors;
-	
-	public IntOverflowCheckVisitor() {
+	private ClassDescriptor classDescriptor;
+	private Type currentReturnType;
+
+	public ProperMethodCallCheckVisitor(ClassDescriptor cd) {
 		this.errors = new ArrayList<Error>();
+		this.classDescriptor = cd;
 	}
 
 	@Override
 	public Integer visit(ArrayLocation loc) {
-		loc.getExpr().accept(this); // Print index expression
+		loc.getExpr().accept(this);
 		return 0;
 	}
 
@@ -54,25 +57,27 @@ public class IntOverflowCheckVisitor implements ASTVisitor<Integer>{
 	public Integer visit(AssignStmt stmt) {
 		stmt.getLocation().accept(this);
 		stmt.getExpression().accept(this);
-		return null;
+		return 0;
 	}
 
 	@Override
 	public Integer visit(BinOpExpr expr) {
 		expr.getLeftOperand().accept(this);
-		expr.getRightOperand().accept(this);	
+		expr.getRightOperand().accept(this);
 		return 0;
-}
+	}
 
 	@Override
 	public Integer visit(Block block) {
-		List<Statement> stmts = block.getStatements();
-		
-		for (int i = 0; i < stmts.size(); i++) {
-			stmts.get(i).accept(this);
-		}		
+		for (VarDecl vd : block.getVarDeclarations()) {
+			vd.accept(this);
+		}
+
+		for (Statement s : block.getStatements()) {
+			s.accept(this);
+		}
+
 		return 0;
-	
 	}
 
 	@Override
@@ -83,37 +88,39 @@ public class IntOverflowCheckVisitor implements ASTVisitor<Integer>{
 	@Override
 	public Integer visit(BreakStmt stmt) {
 		return 0;
-		}
+	}
 
 	@Override
 	public Integer visit(CalloutArg arg) {
-		return 0;
+		if (!arg.isString()) {
+			arg.getExpression().accept(this);
 		}
+		return 0;
+	}
 
 	@Override
 	public Integer visit(CalloutExpr expr) {
-		for (CalloutArg arg: expr.getArguments()) {
+		for (CalloutArg arg : expr.getArguments()) {
 			arg.accept(this);
 		}
+
 		return 0;
 	}
 
 	@Override
 	public Integer visit(CharLiteral lit) {
 		return 0;
-		}
+	}
 
 	@Override
 	public Integer visit(ClassDecl cd) {
-		/*
-		for (FieldDecl fd: cd.getFieldDeclarations()) {
+		for (FieldDecl fd : cd.getFieldDeclarations()) {
 			fd.accept(this);
-		}*/
-		
-		for (MethodDecl md: cd.getMethodDeclarations()) {
+		}
+
+		for (MethodDecl md : cd.getMethodDeclarations()) {
 			md.accept(this);
 		}
-		
 		return 0;
 	}
 
@@ -129,19 +136,15 @@ public class IntOverflowCheckVisitor implements ASTVisitor<Integer>{
 
 	@Override
 	public Integer visit(FieldDecl fd) {
-		/*
-		for (Field f: fd.getFields()) {
+		for (Field f : fd.getFields()) {
 			f.accept(this);
-		}*/
+		}
 		return 0;
 	}
 
 	@Override
 	public Integer visit(ForStmt stmt) {
-		stmt.getInitialValue().accept(this);
-		stmt.getFinalValue().accept(this);
-		stmt.getBlock().accept(this); // Block auto indents
-		
+		stmt.getBlock().accept(this);
 		return 0;
 	}
 
@@ -149,31 +152,17 @@ public class IntOverflowCheckVisitor implements ASTVisitor<Integer>{
 	public Integer visit(IfStmt stmt) {
 		stmt.getCondition().accept(this);
 		stmt.getIfBlock().accept(this);
-		
 		if (stmt.getElseBlock() != null) {
 			stmt.getElseBlock().accept(this);
 		}
+
 		return 0;
 	}
 
-	private Boolean isHex(String intStr){
-		if (intStr.length() < 2)
-			return false;
-		return intStr.startsWith("0x");
+	@Override
+	public Integer visit(IntLiteral lit) {
+		return 0;
 	}
-	
-	 public double hex2decimal(String s) {
-	        String digits = "0123456789ABCDEF";
-	        s = s.toUpperCase();
-	        double val = 0 ;
-	        for (int i = 0; i < s.length(); i++) {
-	            char c = s.charAt(i);
-	            int d = digits.indexOf(c);
-	            val = 16*val + d;
-	        }
-	        return val;
-	 }
-
 
 	@Override
 	public Integer visit(InvokeStmt stmt) {
@@ -183,15 +172,43 @@ public class IntOverflowCheckVisitor implements ASTVisitor<Integer>{
 
 	@Override
 	public Integer visit(MethodCallExpr expr) {
-		for (Expression arg: expr.getArguments()) {
+		for (Expression arg : expr.getArguments()) {
 			arg.accept(this);
+		}
+
+		// Check appropriate return type for each argument
+		MethodSymbolTable methodTable = classDescriptor.getMethodSymbolTable();
+		MethodDescriptor methodDesc = methodTable.get(expr.getName());
+		List<Type> methodParamTypes = methodDesc.getParameterTypes();
+
+		// Too few arguments error
+		if (methodParamTypes.size() != expr.getArguments().size()) {
+			addError(expr,
+					"Expecting " + Integer.toString(methodParamTypes.size())
+							+ " arguments but found " + expr.getArguments().size());
+			return 0;
+		}
+
+		// Otherwise, type check the arguments
+		for (int i = 0; i < methodParamTypes.size(); i++) {
+			Type desiredType = methodParamTypes.get(i);
+			Type argType = expr.getArguments().get(i).getType();
+			if (!desiredType.equals(argType)) {
+				addError(expr, "Expecting " + desiredType.toString()
+						+ " but found " + argType.toString() + " for argument "
+						+ Integer.toString(i + 1));
+			}
 		}
 		return 0;
 	}
 
 	@Override
-	public Integer visit(MethodDecl md) {		
+	public Integer visit(MethodDecl md) {
+		// Get return type
+		currentReturnType = md.getReturnType();
 		md.getBlock().accept(this);
+		currentReturnType = null;
+
 		return 0;
 	}
 
@@ -203,55 +220,30 @@ public class IntOverflowCheckVisitor implements ASTVisitor<Integer>{
 	@Override
 	public Integer visit(ReturnStmt stmt) {
 		if (stmt.getExpression() != null) {
+			Type retType = stmt.getExpression().getType();
+			if (!currentReturnType.equals(retType)) {
+				// Returning wrong type
+				addError(stmt, "Returning " + retType.toString()
+						+ " when expecting " + currentReturnType.toString());
+			}
 			stmt.getExpression().accept(this);
+		} else {
+			if (!currentReturnType.equals(Type.VOID)) {
+				// Trying to return void when there is a current return type
+				addError(
+						stmt,
+						"Returning void when expecting "
+								+ currentReturnType.toString());
+			}
 		}
-		return 0;
-	}
-	
-	private double getDoubleValue(String lit){
-		double interm;
-		String rawValue = lit;
-		if(isHex(rawValue)){
-			 interm = hex2decimal(rawValue.substring(2, rawValue.length()-1));
-		}
-		else{
-			interm = Double.parseDouble(rawValue);
-		}
-		return interm;
-	}
-	
-	@Override
-	public Integer visit(IntLiteral lit) {
-		double interm = getDoubleValue(lit.getRawValue());
-		if(interm <= 2147483647){ //does not cover the case of -2147483648	
-			lit.setValue((int) interm);
-		}else{
-			String msg = "Int is out of range";
-			Error err = new Error(lit.getLineNumber(), lit.getColumnNumber(), msg );
-			this.errors.add(err);
-		}
+
 		return 0;
 	}
 
 	@Override
 	public Integer visit(UnaryOpExpr expr) {
-		if(expr.getExpression().getClass() == IntLiteral.class && expr.getOperator() == UnaryOpType.MINUS){			
-			IntLiteral intLit = (IntLiteral) expr.getExpression();
-			double interm = getDoubleValue(intLit.getRawValue());
-			double range = 2147483647;
-			//System.out.println("SHIT");
-			range++; //make it 2147483648
-			if(interm <= range){ 
-				intLit.setValue((int) interm);
-			}else{
-				String msg = "Int is out of range";
-				Error err = new Error(intLit.getLineNumber(), intLit.getColumnNumber(), msg );
-				this.errors.add(err);
-			}
-		}else{
-			expr.getExpression().accept(this);
-		}
-		return null;
+		expr.getExpression().accept(this);
+		return 0;
 	}
 
 	@Override
@@ -263,9 +255,12 @@ public class IntOverflowCheckVisitor implements ASTVisitor<Integer>{
 	public Integer visit(VarLocation loc) {
 		return 0;
 	}
-	
+
 	public ArrayList<Error> getErrors() {
 		return errors;
 	}
 
+	private void addError(AST a, String desc) {
+		errors.add(new Error(a.getLineNumber(), a.getColumnNumber(), desc));
+	}
 }

@@ -1,17 +1,26 @@
 package decaf.ir.desc;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import decaf.ir.ast.Parameter;
 import decaf.ir.ast.Type;
 
 public class MethodDescriptor extends Descriptor {
 	private GenericSymbolTable parameterSymbolTable;
 	private GenericSymbolTable localSymbolTable;
+	private List<Type> parameterTypes;
 	private Type returnType;
 	private String id;
 	private Object body;
 	
-	public MethodDescriptor(String id, Type returnType) {
+	public MethodDescriptor(String id, Type returnType, List<Parameter> params) {
 		parameterSymbolTable = null;
 		localSymbolTable = null;
+		parameterTypes = new ArrayList<Type>();
+		for (Parameter p : params) {
+			parameterTypes.add(p.getType());
+		}
 		this.id = id;
 		this.returnType = returnType;
 	}
@@ -39,7 +48,15 @@ public class MethodDescriptor extends Descriptor {
 	public void setReturnType(Type returnType) {
 		this.returnType = returnType;
 	}
+	
+	public List<Type> getParameterTypes() {
+		return parameterTypes;
+	}
 
+	public void setParameterTypes(List<Type> parameterTypes) {
+		this.parameterTypes = parameterTypes;
+	}
+	
 	public String getId() {
 		return id;
 	}

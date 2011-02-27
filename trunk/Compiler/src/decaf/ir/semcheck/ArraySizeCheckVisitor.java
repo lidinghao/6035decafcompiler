@@ -48,7 +48,7 @@ public class ArraySizeCheckVisitor implements ASTVisitor<Integer> {
 	@Override
 	public Integer visit(AssignStmt stmt) {
 		stmt.getLocation().accept(this);
-		stmt.getExrpression().accept(this);
+		stmt.getExpression().accept(this);
 		return 0;
 	}
 
@@ -146,6 +146,7 @@ public class ArraySizeCheckVisitor implements ASTVisitor<Integer> {
 
 	@Override
 	public Integer visit(ForStmt stmt) {
+		stmt.getBlock().accept(this);
 		return 0;
 	}
 
