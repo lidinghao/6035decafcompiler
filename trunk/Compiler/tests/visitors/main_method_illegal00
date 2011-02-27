@@ -1,0 +1,12 @@
+class Program {
+
+  void main(int k) { //main shouldn't have parameters
+    int x;
+    x = k;	
+  }
+  
+    void main() { //defined twice
+    int x;
+    x = k;	//shouldn't this cause an error as well?
+  }									
+}	
