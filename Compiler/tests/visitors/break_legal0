@@ -1,0 +1,7 @@
+class Program {
+	void main() {
+		for a = 0, 2 {
+			break;
+		}
+	}
+}

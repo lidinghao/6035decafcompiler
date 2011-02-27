@@ -30,17 +30,14 @@ import decaf.ir.ast.Statement;
 import decaf.ir.ast.UnaryOpExpr;
 import decaf.ir.ast.VarDecl;
 import decaf.ir.ast.VarLocation;
-
 import decaf.test.Error;
 
-public class TypeCheckVisitor implements ASTVisitor<Integer> {
+public class ArraySizeCheckVisitor implements ASTVisitor<Integer> {
 	
 	private ArrayList<Error> errors;
-	private boolean inFor;
 	
-	public TypeCheckVisitor() {
+	public ArraySizeCheckVisitor() {
 		this.errors = new ArrayList<Error>();
-		this.inFor = false;
 	}
 	
 	@Override
@@ -89,13 +86,6 @@ public class TypeCheckVisitor implements ASTVisitor<Integer> {
 
 	@Override
 	public Integer visit(BreakStmt stmt) {
-		if (this.inFor == false) {
-			int ln = stmt.getLineNumber();
-			int cn = stmt.getColumnNumber();
-			String msg = "break statement outside of for loop";
-			Error err = new Error(ln, cn, msg);
-			this.errors.add(err);
-		}
 		return 0;
 	}
 
@@ -136,13 +126,6 @@ public class TypeCheckVisitor implements ASTVisitor<Integer> {
 
 	@Override
 	public Integer visit(ContinueStmt stmt) {
-		if (this.inFor == false) {
-			int ln = stmt.getLineNumber();
-			int cn = stmt.getColumnNumber();
-			String msg = "continue statement outside of for loop";
-			Error err = new Error(ln, cn, msg);
-			this.errors.add(err);
-		}
 		return 0;
 	}
 
@@ -151,10 +134,10 @@ public class TypeCheckVisitor implements ASTVisitor<Integer> {
 		
 		// checking the size of the array
 		if (f.isArray()) {
-			if (!(f.getArrayLength().getValue() > 0)) {
+			if (f.getArrayLength().getValue() < 1) {
 				int ln = f.getLineNumber();
 				int cn = f.getColumnNumber();
-				String msg = "Size of array not greater than 0";
+				String msg = "Size of array is less than 1";
 				Error err = new Error(ln, cn, msg);
 				this.errors.add(err);
 			}
@@ -164,7 +147,6 @@ public class TypeCheckVisitor implements ASTVisitor<Integer> {
 
 	@Override
 	public Integer visit(FieldDecl fd) {
-		//TODO: right now only checks the array size
 		for (Field f: fd.getFields()) {
 			f.accept(this);
 		}
@@ -173,11 +155,6 @@ public class TypeCheckVisitor implements ASTVisitor<Integer> {
 
 	@Override
 	public Integer visit(ForStmt stmt) {
-		this.inFor = true;
-		stmt.getInitialValue().accept(this);
-		stmt.getFinalValue().accept(this);
-		stmt.getBlock().accept(this);
-		this.inFor  =false;
 		return 0;
 	}
 
@@ -258,3 +235,4 @@ public class TypeCheckVisitor implements ASTVisitor<Integer> {
 	}
 
 }
+
