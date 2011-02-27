@@ -1,0 +1,8 @@
+class Program {
+  boolean foo(int i) {
+    return 10; //return type does not match
+  }
+
+  void main() {
+  }								
+}

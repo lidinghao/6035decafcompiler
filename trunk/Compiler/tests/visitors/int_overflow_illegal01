@@ -2,7 +2,8 @@ class Program { //int overflow
 	int a;
 	void main() {
 	 int b;
-	 a = 100000000000000;
-	 b = -100000000000;
+	 a = 2147483648; //illegal by one
+	 b = -2147483649; //illegal by one
+	 b = 100000000000-2147483648; //illegal expression both sides of binOp
 	}
 }
