@@ -1,5 +1,6 @@
 package decaf.ir.semcheck;
 
+import java.io.PrintStream;
 import java.util.List;
 
 import decaf.ir.ast.ClassDecl;
@@ -9,53 +10,53 @@ import decaf.test.Error;
 
 public class SemanticChecker {
 
-	public static boolean performSemanticChecks(ClassDecl cd) {
+	public static boolean performSemanticChecks(ClassDecl cd, PrintStream out) {
 		PrettyPrintVisitor pv = new PrettyPrintVisitor();
 		cd.accept(pv);
 		
 		// Check integer overflow (must do before symbol table generation)
 		IntOverflowCheckVisitor ibv = new IntOverflowCheckVisitor();
 		cd.accept(ibv);
-		System.out.println("Integer overflow check:");
-		System.out.println(ibv.getErrors());
+		out.println("Integer overflow check:");
+		out.println(ibv.getErrors());
 
 		// Generate SymbolTables
 		SymbolTableGenerationVisitor stv = new SymbolTableGenerationVisitor();
 		cd.accept(stv);
-		System.out.println("Symbol table generation:");
-		System.out.println(stv.getErrors());
+		out.println("Symbol table generation:");
+		out.println(stv.getErrors());
 
 		// Type checking and evaluation
 		TypeEvaluationVisitor tev = new TypeEvaluationVisitor(
 				stv.getClassDescriptor());
 		cd.accept(tev);
-		System.out.println("Type checking and evaluation:");
-		System.out.println(tev.getErrors());
+		out.println("Type checking and evaluation:");
+		out.println(tev.getErrors());
 
 		// Method calls and return statement type checking
-		System.out.println("Method argument and return type matching:");
 		MethodCheckVisitor pmv = new MethodCheckVisitor(
 				stv.getClassDescriptor());
 		cd.accept(pmv);
-		System.out.println(pmv.getErrors());
+		out.println("Method argument and return type matching:");
+		out.println(pmv.getErrors());
 
 		// Check if main method with no params exists
-		System.out.println("'main' method check:");
+		out.println("'main' method check:");
 		Error mainMethodError = checkMainMethod(cd);
 		if (mainMethodError != null) {
-			System.out.println(mainMethodError);
+			out.println(mainMethodError);
 		}
 
 		// Break Continue check
-		System.out.println("Break/continue statement check:");
 		BreakContinueStmtCheckVisitor tc = new BreakContinueStmtCheckVisitor();
 		cd.accept(tc);
-		System.out.println(tc.getErrors());
+		out.println("Break/continue statement check:");
+		out.println(tc.getErrors());
 
 		// Array Size check
-		System.out.println("Array size check:");
 		ArraySizeCheckVisitor av = new ArraySizeCheckVisitor();
 		cd.accept(av);
+		System.out.println("Array size check:");
 		System.out.println(av.getErrors());
 		
 		if (ibv.getErrors().size() > 0 ||
