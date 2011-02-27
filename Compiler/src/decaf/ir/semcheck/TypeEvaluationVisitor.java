@@ -129,6 +129,21 @@ public class TypeEvaluationVisitor implements ASTVisitor<Type> {
 			case MULTIPLY:
 			case DIVIDE:
 			case MOD:
+				if (lhs == Type.INT && rhs == Type.INT) {
+					myType = Type.BOOLEAN;
+				}
+
+				if (lhs != Type.INT) {
+					addError(expr.getLeftOperand(), "'" + expr.getLeftOperand()
+							+ "' must be of int type");
+				}
+
+				if (rhs != Type.INT) {
+					addError(expr.getRightOperand(), "'" + expr.getRightOperand()
+							+ "' must be of int type");
+				}
+				
+				break;
 			case LE:
 			case LEQ:
 			case GE:
