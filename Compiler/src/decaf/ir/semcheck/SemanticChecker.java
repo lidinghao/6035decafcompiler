@@ -63,7 +63,8 @@ public class SemanticChecker {
 				tev.getErrors().size() > 0 ||
 				pmv.getErrors().size() > 0 ||
 				tc.getErrors().size() > 0 ||
-				av.getErrors().size() > 0) {
+				av.getErrors().size() > 0 ||
+				mainMethodError != null) {
 			return false;
 		}
 		
