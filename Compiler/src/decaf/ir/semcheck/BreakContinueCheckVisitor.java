@@ -1,7 +1,6 @@
 package decaf.ir.semcheck;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import decaf.ir.ASTVisitor;
 import decaf.ir.ast.ArrayLocation;
@@ -64,18 +63,13 @@ public class BreakContinueCheckVisitor implements ASTVisitor<Integer> {
 	}
 
 	@Override
-	public Integer visit(Block block) {
-		
-		List<VarDecl> vDecls = block.getVarDeclarations();
-		
-		for (int i = 0; i < vDecls.size(); i++) {
-			vDecls.get(i).accept(this);
+	public Integer visit(Block block) {		
+		for (VarDecl vd: block.getVarDeclarations()) {
+			vd.accept(this);
 		}
 		
-		List<Statement> stmts = block.getStatements();
-		
-		for (int i = 0; i < stmts.size(); i++) {
-			stmts.get(i).accept(this);
+		for (Statement s: block.getStatements()) {
+			s.accept(this);
 		}
 		
 		return 0;
@@ -83,8 +77,7 @@ public class BreakContinueCheckVisitor implements ASTVisitor<Integer> {
 
 	@Override
 	public Integer visit(BooleanLiteral lit) {
-		// TODO Auto-generated method stub
-		return null;
+		return 0;
 	}
 
 	@Override
@@ -118,8 +111,7 @@ public class BreakContinueCheckVisitor implements ASTVisitor<Integer> {
 
 	@Override
 	public Integer visit(CharLiteral lit) {
-		// TODO Auto-generated method stub
-		return null;
+		return 0;
 	}
 
 	@Override
