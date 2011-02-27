@@ -16,21 +16,25 @@ public class SemanticChecker {
 		// Generate SymbolTables
 		SymbolTableGenerationVisitor stv = new SymbolTableGenerationVisitor();
 		cd.accept(stv);
+		System.out.println("Symbol table generation:");
 		System.out.println(stv.getErrors());
 
 		// Type checking and evaluation
 		TypeEvaluationVisitor tev = new TypeEvaluationVisitor(
 				stv.getClassDescriptor());
 		cd.accept(tev);
+		System.out.println("Type checking and evaluation:");
 		System.out.println(tev.getErrors());
 
 		// Method calls and return statement type checking
+		System.out.println("Method argument and return type matching:");
 		ProperMethodCallCheckVisitor pmv = new ProperMethodCallCheckVisitor(
 				stv.getClassDescriptor());
 		cd.accept(pmv);
 		System.out.println(pmv.getErrors());
 
 		// Check if main method with no params exists
+		System.out.println("'main' method check:");
 		Error mainMethodError = checkMainMethod(cd);
 		if (mainMethodError != null) {
 			System.out.println(mainMethodError);
@@ -39,14 +43,17 @@ public class SemanticChecker {
 		// Check integer overflow
 		IntOverflowCheckVisitor ibv = new IntOverflowCheckVisitor();
 		cd.accept(ibv);
+		System.out.println("Integer overflow check:");
 		System.out.println(ibv.getErrors());
 
 		// Break Continue check
+		System.out.println("Break/continue statement check:");
 		BreakContinueStmtCheckVisitor tc = new BreakContinueStmtCheckVisitor();
 		cd.accept(tc);
 		System.out.println(tc.getErrors());
 
 		// Array Size check
+		System.out.println("Array size check:");
 		ArraySizeCheckVisitor av = new ArraySizeCheckVisitor();
 		cd.accept(av);
 		System.out.println(av.getErrors());
