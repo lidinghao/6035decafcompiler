@@ -45,13 +45,17 @@ options
 			colNumber = cn;
 		}
 	}
+	
+	class BlockId {
+		public static int blockId = 0;
+	}
 }
 
 class DecafParser extends Parser;
 
 options {
   importVocab = DecafScanner;
-  k = 3;	
+  k = 3;
   buildAST = true;
   defaultErrorHandler=false;
 }
@@ -364,7 +368,8 @@ block returns [Block b] {
 } : 
 (lc:LCURLY (f=var_decl { fields.add(f); })* (s=statement { stmts.add(s); })* RCURLY 
 { 
-	b=new Block(stmts,fields); 
+	b=new Block(BlockId.blockId,stmts,fields); 
+	BlockId.blockId++;
 	b.setLineNumber(lc.getLine());
 	b.setColumnNumber(lc.getColumn());
 }) ;
