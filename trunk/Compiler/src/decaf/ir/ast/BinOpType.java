@@ -1,18 +1,18 @@
 package decaf.ir.ast;
 
 public enum BinOpType {
-	PLUS,
+	PLUS, // Arithmetic
 	MINUS,
 	MULTIPLY,
 	DIVIDE,
 	MOD,
-	LE,
+	LE, // Relational
 	LEQ,
 	GE,
 	GEQ,
-	NEQ,
-	CEQ,
-	AND,
+	NEQ, // Equal
+	CEQ, 
+	AND, // Conditional
 	OR;
 	
 	@Override

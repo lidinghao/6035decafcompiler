@@ -3,7 +3,6 @@ package decaf.ir.desc;
 import decaf.ir.ast.Type;
 
 public class FieldDescriptor extends GenericDescriptor {
-	boolean isArray;
 	int arrayLength;
 	
 	public FieldDescriptor(String id, Type type, boolean isArray, int arrayLength) {
@@ -19,14 +18,6 @@ public class FieldDescriptor extends GenericDescriptor {
 	
 	public FieldDescriptor(String id, Type type) {
 		this(id, type, false, -1);
-	}
-	
-	public boolean isArray() {
-		return isArray;
-	}
-
-	public void setArray(boolean isArray) {
-		this.isArray = isArray;
 	}
 
 	public int getArrayLength() {
