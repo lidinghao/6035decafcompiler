@@ -92,7 +92,7 @@ public class ArraySizeCheckVisitor implements ASTVisitor<Integer> {
 
 	@Override
 	public Integer visit(CalloutExpr expr) {
-		for (CalloutArg arg: expr.getArgs()) {
+		for (CalloutArg arg: expr.getArguments()) {
 			arg.accept(this);
 		}
 		
@@ -173,7 +173,7 @@ public class ArraySizeCheckVisitor implements ASTVisitor<Integer> {
 
 	@Override
 	public Integer visit(MethodCallExpr expr) {
-		for (Expression arg: expr.getArgs()) {
+		for (Expression arg: expr.getArguments()) {
 			arg.accept(this);
 		}
 		return 0;
@@ -181,7 +181,7 @@ public class ArraySizeCheckVisitor implements ASTVisitor<Integer> {
 
 	@Override
 	public Integer visit(MethodDecl md) {
-		for (Parameter p: md.getParamters()) {
+		for (Parameter p: md.getParameters()) {
 			p.accept(this);
 		}
 		md.getBlock().accept(this);

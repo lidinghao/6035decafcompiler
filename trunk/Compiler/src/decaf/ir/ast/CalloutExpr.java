@@ -29,7 +29,7 @@ public class CalloutExpr extends CallExpr {
 		this.methodName = methodName;
 	}
 	
-	public List<CalloutArg> getArgs() {
+	public List<CalloutArg> getArguments() {
 		return args;
 	}
 

@@ -2,7 +2,7 @@ package decaf.ir.desc;
 
 import decaf.ir.ast.Type;
 
-public abstract class FieldDescriptor extends GenericDescriptor {
+public class FieldDescriptor extends GenericDescriptor {
 	boolean isArray;
 	int arrayLength;
 	

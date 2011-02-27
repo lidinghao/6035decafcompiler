@@ -60,7 +60,7 @@ public class MethodDecl extends MemberDecl {
 		parameters = p;
 	}
 	
-	public List<Parameter> getParamters() {
+	public List<Parameter> getParameters() {
 		return parameters;
 	}
 	

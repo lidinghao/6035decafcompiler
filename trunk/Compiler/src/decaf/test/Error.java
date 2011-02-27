@@ -43,6 +43,6 @@ public class Error {
 	
 	@Override
 	public String toString() {
-		return "[" + lineNumber + ", " + columnNumber + "]" + " " + description;
+		return "(" + lineNumber + ", " + columnNumber + ")" + " ERROR: " + description;
 	}
 }
