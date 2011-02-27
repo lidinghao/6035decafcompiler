@@ -28,7 +28,6 @@ import decaf.ir.ast.MethodDecl;
 import decaf.ir.ast.Parameter;
 import decaf.ir.ast.ReturnStmt;
 import decaf.ir.ast.Statement;
-import decaf.ir.ast.Type;
 import decaf.ir.ast.UnaryOpExpr;
 import decaf.ir.ast.UnaryOpType;
 import decaf.ir.ast.VarDecl;
@@ -38,10 +37,10 @@ import decaf.ir.ast.VarLocation;
 /*
  * This Visitor class checks if input int is valid i.e. in the right range and has a right value
  */
-public class IntBoundaryCheckVisitor implements ASTVisitor<Integer>{
+public class IntOverflowCheckVisitor implements ASTVisitor<Integer>{
 	private ArrayList<Error> errors;
 	
-	public IntBoundaryCheckVisitor() {
+	public IntOverflowCheckVisitor() {
 		this.errors = new ArrayList<Error>();
 	}
 
