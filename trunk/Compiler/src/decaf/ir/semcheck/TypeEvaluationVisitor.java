@@ -367,11 +367,12 @@ public class TypeEvaluationVisitor implements ASTVisitor<Type> {
 
 	@Override
 	public Type visit(VarLocation loc) {
-		Type t = getTypeFromScope(loc.getId()).getType();
+		GenericDescriptor desc = getTypeFromScope(loc.getId());
+		
 		Type myType = Type.UNDEFINED;
 		
-		if (t != null) {
-			myType = t;
+		if (desc != null) {
+			myType = desc.getType();
 		}
 		
 		loc.setType(myType);
