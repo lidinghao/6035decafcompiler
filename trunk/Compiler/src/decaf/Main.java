@@ -4,11 +4,7 @@ import java.io.*;
 
 import decaf.ir.ast.ClassDecl;
 import decaf.ir.semcheck.*;
-import decaf.test.PrettyPrintVisitor;
-
-import antlr.CommonAST;
 import antlr.Token;
-import antlr.debug.misc.ASTFrame;
 import java6035.tools.CLI.*;;
 
 class Main {
