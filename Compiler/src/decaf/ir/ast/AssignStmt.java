@@ -25,7 +25,7 @@ public class AssignStmt extends Statement {
 		this.expr = e;
 	}
 	
-	public Expression getExrpression() {
+	public Expression getExpression() {
 		return this.expr;
 	}
 	

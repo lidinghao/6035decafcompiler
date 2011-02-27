@@ -43,7 +43,7 @@ public class PrettyPrintVisitor implements ASTVisitor<Integer> {
 		out.print(stmt.getOperator().toString());
 		
 		indent();	
-		stmt.getExrpression().accept(this);
+		stmt.getExpression().accept(this);
 		dedent();
 		
 		return 0;

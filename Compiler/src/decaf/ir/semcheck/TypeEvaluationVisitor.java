@@ -76,13 +76,13 @@ public class TypeEvaluationVisitor implements ASTVisitor<Type> {
 	@Override
 	public Type visit(AssignStmt stmt) {
 		Type lhs = stmt.getLocation().accept(this);
-		Type rhs = stmt.getExrpression().accept(this);
+		Type rhs = stmt.getExpression().accept(this);
 
 		if (stmt.getOperator() == AssignOpType.ASSIGN) {
 			if (lhs != rhs) {
 				if (lhs != Type.UNDEFINED && rhs != Type.UNDEFINED) {
 					addError(stmt, "'" + stmt.getLocation() + "' is of " + lhs
-							+ " type, but is being assigned '" + stmt.getExrpression()
+							+ " type, but is being assigned '" + stmt.getExpression()
 							+ "' of " + rhs + " type");
 				}
 			} else {
@@ -90,7 +90,7 @@ public class TypeEvaluationVisitor implements ASTVisitor<Type> {
 					addError(stmt, "'" + stmt.getLocation() + "' must be of int type");
 				}
 				if (rhs != Type.INT) {
-					addError(stmt, "'" + stmt.getExrpression()
+					addError(stmt, "'" + stmt.getExpression()
 							+ " must be of int type");
 				}
 			}
