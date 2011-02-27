@@ -3,7 +3,6 @@ package decaf;
 import java.io.*;
 
 import decaf.ir.ast.ClassDecl;
-import decaf.ir.desc.ClassDescriptor;
 import decaf.ir.semcheck.*;
 import decaf.test.PrettyPrintVisitor;
 
@@ -69,12 +68,8 @@ class Main {
         		DecafParser parser = new DecafParser (lexer);
             ClassDecl cd = parser.program();
             
-            PrettyPrintVisitor pv = new PrettyPrintVisitor();
-            cd.accept(pv);
-            
-                        
+            SemanticChecker.performSemanticChecks(cd);
         	}
-        	
         } catch(Exception e) {
         	// print the error:
             System.out.println(CLI.infile + " " + e);
