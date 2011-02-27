@@ -62,7 +62,7 @@ public class SymbolTableGenerationVisitor implements ASTVisitor<Integer> {
 
 		if (fd == null) {
 			addError(loc, "'" + loc.getId() + "'" + " is not declared");
-		} else if (!fd.isArray()) {
+		} else if (fd.getType() != Type.INTARRAY || fd.getType() != Type.BOOLEANARRAY) {
 			addError(loc, "'" + loc.getId() + "'" + " is not an array");
 		}
 
@@ -180,9 +180,11 @@ public class SymbolTableGenerationVisitor implements ASTVisitor<Integer> {
 		} else if (methodTable.containsKey(f.getId())) {
 			addError(f, "'" + f.getId() + "'" + " is a method");
 		} else {
-			currentScope.put(f.getId(), new FieldDescriptor(f.getId(),
-					f.getType(), f.isArray(), (f.isArray() ? f.getArrayLength()
-							.getValue() : -1)));
+			int len = -1;
+			if (f.getType() == Type.INTARRAY || f.getType() == Type.BOOLEANARRAY) {
+				len = f.getArrayLength().getValue();
+			}
+			currentScope.put(f.getId(), new FieldDescriptor(f.getId(), f.getType(), len));
 		}
 
 		return 0;

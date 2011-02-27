@@ -6,6 +6,5 @@ public class ParameterDescriptor extends GenericDescriptor {
 	public ParameterDescriptor(String id, Type type) {
 		this.id = id;
 		this.type = type;
-		this.isArray = false;
 	}
 }

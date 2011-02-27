@@ -247,14 +247,10 @@ public class ProperMethodCallCheckVisitor implements ASTVisitor<Integer> {
 		for (int i = 0; i < methodParamTypes.size(); i++) {
 			Type desiredType = methodParamTypes.get(i);
 			Type argType = expr.getArguments().get(i).getType();
-			if (!desiredType.equals(argType)) {
+			if (desiredType != argType) {
 				addError(expr, "Expecting " + desiredType.toString()
 						+ " but found " + argType.toString() + " for argument "
 						+ Integer.toString(i + 1));
-			}
-			if (isArrayType(expr.getArguments().get(i))) {
-				addError(expr, "Argument " + Integer.toString(i + 1)
-						+ " cannot be an array.");
 			}
 		}
 		return 0;
@@ -350,29 +346,5 @@ public class ProperMethodCallCheckVisitor implements ASTVisitor<Integer> {
 			}
 		}
 		return false;
-	}
-
-	private boolean isArrayType(Expression expr) {
-		if (expr.getClass() == ArrayLocation.class
-				|| expr.getClass() == VarLocation.class) {
-			Location loc = (Location) expr;
-			GenericDescriptor desc = getDescriptorFromScope(loc.getId());
-			if (desc != null) {
-				return desc.isArray();
-			}
-		}
-		return false;
-	}
-
-	private GenericDescriptor getDescriptorFromScope(String id) {
-		GenericSymbolTable scope = currentScope;
-
-		while (scope != null) {
-			if (scope.containsKey(id)) {
-				return scope.get(id);
-			}
-			scope = scope.getParent();
-		}
-		return null;
 	}
 }
