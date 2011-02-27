@@ -7,13 +7,16 @@ import decaf.ir.ASTVisitor;
 public class Block extends Statement {
 	private List<Statement> statements;
 	private List<VarDecl> variableDeclarations;
+	private int blockId;
 	
-	public Block() {
+	public Block(int bId) {
 		statements = new ArrayList<Statement>();
 		variableDeclarations = new ArrayList<VarDecl>();
+		blockId = bId;
 	}
 	
-	public Block(List<Statement> s, List<VarDecl> f) {
+	public Block(int bId, List<Statement> s, List<VarDecl> f) {
+		blockId = bId;
 		statements = s;
 		variableDeclarations = f;
 	}
@@ -34,6 +37,14 @@ public class Block extends Statement {
 		return this.variableDeclarations;
 	}
 	
+	public int getBlockId() {
+		return blockId;
+	}
+
+	public void setBlockId(int blockId) {
+		this.blockId = blockId;
+	}
+
 	@Override
 	public String toString() {
 		String rtn = "";
