@@ -4,7 +4,7 @@ import java.io.*;
 
 import decaf.ir.ast.ClassDecl;
 import decaf.ir.semcheck.ArraySizeCheckVisitor;
-import decaf.ir.semcheck.BreakContinueCheckVisitor;
+import decaf.ir.semcheck.BreakContinueStmtCheckVisitor;
 import decaf.test.PrettyPrintVisitor;
 
 import antlr.CommonAST;
@@ -72,7 +72,7 @@ class Main {
             PrettyPrintVisitor pv = new PrettyPrintVisitor();
             cd.accept(pv);
             
-            BreakContinueCheckVisitor tc = new BreakContinueCheckVisitor();
+            BreakContinueStmtCheckVisitor tc = new BreakContinueStmtCheckVisitor();
             cd.accept(tc);
             System.out.println(tc.getErrors());
             

@@ -32,12 +32,12 @@ import decaf.ir.ast.VarLocation;
 
 import decaf.test.Error;
 
-public class BreakContinueCheckVisitor implements ASTVisitor<Integer> {
+public class BreakContinueStmtCheckVisitor implements ASTVisitor<Integer> {
 	
 	private ArrayList<Error> errors;
 	private boolean inFor;
 	
-	public BreakContinueCheckVisitor() {
+	public BreakContinueStmtCheckVisitor() {
 		this.errors = new ArrayList<Error>();
 		this.inFor = false;
 	}
