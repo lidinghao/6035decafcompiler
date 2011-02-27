@@ -62,7 +62,7 @@ public class SymbolTableGenerationVisitor implements ASTVisitor<Integer> {
 
 		if (fd == null) {
 			addError(loc, "'" + loc.getId() + "'" + " is not declared");
-		} else if (fd.getType() != Type.INTARRAY || fd.getType() != Type.BOOLEANARRAY) {
+		} else if (fd.getType() != Type.INTARRAY && fd.getType() != Type.BOOLEANARRAY) {
 			addError(loc, "'" + loc.getId() + "'" + " is not an array");
 		}
 

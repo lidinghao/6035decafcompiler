@@ -86,7 +86,7 @@ public class TypeEvaluationVisitor implements ASTVisitor<Type> {
 				if (lhs != rhs) {
 					addError(stmt, "'" + stmt.getLocation() + "' is of " + lhs
 							+ " type, but is being assigned '" + stmt.getExpression()
-							+ "' of " + rhs + " type");
+							+ "' of " + rhs + "' type");
 				}
 			}
 			else {
