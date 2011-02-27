@@ -1,0 +1,10 @@
+class Program { //positive int overflow
+	int a;
+	int kyrgyz(){
+		return 10;
+	}
+	void main() {
+	int k;
+	k = kyrgyz() + 15;
+	}
+}
