@@ -69,6 +69,10 @@ public class TypeEvaluationVisitor implements ASTVisitor<Type> {
 			else if (desc.getType() == Type.BOOLEANARRAY) {
 				myType = Type.BOOLEAN;
 			}
+			else {
+				addError(loc, "'" + loc.getId()
+						+ "' must be of an array");
+			}
 		}
 
 		loc.setType(myType);
@@ -181,11 +185,11 @@ public class TypeEvaluationVisitor implements ASTVisitor<Type> {
 								+ expr.getLeftOperand() + "' and '"
 								+ expr.getRightOperand() + "' must be of same type");
 					}
-					else if (lhs == Type.BOOLEANARRAY || lhs == Type.INTARRAY) {
+					else if (lhs.isArray()) {
 						addError(expr.getLeftOperand(), "'"
 								+ expr.getLeftOperand() + "' cant be an array");
 					}
-					else if (rhs == Type.BOOLEANARRAY || rhs == Type.INTARRAY) {
+					else if (rhs.isArray()) {
 						addError(expr.getRightOperand(), "'"
 								+ expr.getRightOperand() + "' cant be an array");
 					}
@@ -381,7 +385,7 @@ public class TypeEvaluationVisitor implements ASTVisitor<Type> {
 		Type myType = Type.UNDEFINED;
 
 		if (t != Type.UNDEFINED) {
-			if (t == Type.BOOLEANARRAY || t == Type.INTARRAY) {
+			if (t.isArray()) {
 				addError(expr.getExpression(), "'" + expr.getExpression()
 						+ "' cannot be an array");
 			}
