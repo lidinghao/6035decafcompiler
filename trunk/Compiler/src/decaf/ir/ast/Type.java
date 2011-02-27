@@ -2,7 +2,9 @@ package decaf.ir.ast;
 
 public enum Type {
 	INT,
+	INTARRAY,
 	BOOLEAN,
+	BOOLEANARRAY,
 	CHAR,
 	VOID,
 	UNDEFINED;
@@ -20,6 +22,10 @@ public enum Type {
 				return "void";
 			case UNDEFINED:
 				return "undefined";
+			case INTARRAY:
+				return "int[]";
+			case BOOLEANARRAY:
+				return "boolean[]";
 		}
 		
 		return null;

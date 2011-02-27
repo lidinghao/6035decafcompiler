@@ -25,6 +25,7 @@ import decaf.ir.ast.ForStmt;
 import decaf.ir.ast.IfStmt;
 import decaf.ir.ast.IntLiteral;
 import decaf.ir.ast.InvokeStmt;
+import decaf.ir.ast.Location;
 import decaf.ir.ast.MethodCallExpr;
 import decaf.ir.ast.MethodDecl;
 import decaf.ir.ast.Parameter;
@@ -53,23 +54,24 @@ public class TypeEvaluationVisitor implements ASTVisitor<Type> {
 
 	@Override
 	public Type visit(ArrayLocation loc) {
-		if	(loc.getExpr().accept(this) != Type.INT) {
-			addError(loc, "'" + loc.getExpr() + "' must be of int type (array index)");
+		if (loc.getExpr().accept(this) != Type.INT) {
+			addError(loc, "'" + loc.getExpr()
+					+ "' must be of int type (array index)");
 		}
-		
-		GenericDescriptor desc = getTypeFromScope(loc.getId());
+
+		GenericDescriptor desc = getDescriptorFromScope(loc.getId());
 		if (desc != null && !desc.isArray()) {
 			addError(loc, "'" + loc.getId() + "' must be an array");
 		}
-		
+
 		Type myType = Type.UNDEFINED;
-		
+
 		if (desc != null) {
 			myType = desc.getType();
 		}
-		
+
 		loc.setType(myType);
-		
+
 		return myType;
 	}
 
@@ -77,20 +79,28 @@ public class TypeEvaluationVisitor implements ASTVisitor<Type> {
 	public Type visit(AssignStmt stmt) {
 		Type lhs = stmt.getLocation().accept(this);
 		Type rhs = stmt.getExpression().accept(this);
-		if (stmt.getOperator() == AssignOpType.ASSIGN) {
-			if (lhs != rhs) {
-				if (lhs != Type.UNDEFINED && rhs != Type.UNDEFINED) {
+
+		if (lhs != Type.UNDEFINED && rhs != Type.UNDEFINED) {
+			if (isArrayType(stmt.getLocation())) {
+				addError(stmt.getLocation(), "'" + stmt.getLocation().getId()
+						+ "' cannot be an array");
+			} else if (isArrayType(stmt.getExpression())) {
+				addError(stmt.getExpression(), "'" + stmt.getExpression()
+						+ "' cannot be an array");
+			} else if (stmt.getOperator() == AssignOpType.ASSIGN) {
+				if (lhs != rhs) {
 					addError(stmt, "'" + stmt.getLocation() + "' is of " + lhs
 							+ " type, but is being assigned '" + stmt.getExpression()
 							+ "' of " + rhs + " type");
-				}
-			} else {
-				if (lhs != Type.INT) {
-					addError(stmt, "'" + stmt.getLocation() + "' must be of int type");
-				}
-				if (rhs != Type.INT) {
-					addError(stmt, "'" + stmt.getExpression()
-							+ " must be of int type");
+				} else {
+					if (lhs != Type.INT) {
+						addError(stmt, "'" + stmt.getLocation()
+								+ "' must be of int type");
+					}
+					if (rhs != Type.INT) {
+						addError(stmt, "'" + stmt.getExpression()
+								+ " must be of int type");
+					}
 				}
 			}
 		}
@@ -106,75 +116,92 @@ public class TypeEvaluationVisitor implements ASTVisitor<Type> {
 
 		BinOpType op = expr.getOperator();
 
-		switch (op) {
-			case AND: // boolean only
-			case OR:
-				if (lhs == Type.BOOLEAN && rhs == Type.BOOLEAN) {
-					myType = Type.BOOLEAN;
-				}
+		// Already produced error somewhere in the child subtree (avoid multiple
+		// errors)
+		if (lhs != Type.UNDEFINED && rhs != Type.UNDEFINED) {
+			// HACK: Check is any of the expressions in an array (short circuit
+			// test)
+			if (isArrayType(expr.getLeftOperand())) {
+				addError(expr.getLeftOperand(), "'" + expr.getLeftOperand()
+						+ "' cannot be an array");
+			} else if (isArrayType(expr.getRightOperand())) {
+				addError(expr.getRightOperand(), "'" + expr.getLeftOperand()
+						+ "' cannot be an array");
+			} else {
 
-				if (lhs != Type.BOOLEAN) {
-					addError(expr.getLeftOperand(), "'" + expr.getLeftOperand()
-							+ "' must be of boolean type");
-				}
+				switch (op) {
+					case AND: // boolean only
+					case OR:
+						if (lhs == Type.BOOLEAN && rhs == Type.BOOLEAN) {
+							myType = Type.BOOLEAN;
+						}
 
-				if (rhs != Type.BOOLEAN) {
-					addError(expr.getRightOperand(), "'" + expr.getRightOperand()
-							+ "' must be of boolean type");
-				}
+						if (lhs != Type.BOOLEAN) {
+							addError(expr.getLeftOperand(), "'"
+									+ expr.getLeftOperand()
+									+ "' must be of boolean type");
+						}
 
-				break;
-			case PLUS: // int only
-			case MINUS:
-			case MULTIPLY:
-			case DIVIDE:
-			case MOD:
-				if (lhs == Type.INT && rhs == Type.INT) {
-					myType = Type.BOOLEAN;
-				}
+						if (rhs != Type.BOOLEAN) {
+							addError(expr.getRightOperand(), "'"
+									+ expr.getRightOperand()
+									+ "' must be of boolean type");
+						}
 
-				if (lhs != Type.INT) {
-					addError(expr.getLeftOperand(), "'" + expr.getLeftOperand()
-							+ "' must be of int type");
-				}
+						break;
+					case PLUS: // int only
+					case MINUS:
+					case MULTIPLY:
+					case DIVIDE:
+					case MOD:
+						if (lhs == Type.INT && rhs == Type.INT) {
+							myType = Type.BOOLEAN;
+						}
 
-				if (rhs != Type.INT) {
-					addError(expr.getRightOperand(), "'" + expr.getRightOperand()
-							+ "' must be of int type");
-				}
-				
-				break;
-			case LE:
-			case LEQ:
-			case GE:
-			case GEQ:
-				if (lhs == Type.INT && rhs == Type.INT) {
-					myType = Type.BOOLEAN;
-				}
+						if (lhs != Type.INT) {
+							addError(expr.getLeftOperand(), "'"
+									+ expr.getLeftOperand() + "' must be of int type");
+						}
 
-				if (lhs != Type.INT) {
-					addError(expr.getLeftOperand(), "'" + expr.getLeftOperand()
-							+ "' must be of int type");
-				}
+						if (rhs != Type.INT) {
+							addError(expr.getRightOperand(), "'"
+									+ expr.getRightOperand() + "' must be of int type");
+						}
 
-				if (rhs != Type.INT) {
-					addError(expr.getRightOperand(), "'" + expr.getRightOperand()
-							+ "' must be of int type");
-				}
+						break;
+					case LE:
+					case LEQ:
+					case GE:
+					case GEQ:
+						if (lhs == Type.INT && rhs == Type.INT) {
+							myType = Type.BOOLEAN;
+						}
 
-				break;
-			case NEQ: // int or boolean (same type though)
-			case CEQ:
-				if (lhs != rhs) {
-					addError(expr.getLeftOperand(), "'" + expr.getLeftOperand()
-							+ "' and '" + expr.getRightOperand()
-							+ "' must be of same type");
-				} else {
-					myType = lhs;
+						if (lhs != Type.INT) {
+							addError(expr.getLeftOperand(), "'"
+									+ expr.getLeftOperand() + "' must be of int type");
+						}
+
+						if (rhs != Type.INT) {
+							addError(expr.getRightOperand(), "'"
+									+ expr.getRightOperand() + "' must be of int type");
+						}
+
+						break;
+					case NEQ: // int or boolean (same type though)
+					case CEQ:
+						if (lhs != rhs) {
+							addError(expr.getLeftOperand(), "'"
+									+ expr.getLeftOperand() + "' and '"
+									+ expr.getRightOperand() + "' must be of same type");
+						} else {
+							myType = lhs;
+						}
+						break;
 				}
-				break;
+			}
 		}
-		
+
 		expr.setType(myType);
 
 		return myType;
@@ -183,14 +210,14 @@ public class TypeEvaluationVisitor implements ASTVisitor<Type> {
 	@Override
 	public Type visit(Block block) {
 		currentScope = classDesc.getScopeTable().get(block.getBlockId());
-		
-		for (VarDecl vd: block.getVarDeclarations()) {
+
+		for (VarDecl vd : block.getVarDeclarations()) {
 			vd.accept(this);
 		}
-		for (Statement s: block.getStatements()) {
+		for (Statement s : block.getStatements()) {
 			s.accept(this);
 		}
-		
+
 		return Type.UNDEFINED;
 	}
 
@@ -209,18 +236,18 @@ public class TypeEvaluationVisitor implements ASTVisitor<Type> {
 		if (!arg.isString()) {
 			return arg.getExpression().accept(this);
 		}
-		
+
 		return Type.UNDEFINED;
 	}
 
 	@Override
 	public Type visit(CalloutExpr expr) {
-		for (CalloutArg arg: expr.getArguments()) {
+		for (CalloutArg arg : expr.getArguments()) {
 			arg.accept(this);
 		}
-		
+
 		expr.setType(Type.UNDEFINED);
-		
+
 		return Type.UNDEFINED;
 	}
 
@@ -231,14 +258,14 @@ public class TypeEvaluationVisitor implements ASTVisitor<Type> {
 
 	@Override
 	public Type visit(ClassDecl cd) {
-		for (FieldDecl fd: cd.getFieldDeclarations()) {
+		for (FieldDecl fd : cd.getFieldDeclarations()) {
 			fd.accept(this);
 		}
-		
-		for (MethodDecl md: cd.getMethodDeclarations()) {
+
+		for (MethodDecl md : cd.getMethodDeclarations()) {
 			md.accept(this);
 		}
-		
+
 		return Type.UNDEFINED;
 	}
 
@@ -254,53 +281,54 @@ public class TypeEvaluationVisitor implements ASTVisitor<Type> {
 
 	@Override
 	public Type visit(FieldDecl fd) {
-		for (Field f: fd.getFields()) {
+		for (Field f : fd.getFields()) {
 			f.accept(this);
 		}
-		
+
 		return fd.getType();
 	}
 
 	@Override
 	public Type visit(ForStmt stmt) {
-		GenericDescriptor desc = getTypeFromScope(stmt.getId());
-		
+		GenericDescriptor desc = getDescriptorFromScope(stmt.getId());
+
 		Type idType = Type.UNDEFINED;
-		
+
 		if (desc != null) {
 			idType = desc.getType();
 		}
-		
+
 		if (idType != Type.INT && idType != Type.UNDEFINED) {
-			addError(stmt, "Loop variable '" + stmt.getId() + "' must be of type int");
+			addError(stmt, "Loop variable '" + stmt.getId()
+					+ "' must be of type int");
 		}
-		
+
 		if (stmt.getInitialValue().accept(this) != Type.INT) {
 			addError(stmt, "'" + stmt.getInitialValue() + "' must be of int type");
 		}
 		if (stmt.getFinalValue().accept(this) != Type.INT) {
 			addError(stmt, "'" + stmt.getInitialValue() + "' must be of int type");
 		}
-		
+
 		stmt.getBlock().accept(this);
-		
+
 		return Type.UNDEFINED;
 	}
 
 	@Override
 	public Type visit(IfStmt stmt) {
 		Type exprType = stmt.getCondition().accept(this);
-		
+
 		if (exprType != Type.BOOLEAN) {
 			addError(stmt, "'" + stmt.getCondition() + "' must be of boolean type");
 		}
-		
+
 		stmt.getIfBlock().accept(this);
-		
+
 		if (stmt.getElseBlock() != null) {
 			stmt.getElseBlock().accept(this);
 		}
-		
+
 		return Type.UNDEFINED;
 	}
 
@@ -312,29 +340,30 @@ public class TypeEvaluationVisitor implements ASTVisitor<Type> {
 	@Override
 	public Type visit(InvokeStmt stmt) {
 		stmt.getMethodCall().accept(this);
-		
+
 		return Type.UNDEFINED;
 	}
 
 	@Override
 	public Type visit(MethodCallExpr expr) {
-		for (Expression e: expr.getArguments()) {
+		for (Expression e : expr.getArguments()) {
 			e.accept(this);
 		}
-		
-		expr.setType(classDesc.getMethodSymbolTable().get(expr.getName()).getReturnType());
-		
+
+		expr.setType(classDesc.getMethodSymbolTable().get(expr.getName())
+				.getReturnType());
+
 		return expr.getType();
 	}
 
 	@Override
 	public Type visit(MethodDecl md) {
 		md.getBlock().accept(this);
-		
-		for (Parameter p: md.getParameters()) {
+
+		for (Parameter p : md.getParameters()) {
 			p.accept(this);
 		}
-		
+
 		return md.getReturnType();
 	}
 
@@ -347,8 +376,7 @@ public class TypeEvaluationVisitor implements ASTVisitor<Type> {
 	public Type visit(ReturnStmt stmt) {
 		if (stmt.getExpression() == null) {
 			return Type.VOID;
-		}
-		else {
+		} else {
 			return stmt.getExpression().accept(this);
 		}
 	}
@@ -357,26 +385,31 @@ public class TypeEvaluationVisitor implements ASTVisitor<Type> {
 	public Type visit(UnaryOpExpr expr) {
 		Type t = expr.getExpression().accept(this);
 		Type myType = Type.UNDEFINED;
-		
-		if (expr.getOperator() == UnaryOpType.NOT) {
-			if (t != Type.BOOLEAN) {
-				addError(expr, "'" + expr.getExpression() + "' must be of boolean type");
+
+		if (t != Type.UNDEFINED) {
+			if (isArrayType(expr.getExpression())) {
+				addError(expr.getExpression(), "'" + expr.getExpression()
+						+ "' cannot be an array");
 			}
-			else {
-				myType = Type.BOOLEAN;
+			else if (expr.getOperator() == UnaryOpType.NOT) {
+				if (t != Type.BOOLEAN) {
+					addError(expr, "'" + expr.getExpression()
+							+ "' must be of boolean type");
+				} else {
+					myType = Type.BOOLEAN;
+				}
+			} else {
+				if (t != Type.INT) {
+					addError(expr, "'" + expr.getExpression()
+							+ "' must be of int type");
+				} else {
+					myType = Type.INT;
+				}
 			}
 		}
-		else {
-			if (t != Type.INT) {
-				addError(expr, "'" + expr.getExpression() + "' must be of int type");
-			}
-			else {
-				myType = Type.INT;
-			}
-		}
-		
+
 		expr.setType(myType);
-		
+
 		return myType;
 	}
 
@@ -387,20 +420,20 @@ public class TypeEvaluationVisitor implements ASTVisitor<Type> {
 
 	@Override
 	public Type visit(VarLocation loc) {
-		GenericDescriptor desc = getTypeFromScope(loc.getId());
-		
+		GenericDescriptor desc = getDescriptorFromScope(loc.getId());
+
 		Type myType = Type.UNDEFINED;
-		
+
 		if (desc != null) {
 			myType = desc.getType();
 		}
-		
+
 		loc.setType(myType);
-		
+
 		return myType;
 	}
 
-	private GenericDescriptor getTypeFromScope(String id) {
+	private GenericDescriptor getDescriptorFromScope(String id) {
 		GenericSymbolTable scope = currentScope;
 
 		while (scope != null) {
@@ -416,6 +449,19 @@ public class TypeEvaluationVisitor implements ASTVisitor<Type> {
 
 	private void addError(AST a, String desc) {
 		errors.add(new Error(a.getLineNumber(), a.getColumnNumber(), desc));
+	}
+
+	private boolean isArrayType(Expression expr) {
+		if (expr.getClass() == ArrayLocation.class
+				|| expr.getClass() == VarLocation.class) {
+			Location loc = (Location) expr;
+			GenericDescriptor desc = getDescriptorFromScope(loc.getId());
+			if (desc != null) {
+				return desc.isArray();
+			}
+		}
+
+		return false;
 	}
 
 	public List<Error> getErrors() {
