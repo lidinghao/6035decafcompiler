@@ -18,6 +18,7 @@ import decaf.ir.ast.CalloutExpr;
 import decaf.ir.ast.CharLiteral;
 import decaf.ir.ast.ClassDecl;
 import decaf.ir.ast.ContinueStmt;
+import decaf.ir.ast.Expression;
 import decaf.ir.ast.Field;
 import decaf.ir.ast.FieldDecl;
 import decaf.ir.ast.ForStmt;
@@ -297,6 +298,10 @@ public class TypeEvaluationVisitor implements ASTVisitor<Type> {
 
 	@Override
 	public Type visit(MethodCallExpr expr) {
+		for (Expression e: expr.getArguments()) {
+			e.accept(this);
+		}
+		
 		expr.setType(classDesc.getMethodSymbolTable().get(expr.getName()).getReturnType());
 		
 		return expr.getType();
