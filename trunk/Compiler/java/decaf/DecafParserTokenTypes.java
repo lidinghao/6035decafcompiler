@@ -1,9 +1,9 @@
 // $ANTLR 2.7.7 (2006-11-01): "Parser.g" -> "DecafParser.java"$
 
-  package decaf;
-  import ir.ast.*;
-  import java.util.List;
-  import java.util.ArrayList;
+  	package decaf;
+  	import decaf.ir.ast.*;
+  	import java.util.List;
+  	import java.util.ArrayList;
 
 public interface DecafParserTokenTypes {
 	int EOF = 1;
