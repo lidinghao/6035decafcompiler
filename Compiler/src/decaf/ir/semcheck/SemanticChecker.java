@@ -9,7 +9,7 @@ import decaf.test.Error;
 
 public class SemanticChecker {
 
-	public static void performSemanticChecks(ClassDecl cd) {
+	public static boolean performSemanticChecks(ClassDecl cd) {
 		PrettyPrintVisitor pv = new PrettyPrintVisitor();
 		cd.accept(pv);
 		
@@ -57,6 +57,17 @@ public class SemanticChecker {
 		ArraySizeCheckVisitor av = new ArraySizeCheckVisitor();
 		cd.accept(av);
 		System.out.println(av.getErrors());
+		
+		if (ibv.getErrors().size() > 0 ||
+				stv.getErrors().size() > 0 ||
+				tev.getErrors().size() > 0 ||
+				pmv.getErrors().size() > 0 ||
+				tc.getErrors().size() > 0 ||
+				av.getErrors().size() > 0) {
+			return false;
+		}
+		
+		return true;
 	}
 
 	// Checks whether the program contains a main method with no parameters

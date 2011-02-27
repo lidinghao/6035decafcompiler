@@ -66,9 +66,16 @@ class Main {
         	{
         		DecafScanner lexer = new DecafScanner(new DataInputStream(inputStream));
         		DecafParser parser = new DecafParser (lexer);
+            parser.program();
+        	}
+        	else if (CLI.target == CLI.INTER) {
+        		DecafScanner lexer = new DecafScanner(new DataInputStream(inputStream));
+        		DecafParser parser = new DecafParser (lexer);
             ClassDecl cd = parser.program();
             
-            SemanticChecker.performSemanticChecks(cd);
+            if (!SemanticChecker.performSemanticChecks(cd)) {
+            	System.exit(-1);
+            }
         	}
         } catch(Exception e) {
         	// print the error:
