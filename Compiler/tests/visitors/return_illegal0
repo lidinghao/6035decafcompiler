@@ -1,0 +1,24 @@
+class Program {
+	int foo() {
+		return 5;
+	}
+	int bar(int a) {
+		int b;
+		b = 1;
+		if (b == 1) {
+			int c;
+			c = 0;
+			if (c == 0) {
+				return 5;
+			} else {
+			}
+		} else {
+			return 5;
+		}
+	}
+	void main() {
+		boolean b;
+		bar(b);
+		return 5;
+	}
+}

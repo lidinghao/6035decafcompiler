@@ -41,10 +41,12 @@ public class ProperMethodCallCheckVisitor implements ASTVisitor<Integer> {
 	private ArrayList<Error> errors;
 	private ClassDescriptor classDescriptor;
 	private Type currentReturnType;
+	private boolean returnTypeSatisfied;
 
 	public ProperMethodCallCheckVisitor(ClassDescriptor cd) {
 		this.errors = new ArrayList<Error>();
 		this.classDescriptor = cd;
+		this.returnTypeSatisfied = true;
 	}
 
 	@Override
@@ -144,18 +146,64 @@ public class ProperMethodCallCheckVisitor implements ASTVisitor<Integer> {
 
 	@Override
 	public Integer visit(ForStmt stmt) {
-		stmt.getBlock().accept(this);
+		if (!returnTypeSatisfied) {
+			// We want to ignore any changes to the return type satisifed state as
+			// a result of logic inside a for loop
+			stmt.getBlock().accept(this);
+			returnTypeSatisfied = false;
+		} else {
+			stmt.getBlock().accept(this);
+		}
 		return 0;
 	}
 
 	@Override
 	public Integer visit(IfStmt stmt) {
 		stmt.getCondition().accept(this);
+		boolean ifBlockHasReturn = false;
+		// If return type has not been satisifed
+		if (!returnTypeSatisfied) {
+			// If the IF block doesn't have a return statement
+			if (!hasReturnStmt(stmt.getIfBlock())) {
+				stmt.getIfBlock().accept(this);
+				if (!returnTypeSatisfied) {
+					// If the IF condition doesn't return, show error
+					addError(stmt,
+							"There exists a condition where nothing is returned, but method expects "
+									+ currentReturnType.toString() + " to be returned");
+				} else {
+					ifBlockHasReturn = true;
+				}
+			} else {
+				ifBlockHasReturn = true;
+			}
+			// If the ELSE block exists
+			if (stmt.getElseBlock() != null) {
+				// If the ELSE block doesn't have a return statement
+				if (!hasReturnStmt(stmt.getElseBlock())) {
+					stmt.getElseBlock().accept(this);
+					if (!returnTypeSatisfied) {
+						// If the ELSE condition doesn't return, show error
+						addError(stmt,
+								"There exists a condition where nothing is returned, but method expects "
+										+ currentReturnType.toString()
+										+ " to be returned");
+						returnTypeSatisfied = false;
+					} else {
+						returnTypeSatisfied = ifBlockHasReturn;
+					}
+				} else {
+					returnTypeSatisfied = ifBlockHasReturn;
+				}
+			} else {
+				returnTypeSatisfied = ifBlockHasReturn;
+			}
+		}
+
 		stmt.getIfBlock().accept(this);
 		if (stmt.getElseBlock() != null) {
 			stmt.getElseBlock().accept(this);
 		}
-
 		return 0;
 	}
 
@@ -206,7 +254,25 @@ public class ProperMethodCallCheckVisitor implements ASTVisitor<Integer> {
 	public Integer visit(MethodDecl md) {
 		// Get return type
 		currentReturnType = md.getReturnType();
+		if (currentReturnType.equals(Type.VOID)) {
+			returnTypeSatisfied = true;
+		} else {
+			returnTypeSatisfied = false;
+		}
+		// Check top-level method block
+		if (!returnTypeSatisfied) {
+			if (hasReturnStmt(md.getBlock())) {
+				returnTypeSatisfied = true;
+			}
+		}
 		md.getBlock().accept(this);
+		if (!returnTypeSatisfied) {
+			addError(md.getBlock(),
+					"There exists a condition where nothing is returned, but method expects "
+							+ currentReturnType.toString() + " to be returned");
+		}
+		// Reset global state
+		returnTypeSatisfied = true;
 		currentReturnType = null;
 
 		return 0;
@@ -262,5 +328,17 @@ public class ProperMethodCallCheckVisitor implements ASTVisitor<Integer> {
 
 	private void addError(AST a, String desc) {
 		errors.add(new Error(a.getLineNumber(), a.getColumnNumber(), desc));
+	}
+
+	// Returns true if the block contains a return statement at the top-level,
+	// False otherwise
+	private boolean hasReturnStmt(Block b) {
+		List<Statement> blockStmts = b.getStatements();
+		for (Statement stmt : blockStmts) {
+			if (stmt.getClass() == ReturnStmt.class) {
+				return true;
+			}
+		}
+		return false;
 	}
 }
