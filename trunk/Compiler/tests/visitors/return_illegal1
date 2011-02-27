@@ -1,0 +1,14 @@
+class Program {
+	int foo() {
+		int x;
+		for x = 0, 10 {
+			if (x == 1) {
+				return 1;
+			} else {
+				return 2;
+			}
+		}
+	}
+	void main() {
+	}
+}
