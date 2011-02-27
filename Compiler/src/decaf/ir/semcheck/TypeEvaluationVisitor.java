@@ -79,12 +79,14 @@ public class TypeEvaluationVisitor implements ASTVisitor<Type> {
 
 		if (stmt.getOperator() == AssignOpType.ASSIGN) {
 			if (lhs != rhs) {
-				addError(stmt, "'" + stmt.getLocation() + "' is of " + lhs
-						+ " type, but is being assigned '" + stmt.getExrpression()
-						+ "' of " + rhs + " type");
+				if (lhs != Type.UNDEFINED && rhs != Type.UNDEFINED) {
+					addError(stmt, "'" + stmt.getLocation() + "' is of " + lhs
+							+ " type, but is being assigned '" + stmt.getExrpression()
+							+ "' of " + rhs + " type");
+				}
 			} else {
 				if (lhs != Type.INT) {
-					addError(stmt, "'" + stmt.getLocation() + " must be of int type");
+					addError(stmt, "'" + stmt.getLocation() + "' must be of int type");
 				}
 				if (rhs != Type.INT) {
 					addError(stmt, "'" + stmt.getExrpression()
@@ -388,5 +390,13 @@ public class TypeEvaluationVisitor implements ASTVisitor<Type> {
 
 	private void addError(AST a, String desc) {
 		errors.add(new Error(a.getLineNumber(), a.getColumnNumber(), desc));
+	}
+
+	public List<Error> getErrors() {
+		return errors;
+	}
+
+	public void setErrors(List<Error> errors) {
+		this.errors = errors;
 	}
 }
