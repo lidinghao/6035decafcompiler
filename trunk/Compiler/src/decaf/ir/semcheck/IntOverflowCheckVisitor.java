@@ -28,7 +28,6 @@ import decaf.ir.ast.MethodDecl;
 import decaf.ir.ast.Parameter;
 import decaf.ir.ast.ReturnStmt;
 import decaf.ir.ast.Statement;
-import decaf.ir.ast.Type;
 import decaf.ir.ast.UnaryOpExpr;
 import decaf.ir.ast.UnaryOpType;
 import decaf.ir.ast.VarDecl;
@@ -103,6 +102,10 @@ public class IntOverflowCheckVisitor implements ASTVisitor<Integer>{
 
 	@Override
 	public Integer visit(ClassDecl cd) {
+		for (FieldDecl fd: cd.getFieldDeclarations()) {
+			fd.accept(this);
+		}
+		
 		for (MethodDecl md: cd.getMethodDeclarations()) {
 			md.accept(this);
 		}
@@ -117,6 +120,9 @@ public class IntOverflowCheckVisitor implements ASTVisitor<Integer>{
 	
 	@Override
 	public Integer visit(Field f) {
+		if (f.getArrayLength() != null) {
+			f.getArrayLength().accept(this);
+		}
 		return 0;
 	}
 
@@ -154,7 +160,7 @@ public class IntOverflowCheckVisitor implements ASTVisitor<Integer>{
 		return intStr.startsWith("0x");
 	}
 	
-	 public double hex2decimal(String s) {
+	 private double hexToDecimal(String s) {
 	        String digits = "0123456789ABCDEF";
 	        s = s.toUpperCase();
 	        double val = 0 ;
@@ -204,7 +210,7 @@ public class IntOverflowCheckVisitor implements ASTVisitor<Integer>{
 		double interm;
 		String rawValue = lit;
 		if(isHex(rawValue)){
-			 interm = hex2decimal(rawValue.substring(2, rawValue.length()-1));
+			 interm = hexToDecimal(rawValue.substring(2, rawValue.length()-1));
 		}
 		else{
 			interm = Double.parseDouble(rawValue);
