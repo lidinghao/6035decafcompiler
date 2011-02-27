@@ -1,0 +1,14 @@
+class Program {
+	
+  boolean foo(int i, int j){
+  	return (i%10)==j;
+  }
+
+  void main() {
+    int x;
+    x=10000;
+    if(x==1000 ||foo(100,22)){
+    	callout("that\'s crazy!");
+    	}
+    }	
+}
