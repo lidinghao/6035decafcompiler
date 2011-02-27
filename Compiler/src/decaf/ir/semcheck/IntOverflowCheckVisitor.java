@@ -154,25 +154,6 @@ public class IntOverflowCheckVisitor implements ASTVisitor<Integer>{
 		return 0;
 	}
 
-	private Boolean isHex(String intStr){
-		if (intStr.length() < 2)
-			return false;
-		return intStr.startsWith("0x");
-	}
-	
-	 private double hexToDecimal(String s) {
-	        String digits = "0123456789ABCDEF";
-	        s = s.toUpperCase();
-	        double val = 0 ;
-	        for (int i = 0; i < s.length(); i++) {
-	            char c = s.charAt(i);
-	            int d = digits.indexOf(c);
-	            val = 16*val + d;
-	        }
-	        return val;
-	 }
-
-
 	@Override
 	public Integer visit(InvokeStmt stmt) {
 		stmt.getMethodCall().accept(this);
@@ -204,18 +185,6 @@ public class IntOverflowCheckVisitor implements ASTVisitor<Integer>{
 			stmt.getExpression().accept(this);
 		}
 		return 0;
-	}
-	
-	private double getDoubleValue(String lit){
-		double interm;
-		String rawValue = lit;
-		if(isHex(rawValue)){
-			 interm = hexToDecimal(rawValue.substring(2, rawValue.length()-1));
-		}
-		else{
-			interm = Double.parseDouble(rawValue);
-		}
-		return interm;
 	}
 	
 	@Override
@@ -265,5 +234,34 @@ public class IntOverflowCheckVisitor implements ASTVisitor<Integer>{
 	public ArrayList<Error> getErrors() {
 		return errors;
 	}
-
+	
+	private Boolean isHex(String intStr){
+		if (intStr.length() < 2)
+			return false;
+		return intStr.startsWith("0x");
+	}
+	
+	 private double hexToDecimal(String s) {
+		 String digits = "0123456789ABCDEF";
+		 s = s.toUpperCase();
+	    double val = 0 ;
+       for (int i = 0; i < s.length(); i++) {
+      	 char c = s.charAt(i);
+          int d = digits.indexOf(c);
+          val = 16*val + d;
+       }
+       return val;
+	 }
+	 
+	 private double getDoubleValue(String lit) {
+		 double interm;
+		 String rawValue = lit;
+		 if(isHex(rawValue)){
+			 interm = hexToDecimal(rawValue.substring(2, rawValue.length()-1));
+		 }
+		 else {
+			 interm = Double.parseDouble(rawValue);
+		 }
+		 return interm;
+	 }
 }

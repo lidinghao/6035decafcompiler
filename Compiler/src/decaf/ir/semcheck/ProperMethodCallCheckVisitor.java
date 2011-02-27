@@ -23,7 +23,6 @@ import decaf.ir.ast.ForStmt;
 import decaf.ir.ast.IfStmt;
 import decaf.ir.ast.IntLiteral;
 import decaf.ir.ast.InvokeStmt;
-import decaf.ir.ast.Location;
 import decaf.ir.ast.MethodCallExpr;
 import decaf.ir.ast.MethodDecl;
 import decaf.ir.ast.Parameter;
@@ -34,8 +33,6 @@ import decaf.ir.ast.UnaryOpExpr;
 import decaf.ir.ast.VarDecl;
 import decaf.ir.ast.VarLocation;
 import decaf.ir.desc.ClassDescriptor;
-import decaf.ir.desc.GenericDescriptor;
-import decaf.ir.desc.GenericSymbolTable;
 import decaf.ir.desc.MethodDescriptor;
 import decaf.ir.desc.MethodSymbolTable;
 import decaf.test.Error;
@@ -45,12 +42,10 @@ public class ProperMethodCallCheckVisitor implements ASTVisitor<Integer> {
 	private ClassDescriptor classDescriptor;
 	private Type currentReturnType;
 	private boolean returnTypeSatisfied;
-	private GenericSymbolTable currentScope;
 
 	public ProperMethodCallCheckVisitor(ClassDescriptor cd) {
 		this.errors = new ArrayList<Error>();
 		this.classDescriptor = cd;
-		this.currentScope = cd.getFieldSymbolTable();
 		this.returnTypeSatisfied = true;
 	}
 
@@ -76,7 +71,6 @@ public class ProperMethodCallCheckVisitor implements ASTVisitor<Integer> {
 
 	@Override
 	public Integer visit(Block block) {
-		currentScope = classDescriptor.getScopeTable().get(block.getBlockId());
 		for (VarDecl vd : block.getVarDeclarations()) {
 			vd.accept(this);
 		}

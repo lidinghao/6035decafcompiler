@@ -30,4 +30,12 @@ public enum Type {
 		
 		return null;
 	}
+	
+	public boolean isArray() {
+		if (this == Type.BOOLEANARRAY || this == Type.INTARRAY) {
+			return true;
+		}
+		
+		return false;
+	}
 }

@@ -125,11 +125,11 @@ public class ArraySizeCheckVisitor implements ASTVisitor<Integer> {
 	@Override
 	public Integer visit(Field f) {		
 		// checking the size of the array
-		if (f.getType() == Type.INTARRAY || f.getType() == Type.BOOLEANARRAY) {
+		if (f.getType().isArray()) {
 			if (f.getArrayLength().getValue() < 1) {
 				int ln = f.getLineNumber();
 				int cn = f.getColumnNumber();
-				String msg = "Size of array is less than 1";
+				String msg = "Size of array '" + f.getId() + "' is less than 1";
 				Error err = new Error(ln, cn, msg);
 				this.errors.add(err);
 			}
