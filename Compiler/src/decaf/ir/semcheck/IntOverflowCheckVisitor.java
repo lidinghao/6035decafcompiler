@@ -28,6 +28,7 @@ import decaf.ir.ast.MethodDecl;
 import decaf.ir.ast.Parameter;
 import decaf.ir.ast.ReturnStmt;
 import decaf.ir.ast.Statement;
+import decaf.ir.ast.Type;
 import decaf.ir.ast.UnaryOpExpr;
 import decaf.ir.ast.UnaryOpType;
 import decaf.ir.ast.VarDecl;
@@ -92,9 +93,6 @@ public class IntOverflowCheckVisitor implements ASTVisitor<Integer>{
 
 	@Override
 	public Integer visit(CalloutExpr expr) {
-		for (CalloutArg arg: expr.getArguments()) {
-			arg.accept(this);
-		}
 		return 0;
 	}
 
@@ -105,11 +103,6 @@ public class IntOverflowCheckVisitor implements ASTVisitor<Integer>{
 
 	@Override
 	public Integer visit(ClassDecl cd) {
-		/*
-		for (FieldDecl fd: cd.getFieldDeclarations()) {
-			fd.accept(this);
-		}*/
-		
 		for (MethodDecl md: cd.getMethodDeclarations()) {
 			md.accept(this);
 		}
@@ -121,7 +114,7 @@ public class IntOverflowCheckVisitor implements ASTVisitor<Integer>{
 	public Integer visit(ContinueStmt stmt) {
 		return 0;
 	}
-
+	
 	@Override
 	public Integer visit(Field f) {
 		return 0;
@@ -129,10 +122,9 @@ public class IntOverflowCheckVisitor implements ASTVisitor<Integer>{
 
 	@Override
 	public Integer visit(FieldDecl fd) {
-		/*
 		for (Field f: fd.getFields()) {
 			f.accept(this);
-		}*/
+		}
 		return 0;
 	}
 
