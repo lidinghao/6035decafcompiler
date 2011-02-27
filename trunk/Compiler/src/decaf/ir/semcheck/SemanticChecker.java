@@ -34,7 +34,7 @@ public class SemanticChecker {
 
 		// Method calls and return statement type checking
 		System.out.println("Method argument and return type matching:");
-		ProperMethodCallCheckVisitor pmv = new ProperMethodCallCheckVisitor(
+		MethodCheckVisitor pmv = new MethodCheckVisitor(
 				stv.getClassDescriptor());
 		cd.accept(pmv);
 		System.out.println(pmv.getErrors());
