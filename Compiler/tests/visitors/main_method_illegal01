@@ -1,0 +1,16 @@
+class Program {
+	int getIntBeforeMain(){
+	return 1;
+	}
+  
+    void main() { //defined twice
+    int x,y;
+    x = getIntBeforeMain();
+    y = getIntAfterMain();	//method is being called before declaration
+  	}	
+  	
+  	int getIntAfterMain(){
+	return 1;
+	}	
+  							
+}	
