@@ -12,6 +12,16 @@ public class SemanticChecker {
 	public static void performSemanticChecks(ClassDecl cd) {
 		PrettyPrintVisitor pv = new PrettyPrintVisitor();
 		cd.accept(pv);
+		
+		// Generate SymbolTables
+		SymbolTableGenerationVisitor stv = new SymbolTableGenerationVisitor();
+		cd.accept(stv);
+		System.out.println(stv.getErrors());
+		
+		// Type checking and evaluation
+		TypeEvaluationVisitor tev = new TypeEvaluationVisitor(stv.getClassDescriptor());
+		cd.accept(tev);
+		System.out.println(tev.getErrors());
 
 		// Check if main method with no params exists
 		Error mainMethodError = checkMainMethod(cd);
@@ -24,20 +34,15 @@ public class SemanticChecker {
 		cd.accept(ibv);
 		System.out.println(ibv.getErrors());
 
-		//
+		// Break Continue check
 		BreakContinueStmtCheckVisitor tc = new BreakContinueStmtCheckVisitor();
 		cd.accept(tc);
 		System.out.println(tc.getErrors());
 
-		//
+		// Array Size check
 		ArraySizeCheckVisitor av = new ArraySizeCheckVisitor();
 		cd.accept(av);
 		System.out.println(av.getErrors());
-
-		// Generate SymbolTables
-		SymbolTableGenerationVisitor stv = new SymbolTableGenerationVisitor();
-		cd.accept(stv);
-		System.out.println(stv.getErrors());
 	}
 	
 	// Checks whether the program contains a main method with no parameters
