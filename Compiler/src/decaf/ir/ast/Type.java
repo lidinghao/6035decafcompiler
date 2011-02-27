@@ -5,7 +5,7 @@ public enum Type {
 	BOOLEAN,
 	CHAR,
 	VOID,
-	ERROR;
+	UNDEFINED;
 	
 	@Override
 	public String toString() {
@@ -18,8 +18,8 @@ public enum Type {
 				return "bool";
 			case VOID:
 				return "void";
-			case ERROR:
-				return "error";
+			case UNDEFINED:
+				return "undefined";
 		}
 		
 		return null;
