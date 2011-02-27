@@ -206,7 +206,7 @@ public class IntOverflowCheckVisitor implements ASTVisitor<Integer>{
 			IntLiteral intLit = (IntLiteral) expr.getExpression();
 			double interm = getDoubleValue(intLit.getRawValue());
 			double range = 2147483647;
-			//System.out.println("SHIT");
+
 			range++; //make it 2147483648
 			if(interm <= range){ 
 				intLit.setValue((int) interm);
