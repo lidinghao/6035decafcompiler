@@ -1,0 +1,10 @@
+class Program {
+  int foo(int i, int j) {
+    return i+j;
+  }
+
+  void main() {
+    int x;
+    x = foo(); //number of arguments in the parameter is given wrong
+  }								
+}

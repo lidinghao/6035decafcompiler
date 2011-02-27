@@ -5,6 +5,6 @@ class Program { //positive int overflow
 	}
 	void main() {
 	int k;
-	k = kyrgyz() + 15;
+	k = kyrgyz() +  (-2147483647); //should not give an error because a number is 'negative'
 	}
 }
