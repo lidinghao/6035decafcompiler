@@ -5,6 +5,7 @@ import java.util.List;
 
 import decaf.ir.ast.ClassDecl;
 import decaf.ir.ast.MethodDecl;
+import decaf.ir.desc.ClassDescriptor;
 import decaf.test.PrettyPrintVisitor;
 import decaf.test.Error;
 
@@ -17,12 +18,17 @@ public class SemanticChecker {
 		// Check integer overflow (must do before symbol table generation)
 		IntOverflowCheckVisitor ibv = new IntOverflowCheckVisitor();
 		cd.accept(ibv);
-		out.println("Integer overflow check:");
-		out.println(ibv.getErrors());
 
 		// Generate SymbolTables
 		SymbolTableGenerationVisitor stv = new SymbolTableGenerationVisitor();
 		cd.accept(stv);
+		
+		// Print Symbol Tables
+		out.println(stv.getClassDescriptor());
+		
+		// Print errors for integer overflow and symbol table generation
+		out.println("Integer overflow check:");
+		out.println(ibv.getErrors());
 		out.println("Symbol table generation:");
 		out.println(stv.getErrors());
 

@@ -8,5 +8,14 @@ public class MethodSymbolTable extends SymbolTable<String, MethodDescriptor> {
 	public MethodSymbolTable() {
 		super();
 	}
-
+	
+	@Override
+	public String toString() {
+		String rtn = "";
+		for (String key: this.keySet()) {
+			rtn += "" + key + "=" + this.get(key) + "\n";
+		}
+		
+		return rtn;
+	}
 }
