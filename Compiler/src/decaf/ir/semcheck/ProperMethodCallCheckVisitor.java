@@ -23,6 +23,7 @@ import decaf.ir.ast.ForStmt;
 import decaf.ir.ast.IfStmt;
 import decaf.ir.ast.IntLiteral;
 import decaf.ir.ast.InvokeStmt;
+import decaf.ir.ast.Location;
 import decaf.ir.ast.MethodCallExpr;
 import decaf.ir.ast.MethodDecl;
 import decaf.ir.ast.Parameter;
@@ -33,6 +34,8 @@ import decaf.ir.ast.UnaryOpExpr;
 import decaf.ir.ast.VarDecl;
 import decaf.ir.ast.VarLocation;
 import decaf.ir.desc.ClassDescriptor;
+import decaf.ir.desc.GenericDescriptor;
+import decaf.ir.desc.GenericSymbolTable;
 import decaf.ir.desc.MethodDescriptor;
 import decaf.ir.desc.MethodSymbolTable;
 import decaf.test.Error;
@@ -42,10 +45,12 @@ public class ProperMethodCallCheckVisitor implements ASTVisitor<Integer> {
 	private ClassDescriptor classDescriptor;
 	private Type currentReturnType;
 	private boolean returnTypeSatisfied;
+	private GenericSymbolTable currentScope;
 
 	public ProperMethodCallCheckVisitor(ClassDescriptor cd) {
 		this.errors = new ArrayList<Error>();
 		this.classDescriptor = cd;
+		this.currentScope = cd.getFieldSymbolTable();
 		this.returnTypeSatisfied = true;
 	}
 
@@ -71,6 +76,7 @@ public class ProperMethodCallCheckVisitor implements ASTVisitor<Integer> {
 
 	@Override
 	public Integer visit(Block block) {
+		currentScope = classDescriptor.getScopeTable().get(block.getBlockId());
 		for (VarDecl vd : block.getVarDeclarations()) {
 			vd.accept(this);
 		}
@@ -246,6 +252,10 @@ public class ProperMethodCallCheckVisitor implements ASTVisitor<Integer> {
 						+ " but found " + argType.toString() + " for argument "
 						+ Integer.toString(i + 1));
 			}
+			if (isArrayType(expr.getArguments().get(i))) {
+				addError(expr, "Argument " + Integer.toString(i + 1)
+						+ " cannot be an array.");
+			}
 		}
 		return 0;
 	}
@@ -340,5 +350,29 @@ public class ProperMethodCallCheckVisitor implements ASTVisitor<Integer> {
 			}
 		}
 		return false;
+	}
+
+	private boolean isArrayType(Expression expr) {
+		if (expr.getClass() == ArrayLocation.class
+				|| expr.getClass() == VarLocation.class) {
+			Location loc = (Location) expr;
+			GenericDescriptor desc = getDescriptorFromScope(loc.getId());
+			if (desc != null) {
+				return desc.isArray();
+			}
+		}
+		return false;
+	}
+
+	private GenericDescriptor getDescriptorFromScope(String id) {
+		GenericSymbolTable scope = currentScope;
+
+		while (scope != null) {
+			if (scope.containsKey(id)) {
+				return scope.get(id);
+			}
+			scope = scope.getParent();
+		}
+		return null;
 	}
 }
