@@ -1,0 +1,8 @@
+class Program { //int overflow
+	int a;
+	void main() {
+	 int b;
+	 a = 100000000000000;
+	 b = -100000000000;
+	}
+}
