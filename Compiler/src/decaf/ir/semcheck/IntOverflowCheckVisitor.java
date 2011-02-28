@@ -36,72 +36,91 @@ import decaf.ir.ast.VarLocation;
 
 /*
  * This Visitor class checks if input int is valid i.e. in the right range and has a right value
+ * Returns true if expression is unary and needs to be replaced
  */
-public class IntOverflowCheckVisitor implements ASTVisitor<Integer>{
+public class IntOverflowCheckVisitor implements ASTVisitor<Boolean>{
 	private ArrayList<Error> errors;
+	private boolean inUnaryMinus;
 	
 	public IntOverflowCheckVisitor() {
 		this.errors = new ArrayList<Error>();
+		inUnaryMinus = false;
 	}
 
 	@Override
-	public Integer visit(ArrayLocation loc) {
-		loc.getExpr().accept(this); // Print index expression
-		return 0;
+	public Boolean visit(ArrayLocation loc) {
+		if (loc.getExpr().accept(this)) {
+			loc.setExpr(getNegativeIntLiteral(loc.getExpr()));
+		}
+		return false;
 	}
 
 	@Override
-	public Integer visit(AssignStmt stmt) {
+	public Boolean visit(AssignStmt stmt) {
 		stmt.getLocation().accept(this);
-		stmt.getExpression().accept(this);
-		return null;
+		if (stmt.getExpression().accept(this)) {
+			stmt.setExpression(getNegativeIntLiteral(stmt.getExpression()));
+		}
+		return false;
 	}
 
 	@Override
-	public Integer visit(BinOpExpr expr) {
-		expr.getLeftOperand().accept(this);
-		expr.getRightOperand().accept(this);	
-		return 0;
+	public Boolean visit(BinOpExpr expr) {
+		if (expr.getLeftOperand().accept(this)) {
+			expr.setLeftOperand(getNegativeIntLiteral(expr.getLeftOperand()));
+		}
+		if (expr.getRightOperand().accept(this)) {
+			expr.setRightOperand(getNegativeIntLiteral(expr.getRightOperand()));;	
+		}
+		return false;
 }
 
 	@Override
-	public Integer visit(Block block) {
+	public Boolean visit(Block block) {
 		List<Statement> stmts = block.getStatements();
 		
 		for (int i = 0; i < stmts.size(); i++) {
 			stmts.get(i).accept(this);
 		}		
-		return 0;
+		return false;
 	
 	}
 
 	@Override
-	public Integer visit(BooleanLiteral lit) {
-		return 0;
+	public Boolean visit(BooleanLiteral lit) {
+		return false;
 	}
 
 	@Override
-	public Integer visit(BreakStmt stmt) {
-		return 0;
+	public Boolean visit(BreakStmt stmt) {
+		return false;
 		}
 
 	@Override
-	public Integer visit(CalloutArg arg) {
-		return 0;
+	public Boolean visit(CalloutArg arg) {
+		if (!arg.isString()) {
+			if (arg.getExpression().accept(this)) {
+				arg.setExpression(getNegativeIntLiteral(arg.getExpression()));
+			}
 		}
-
-	@Override
-	public Integer visit(CalloutExpr expr) {
-		return 0;
+		return false;
 	}
 
 	@Override
-	public Integer visit(CharLiteral lit) {
-		return 0;
+	public Boolean visit(CalloutExpr expr) {
+		for (CalloutArg arg: expr.getArguments()) {
+			arg.accept(this);
+		}
+		return false;
+	}
+
+	@Override
+	public Boolean visit(CharLiteral lit) {
+		return false;
 		}
 
 	@Override
-	public Integer visit(ClassDecl cd) {
+	public Boolean visit(ClassDecl cd) {
 		for (FieldDecl fd: cd.getFieldDeclarations()) {
 			fd.accept(this);
 		}
@@ -110,126 +129,157 @@ public class IntOverflowCheckVisitor implements ASTVisitor<Integer>{
 			md.accept(this);
 		}
 		
-		return 0;
+		return false;
 	}
 
 	@Override
-	public Integer visit(ContinueStmt stmt) {
-		return 0;
+	public Boolean visit(ContinueStmt stmt) {
+		return false;
 	}
 	
 	@Override
-	public Integer visit(Field f) {
+	public Boolean visit(Field f) {
 		if (f.getArrayLength() != null) {
 			f.getArrayLength().accept(this);
 		}
-		return 0;
+		return false;
 	}
 
 	@Override
-	public Integer visit(FieldDecl fd) {
+	public Boolean visit(FieldDecl fd) {
 		for (Field f: fd.getFields()) {
 			f.accept(this);
 		}
-		return 0;
+		return false;
 	}
 
 	@Override
-	public Integer visit(ForStmt stmt) {
-		stmt.getInitialValue().accept(this);
-		stmt.getFinalValue().accept(this);
+	public Boolean visit(ForStmt stmt) {
+		if (stmt.getInitialValue().accept(this)) {
+			stmt.setInitialValue(getNegativeIntLiteral(stmt.getInitialValue()));
+		}
+		
+		if (stmt.getFinalValue().accept(this)) {
+			stmt.setFinalValue(getNegativeIntLiteral(stmt.getFinalValue()));
+		}
+		
 		stmt.getBlock().accept(this); // Block auto indents
 		
-		return 0;
+		return false;
 	}
 
 	@Override
-	public Integer visit(IfStmt stmt) {
-		stmt.getCondition().accept(this);
+	public Boolean visit(IfStmt stmt) {
+		if (stmt.getCondition().accept(this)) {
+			stmt.setCondition(getNegativeIntLiteral(stmt.getCondition()));
+		}
+		
 		stmt.getIfBlock().accept(this);
 		
 		if (stmt.getElseBlock() != null) {
 			stmt.getElseBlock().accept(this);
 		}
-		return 0;
+		return false;
 	}
 
 	@Override
-	public Integer visit(InvokeStmt stmt) {
+	public Boolean visit(InvokeStmt stmt) {
 		stmt.getMethodCall().accept(this);
-		return 0;
+		return false;
 	}
 
 	@Override
-	public Integer visit(MethodCallExpr expr) {
-		for (Expression arg: expr.getArguments()) {
-			arg.accept(this);
+	public Boolean visit(MethodCallExpr expr) {
+		for (int i = 0; i < expr.getArguments().size(); i++) {
+			if (expr.getArguments().get(i).accept(this)) {
+				expr.getArguments().set(i, getNegativeIntLiteral(expr.getArguments().get(i)));
+			}
 		}
-		return 0;
+		return false;
 	}
 
 	@Override
-	public Integer visit(MethodDecl md) {		
+	public Boolean visit(MethodDecl md) {		
 		md.getBlock().accept(this);
-		return 0;
+		return false;
 	}
 
 	@Override
-	public Integer visit(Parameter param) {
-		return 0;
+	public Boolean visit(Parameter param) {
+		return false;
 	}
 
 	@Override
-	public Integer visit(ReturnStmt stmt) {
+	public Boolean visit(ReturnStmt stmt) {
 		if (stmt.getExpression() != null) {
-			stmt.getExpression().accept(this);
+			if (stmt.getExpression().accept(this)) {
+				stmt.setExpression(getNegativeIntLiteral(stmt.getExpression()));
+			}
 		}
-		return 0;
+		return false;
 	}
 	
 	@Override
-	public Integer visit(IntLiteral lit) {
-		double interm = getDoubleValue(lit.getRawValue());
-		if (interm <= 2147483647) { //does not cover the case of -2147483648	
-			lit.setValue((int) interm);
+	public Boolean visit(IntLiteral lit) {
+		String rawValue = lit.getRawValue();		
+		int value = -1;
+		boolean isHex = false;
+		
+		if (isHex(rawValue)) { // Check for hex string
+			rawValue = rawValue.substring(2); // Remove '0x'
+			isHex = true;
 		}
-		else{
-			String msg = "Int is out of range";
+		
+		if (inUnaryMinus) {
+				rawValue = "-" + rawValue;
+				lit.setRawValue("-" + lit.getRawValue());
+		}
+		
+		try {
+			if (isHex) {
+				value = Integer.parseInt(rawValue, 16);
+			}
+			else {
+				value = Integer.parseInt(rawValue);
+			}
+		}
+		catch (Exception e) {
+			String msg = "Int literal " + lit.getRawValue() + " is out of range";
 			Error err = new Error(lit.getLineNumber(), lit.getColumnNumber(), msg);
 			this.errors.add(err);
 		}
-		return 0;
+		
+		lit.setValue(value);
+		
+		return false;
 	}
 
 	@Override
-	public Integer visit(UnaryOpExpr expr) {
-		if(expr.getExpression().getClass() == IntLiteral.class && expr.getOperator() == UnaryOpType.MINUS){			
-			IntLiteral intLit = (IntLiteral) expr.getExpression();
-			double interm = getDoubleValue(intLit.getRawValue());
-			double range = 2147483647;
-
-			range++; //make it 2147483648
-			if(interm <= range){ 
-				intLit.setValue((int) interm);
-			}else{
-				String msg = "Int is out of range";
-				Error err = new Error(intLit.getLineNumber(), intLit.getColumnNumber(), msg );
-				this.errors.add(err);
-			}
-		}else{
+	public Boolean visit(UnaryOpExpr expr) {
+		if (expr.getOperator() == UnaryOpType.MINUS && expr.getExpression().getClass() == IntLiteral.class) {
+			inUnaryMinus = true;
 			expr.getExpression().accept(this);
+			inUnaryMinus = false;
+			
+			return true;
 		}
-		return null;
+		else {
+			if (expr.getExpression().accept(this)) {
+				expr.setExpression(getNegativeIntLiteral(expr.getExpression()));
+			}
+			
+			return false;
+		}
 	}
 
 	@Override
-	public Integer visit(VarDecl vd) {
-		return 0;
+	public Boolean visit(VarDecl vd) {
+		return false;
 	}
 
 	@Override
-	public Integer visit(VarLocation loc) {
-		return 0;
+	public Boolean visit(VarLocation loc) {
+		return false;
 	}
 	
 	public ArrayList<Error> getErrors() {
@@ -241,28 +291,9 @@ public class IntOverflowCheckVisitor implements ASTVisitor<Integer>{
 			return false;
 		return intStr.startsWith("0x");
 	}
-	
-	 private double hexToDecimal(String s) {
-		 String digits = "0123456789ABCDEF";
-		 s = s.toUpperCase();
-	    double val = 0 ;
-       for (int i = 0; i < s.length(); i++) {
-      	 char c = s.charAt(i);
-          int d = digits.indexOf(c);
-          val = 16*val + d;
-       }
-       return val;
-	 }
 	 
-	 private double getDoubleValue(String lit) {
-		 double interm;
-		 String rawValue = lit;
-		 if(isHex(rawValue)){
-			 interm = hexToDecimal(rawValue.substring(2, rawValue.length()-1));
-		 }
-		 else {
-			 interm = Double.parseDouble(rawValue);
-		 }
-		 return interm;
+	 private Expression getNegativeIntLiteral(Expression e) {
+		 UnaryOpExpr expr = (UnaryOpExpr) e;
+		 return expr.getExpression();
 	 }
 }

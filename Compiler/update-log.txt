@@ -13,3 +13,4 @@
 * Some test cases written by Kainar, usually check straightforward cases mentioned in handout. Need to check rigorous cases.
 * Now print file name in errors
 * Updated method check visitor
+* Fixed Int overflow visitor
