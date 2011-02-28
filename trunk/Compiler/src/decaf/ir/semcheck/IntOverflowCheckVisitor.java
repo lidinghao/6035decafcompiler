@@ -221,36 +221,58 @@ public class IntOverflowCheckVisitor implements ASTVisitor<Boolean>{
 	
 	@Override
 	public Boolean visit(IntLiteral lit) {
-		String rawValue = lit.getRawValue();		
-		int value = -1;
-		boolean isHex = false;
+		String rawValue = lit.getRawValue();
 		
-		if (isHex(rawValue)) { // Check for hex string
-			rawValue = rawValue.substring(2); // Remove '0x'
-			isHex = true;
-		}
-		
-		if (inUnaryMinus) {
-				rawValue = "-" + rawValue;
-				lit.setRawValue("-" + lit.getRawValue());
-		}
-		
-		try {
-			if (isHex) {
-				value = Integer.parseInt(rawValue, 16);
+		if (lit.getValue() == null) { // Checking int literal for first time
+			int value = -1;
+			boolean isHex = false;
+			
+			if (isHex(rawValue)) { // Check for hex string
+				rawValue = rawValue.substring(2); // Remove '0x'
+				isHex = true;
 			}
-			else {
-				value = Integer.parseInt(rawValue);
+			
+			if (inUnaryMinus) {
+					rawValue = "-" + rawValue;
+					lit.setRawValue("-" + lit.getRawValue());
+			}
+			
+			try {
+				if (isHex) {
+					value = Integer.parseInt(rawValue, 16);
+				}
+				else {
+					value = Integer.parseInt(rawValue);
+				}
+			}
+			catch (Exception e) {
+				String msg = "Int literal " + lit.getRawValue() + " is out of range";
+				Error err = new Error(lit.getLineNumber(), lit.getColumnNumber(), msg);
+				this.errors.add(err);
+			}
+			
+			lit.setValue(value);
+			lit.setRawValue(Integer.toString(value));
+		}
+		else {
+			if (inUnaryMinus) {
+				if (lit.getValue() < 0) { // Fix sign in raw format
+					lit.setRawValue(rawValue.substring(1));
+				}
+				else {
+					lit.setRawValue("-" + rawValue);
+				}
+				
+				if (lit.getValue() == -2147483648) {
+					String msg = "Int literal " + lit.getRawValue() + " is out of range";
+					Error err = new Error(lit.getLineNumber(), lit.getColumnNumber(), msg);
+					this.errors.add(err);
+				}
+				else {
+					lit.setValue(lit.getValue() * -1);
+				}
 			}
 		}
-		catch (Exception e) {
-			String msg = "Int literal " + lit.getRawValue() + " is out of range";
-			Error err = new Error(lit.getLineNumber(), lit.getColumnNumber(), msg);
-			this.errors.add(err);
-		}
-		
-		lit.setValue(value);
-		lit.setRawValue(Integer.toString(value));
 		
 		return false;
 	}
@@ -261,16 +283,16 @@ public class IntOverflowCheckVisitor implements ASTVisitor<Boolean>{
 			inUnaryMinus = true;
 			expr.getExpression().accept(this);
 			inUnaryMinus = false;
-			
 			return true;
 		}
 		else {
 			if (expr.getExpression().accept(this)) {
 				expr.setExpression(getNegativeIntLiteral(expr.getExpression()));
+				return expr.accept(this);
 			}
-			
-			return false;
 		}
+		
+		return false;
 	}
 
 	@Override
