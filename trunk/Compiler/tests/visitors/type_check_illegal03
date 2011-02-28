@@ -1,0 +1,15 @@
+class Program {
+  int x[10];
+  void main() {
+    int y;
+    
+    boolean k;
+ 	
+    k = 'c'; //illegal operation: should assign boolean not a char
+    x += 5; //illegal operatoin: x[10] should be type of intliteral not intarray
+    
+    y +=5; // legal operation
+    
+    }
+    
+}

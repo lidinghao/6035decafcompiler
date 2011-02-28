@@ -1,0 +1,10 @@
+class Program {
+  void main() {
+    int x;
+    boolean k;
+ 
+    x = -10; //legal operation
+    k = !false; //legal operation
+    }
+    
+}
