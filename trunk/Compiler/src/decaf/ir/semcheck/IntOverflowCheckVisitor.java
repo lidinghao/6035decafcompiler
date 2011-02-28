@@ -250,6 +250,7 @@ public class IntOverflowCheckVisitor implements ASTVisitor<Boolean>{
 		}
 		
 		lit.setValue(value);
+		lit.setRawValue(Integer.toString(value));
 		
 		return false;
 	}

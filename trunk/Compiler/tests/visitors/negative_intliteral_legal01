@@ -1,0 +1,8 @@
+class Program {
+	void main() {
+		int a, b, c;
+		a = -5;
+		c = -0xA10;
+		b = a + -5 + -0xB;
+	}
+}
