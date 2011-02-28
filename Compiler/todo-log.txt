@@ -4,3 +4,5 @@ TODO:
  * Fix line/column numbers
  * Write test cases (use existing infrastructure by adding shit under tests/{scanner, parser, semantics})
  * Write up!
+ * Fix unary op expression if negative int literal
+ * Print filename in error

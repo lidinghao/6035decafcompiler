@@ -1,6 +1,7 @@
 package decaf.test;
 
 public class Error {
+	public static String fileName = "";
 	int lineNumber;
 	int columnNumber;
 	String description;
@@ -43,6 +44,6 @@ public class Error {
 	
 	@Override
 	public String toString() {
-		return "(" + lineNumber + ", " + columnNumber + ")" + " ERROR: " + description;
+		return fileName + ": (" + lineNumber + ", " + columnNumber + ")" + " " + description;
 	}
 }
