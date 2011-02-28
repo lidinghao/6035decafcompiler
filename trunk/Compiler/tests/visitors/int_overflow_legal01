@@ -1,10 +1,13 @@
 class Program { //positive int overflow
 	int a;
-	int kyrgyz(){
+	
+	int kyrgyz() {
 		return 10;
 	}
+	
 	void main() {
-	int k;
-	k = kyrgyz() +  (-2147483647); //should not give an error because a number is 'negative'
+		int k;
+		k = kyrgyz() +  (-2147483648); //should not give an error because a number is 'negative'
+		k = 2147483648; //still in range
 	}
 }

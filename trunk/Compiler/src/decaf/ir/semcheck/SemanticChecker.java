@@ -75,6 +75,9 @@ public class SemanticChecker {
 			return false;
 		}
 		
+		// Print again
+		cd.accept(pv);
+		
 		return true;
 	}
 
