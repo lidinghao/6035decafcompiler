@@ -5,13 +5,14 @@ import java.util.List;
 
 import decaf.ir.ast.ClassDecl;
 import decaf.ir.ast.MethodDecl;
-import decaf.ir.desc.ClassDescriptor;
 import decaf.test.PrettyPrintVisitor;
 import decaf.test.Error;
 
 public class SemanticChecker {
 
 	public static boolean performSemanticChecks(ClassDecl cd, PrintStream out) {
+		// Print AST
+		out.println("AST after parsing:");
 		PrettyPrintVisitor pv = new PrettyPrintVisitor();
 		cd.accept(pv);
 		
@@ -76,6 +77,7 @@ public class SemanticChecker {
 		}
 		
 		// Print again
+		out.println("AST after semantic checks:");
 		cd.accept(pv);
 		
 		return true;
