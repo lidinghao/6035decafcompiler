@@ -1,7 +1,7 @@
 package decaf.test;
 
 public class Error {
-	public static String fileName = "";
+	public static String fileName = null;
 	int lineNumber;
 	int columnNumber;
 	String description;
