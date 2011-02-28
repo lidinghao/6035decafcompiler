@@ -3,8 +3,8 @@ package decaf.ir.ast;
 import decaf.ir.ASTVisitor;
 
 public abstract class AST {
-	protected int lineNumber;
-	protected int colNumber;
+	private int lineNumber;
+	private int colNumber;
 	
 	public int getLineNumber() {
 		return lineNumber;

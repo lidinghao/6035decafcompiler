@@ -12,9 +12,9 @@ public class Field extends AST {
 		arrayLength = null;
 	}
 	
-	public Field(String i, String arrSize) {
+	public Field(String i, IntLiteral arrSize) {
 		id = i;
-		arrayLength = new IntLiteral(arrSize);
+		arrayLength = arrSize;
 	}
 	
 	public void setId(String i) {
