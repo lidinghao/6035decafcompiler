@@ -12,8 +12,8 @@ public class Error {
 	}
 	
 	public Error(int ln, int cn, String desc) {
-		lineNumber = ln + 1; // Remove zero index offset
-		columnNumber = cn + 1;
+		lineNumber = ln; // Remove zero index offset
+		columnNumber = cn;
 		description = desc;
 	}
 
@@ -22,7 +22,7 @@ public class Error {
 	}
 
 	public void setLineNumber(int lineNumber) {
-		this.lineNumber = lineNumber + 1;
+		this.lineNumber = lineNumber;
 	}
 
 	public int getColumnNumber() {
@@ -30,7 +30,7 @@ public class Error {
 	}
 
 	public void setColumnNumber(int columnNumber) {
-		this.columnNumber = columnNumber + 1;
+		this.columnNumber = columnNumber;
 	}
 
 	public String getDescription() {

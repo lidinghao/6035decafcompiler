@@ -1,6 +1,8 @@
 class Program {
 	int a[0]; //array size is less that 1
 	int b[10000000000000000]; //overflow in array size
+	
 	void main() {
+	
 	}
 }

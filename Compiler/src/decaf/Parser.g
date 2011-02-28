@@ -126,6 +126,7 @@ field_decl_group returns [Field f] {
 	StringToken i;
 	StringToken l;
 	f = null;
+	IntLiteral il;
 } : 
 (i=id { 
 	f = new Field(i.getString()); 
@@ -133,7 +134,10 @@ field_decl_group returns [Field f] {
 	f.setColumnNumber(i.getColumnNumber());
 }) |
 (i=id LSQUARE l=intLit RSQUARE { 
-	f = new Field(i.getString(),l.getString()); 
+	il = new IntLiteral(l.getString());
+	il.setLineNumber(l.getLineNumber());
+	il.setColumnNumber(l.getColumnNumber());	
+	f = new Field(i.getString(),il); 
 	f.setLineNumber(i.getLineNumber());
 	f.setColumnNumber(i.getColumnNumber());
 }) ;

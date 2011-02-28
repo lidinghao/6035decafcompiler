@@ -190,11 +190,12 @@ public class IntOverflowCheckVisitor implements ASTVisitor<Integer>{
 	@Override
 	public Integer visit(IntLiteral lit) {
 		double interm = getDoubleValue(lit.getRawValue());
-		if(interm <= 2147483647){ //does not cover the case of -2147483648	
+		if (interm <= 2147483647) { //does not cover the case of -2147483648	
 			lit.setValue((int) interm);
-		}else{
+		}
+		else{
 			String msg = "Int is out of range";
-			Error err = new Error(lit.getLineNumber(), lit.getColumnNumber(), msg );
+			Error err = new Error(lit.getLineNumber(), lit.getColumnNumber(), msg);
 			this.errors.add(err);
 		}
 		return 0;
