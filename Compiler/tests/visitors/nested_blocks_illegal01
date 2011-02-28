@@ -1,0 +1,23 @@
+class Program {
+  int x, y;
+  void foo(){
+  		for x = 0, 10 {
+			if (x == 1) {
+			  boolean boo;
+			} else {
+				if(boo){ //not legal
+				  int j;
+				  callout("peace");
+				}else{
+				  j = 0; //not legal
+				}
+			}
+		}
+  }
+  
+  void main() {
+    int x,z,y;
+    
+    }
+    
+}
