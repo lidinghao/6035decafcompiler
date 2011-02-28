@@ -1,0 +1,13 @@
+class Program {
+  void main() {
+    int x,z,y;
+    
+    x = 10 + false; //illegal operation
+    
+    y = 10 < (20-15); //illegal operation
+    
+    z = false + true; //illegal operation
+    
+    }
+    
+}

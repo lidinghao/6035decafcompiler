@@ -6,5 +6,5 @@ class Program {
   void main() {
     int x;
     x = foo(); //number of arguments in the parameter is given wrong
-  }								
+  }	
 }

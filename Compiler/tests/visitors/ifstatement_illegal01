@@ -1,12 +1,10 @@
 class Program {
-	
-
   void main() {
     int x;
     boolean y;
     x=10000;
     if(x || (true == (false && y))){ //x is not of a boolean type
     	callout("that\'s crazy!");
-    	}	
-    }	
+    	}
+    }
 }

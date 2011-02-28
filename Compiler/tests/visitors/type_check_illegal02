@@ -1,0 +1,9 @@
+class Program {
+  void main() {
+    int y,z;
+   
+    y = -true; //illegal operation: wrong type. Minus can't be in front of boolean
+    z = !10; //illegal operation 
+   }
+    
+}
