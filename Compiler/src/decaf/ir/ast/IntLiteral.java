@@ -4,7 +4,7 @@ import decaf.ir.ASTVisitor;
 
 public class IntLiteral extends Literal {
 	private String rawValue;
-	private int value;
+	private Integer value;
 	
 	/*
 	 * Constructor for int literal that takes a string as an input
@@ -12,6 +12,7 @@ public class IntLiteral extends Literal {
 	 */
 	public IntLiteral(String val){
 		rawValue = val; // Will convert to int value in semantic check
+		value = null;
 	}
 
 	@Override
@@ -27,7 +28,7 @@ public class IntLiteral extends Literal {
 		this.rawValue = stringValue;
 	}
 
-	public int getValue() {
+	public Integer getValue() {
 		return value;
 	}
 
