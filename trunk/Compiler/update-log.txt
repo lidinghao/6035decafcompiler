@@ -8,3 +8,8 @@
 * Semantic checks done
 * './test-scanner-parser.py .' for running scanner/parser tests
 * './test-semantic.py .' for running semantic checks
+
+2/28:
+* Some test cases written by Kainar, usually check straightforward cases mentioned in handout. Need to check rigorous cases.
+* Now print file name in errors
+* Updated method check visitor

@@ -4,6 +4,7 @@ import java.io.*;
 
 import decaf.ir.ast.ClassDecl;
 import decaf.ir.semcheck.*;
+import decaf.test.Error;
 import antlr.Token;
 import java6035.tools.CLI.*;;
 
@@ -67,7 +68,12 @@ class Main {
         	else if (CLI.target == CLI.INTER) {
         		DecafScanner lexer = new DecafScanner(new DataInputStream(inputStream));
         		DecafParser parser = new DecafParser(lexer);
+        		
+        		// Parse and generate AST
             ClassDecl cd = parser.program();
+            
+            // Set file name
+            Error.fileName = getFileName(CLI.infile);
             
             // Check for semantic errors
             if (!SemanticChecker.performSemanticChecks(cd, System.out)) {
@@ -80,6 +86,22 @@ class Main {
             e.printStackTrace();
             System.exit(-1);
         }
+    }
+    
+    private static String getFileName(String name) {
+   	 int slashIndex = -1;
+   	 for (int i = name.length() - 1; i >= 0; i--) {
+   		 if (name.charAt(i) == '/') {
+   			 slashIndex = i;
+   			 break;
+   		 }
+   	 }
+   	 
+   	 if (slashIndex != -1) {
+   		 return name.substring(slashIndex + 1);
+   	 }
+   	 
+   	 return name;
     }
 }
 
