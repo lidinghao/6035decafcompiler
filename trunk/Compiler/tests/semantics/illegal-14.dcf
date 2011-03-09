@@ -1,7 +1,11 @@
+// 14. The <location> and <expr> in an assignment, <location> = <expr>, 
+// must have the same type.
 class Program {
-  boolean b;
+
+  boolean b[10];
 
   void main() {
-    b = true > false;		// operands of > must be ints
-  }								
+    int x;
+    x = b[1];
+  }
 }

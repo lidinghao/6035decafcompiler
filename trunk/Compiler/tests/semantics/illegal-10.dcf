@@ -1,7 +1,7 @@
+// 12. The operands of <arith_op>s must have type int.
 class Program {
-  int a[10];
-
   void main() {
-    a[1] = a;	// bad type, rhs should be an int
-  }								
+    int x;
+    x = x + true;
+  }
 }

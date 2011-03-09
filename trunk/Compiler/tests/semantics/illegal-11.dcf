@@ -1,7 +1,11 @@
+// 1. No identifier can be declared twice in the same scope.
 class Program {
-  int a[10];
-
+  int x;
   void main() {
-    if (a[3]) {}	// condition should be a boolean
+    int y;
+    {	
+      int z;
+      int z;
+    }
   }								
-}
+}	

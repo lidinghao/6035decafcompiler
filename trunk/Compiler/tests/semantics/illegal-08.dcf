@@ -1,9 +1,9 @@
+// 12. The operands of <rel_op>s must have type int.
+
 class Program {
-  int foo(int i, boolean b) {
-    return true;	// return value has wrong type
-  }
+
   void main() {
-    int x;
-    x = foo(34, true);
-  }							
+    boolean b;
+    b = (1 > 2) <= (3 > 4);
+  }
 }

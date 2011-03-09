@@ -1,7 +1,11 @@
+// 11. The <expr> in if statement must have type bool.
 class Program {
-  void foo(int i, boolean b) {
-    return 3;	// should not return value;
+  int foo() {
+    return 0;
   }
+
   void main() {
-  }								
+    if (foo()) {} 
+    else {} 
+  }
 }
