@@ -1,10 +1,10 @@
+// 5. The types of arguments must match those in the method signature
 class Program {
-  int foo(int i, boolean b) {
-    return 4;
-  }
-
+  void foo(int i) {}
   void main() {
-    int x;
-    x = foo(34, true, true);	// argument mismatch
-  }								
-}	
+    boolean b;
+    int i;
+    i = 0;
+    foo((i + 5) < 3);
+  }
+}

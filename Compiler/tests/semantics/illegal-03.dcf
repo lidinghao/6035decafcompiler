@@ -1,7 +1,8 @@
-// No main method
+// 15. character literals have int type
 class Program {
-  void foo() {
+  void main() {
+    boolean  b;
+    
+    b = 'b';
   }
-  void bar() {
-  }
-}	
+}

@@ -1,7 +1,9 @@
+// 14. The <location> and <expr> in an assignment, <location> = <expr>, 
+// must have the same type.
 class Program {
-  boolean b;
 
   void main() {
-    b += true;	// lhs and rhs of += must be int
-  }								
+    boolean b;
+    b = callout("getpid"); // Error: callouts return ints
+  }
 }
