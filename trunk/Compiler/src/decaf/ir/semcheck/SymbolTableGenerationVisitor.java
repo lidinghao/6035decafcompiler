@@ -177,12 +177,8 @@ public class SymbolTableGenerationVisitor implements ASTVisitor<Integer> {
 
 	@Override
 	public Integer visit(Field f) {
-		MethodSymbolTable methodTable = classDescriptor.getMethodSymbolTable();
-
 		if (currentScope.containsKey(f.getId())) {
 			addError(f, "'" + f.getId() + "'" + " is already declared");
-		} else if (methodTable.containsKey(f.getId())) {
-			addError(f, "'" + f.getId() + "'" + " is a method");
 		} else {
 			int len = -1;
 			if (f.getType().isArray()) {
