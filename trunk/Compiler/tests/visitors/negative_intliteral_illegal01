@@ -3,6 +3,5 @@ class Program {
 		int a, b, c;
 		a = -5555555555555555555; // Too small
 		c = 0xA10AFFFFFFFFF; // Too big
-		b = - (-2147483648); // Should evaluate to +2147483648 which in invalid
 	}
 }

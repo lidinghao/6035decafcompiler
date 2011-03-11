@@ -46,6 +46,7 @@ public class SymbolTableGenerationVisitor implements ASTVisitor<Integer> {
 	private List<Error> errors;
 	private MethodDescriptor inMethod;
 	private String loopId;
+	private int inLocalScope;
 	
 	public SymbolTableGenerationVisitor() {
 		setClassDescriptor(new ClassDescriptor());
@@ -53,6 +54,7 @@ public class SymbolTableGenerationVisitor implements ASTVisitor<Integer> {
 		currentScope = null;
 		loopId = null;
 		inMethod = null;
+		inLocalScope = 0;
 	}
 
 	@Override
@@ -89,6 +91,8 @@ public class SymbolTableGenerationVisitor implements ASTVisitor<Integer> {
 
 	@Override
 	public Integer visit(Block block) {
+		inLocalScope += 1;
+		
 		GenericSymbolTable newScope = new GenericSymbolTable(currentScope);
 		currentScope = newScope;
 
@@ -266,12 +270,14 @@ public class SymbolTableGenerationVisitor implements ASTVisitor<Integer> {
 			mDesc.setParameterSymbolTable(pTable);
 
 			currentScope = pTable;
-
+			
 			for (Parameter p : md.getParameters()) {
 				p.accept(this);
 			}
 
 			inMethod = mDesc;
+			inLocalScope = 0; // Set to 0 to show we are at top level scope
+			
 			md.getBlock().accept(this);
 
 			currentScope = currentScope.getParent();
@@ -308,6 +314,13 @@ public class SymbolTableGenerationVisitor implements ASTVisitor<Integer> {
 	@Override
 	public Integer visit(VarDecl vd) {
 		for (String var : vd.getVariables()) {
+			if (inLocalScope == 1) {
+				if (currentScope.getParent().containsKey(var)) {
+					addError(vd, "'" + var + "'" + " is already declared in method params");
+					
+					return 0;
+				}
+			}
 			if (currentScope.containsKey(var)) {
 				addError(vd, "'" + var + "'" + " is already declared");
 			} else {

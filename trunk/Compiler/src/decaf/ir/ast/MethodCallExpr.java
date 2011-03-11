@@ -36,7 +36,18 @@ public class MethodCallExpr extends CallExpr {
 	
 	@Override
 	public String toString() {
-		return name + "(" + args + ")";
+		String rtn = name + "(";
+		for (Expression arg: args) {
+			rtn += arg + ", ";
+		}
+		
+		if (!args.isEmpty()){
+			rtn = rtn.substring(0, rtn.length()-2);
+		}
+		
+		rtn += ")";
+		
+		return rtn;
 	}
 
 	@Override

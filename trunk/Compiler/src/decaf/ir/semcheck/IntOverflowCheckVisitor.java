@@ -254,31 +254,13 @@ public class IntOverflowCheckVisitor implements ASTVisitor<Boolean>{
 			lit.setValue(value);
 			lit.setRawValue(Integer.toString(value));
 		}
-		else {
-			if (inUnaryMinus) {
-				if (lit.getValue() < 0) { // Fix sign in raw format
-					lit.setRawValue(rawValue.substring(1));
-				}
-				else {
-					lit.setRawValue("-" + rawValue);
-				}
-				
-				if (lit.getValue() == -2147483648) {
-					String msg = "Int literal " + lit.getRawValue() + " is out of range";
-					Error err = new Error(lit.getLineNumber(), lit.getColumnNumber(), msg);
-					this.errors.add(err);
-				}
-				else {
-					lit.setValue(lit.getValue() * -1);
-				}
-			}
-		}
 		
 		return false;
 	}
 
 	@Override
 	public Boolean visit(UnaryOpExpr expr) {
+		// If UnaryMinus with IntLiteral, collapse to one node
 		if (expr.getOperator() == UnaryOpType.MINUS && expr.getExpression().getClass() == IntLiteral.class) {
 			inUnaryMinus = true;
 			expr.getExpression().accept(this);
@@ -288,7 +270,6 @@ public class IntOverflowCheckVisitor implements ASTVisitor<Boolean>{
 		else {
 			if (expr.getExpression().accept(this)) {
 				expr.setExpression(getNegativeIntLiteral(expr.getExpression()));
-				return expr.accept(this);
 			}
 		}
 		

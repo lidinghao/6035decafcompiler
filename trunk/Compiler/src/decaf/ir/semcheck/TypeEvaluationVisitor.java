@@ -84,7 +84,6 @@ public class TypeEvaluationVisitor implements ASTVisitor<Type> {
 	public Type visit(AssignStmt stmt) {
 		Type lhs = stmt.getLocation().accept(this);
 		Type rhs = stmt.getExpression().accept(this);
-
 		if (lhs != Type.UNDEFINED && rhs != Type.UNDEFINED) {
 			if (stmt.getOperator() == AssignOpType.ASSIGN) {
 				if (lhs != rhs) {
@@ -180,10 +179,13 @@ public class TypeEvaluationVisitor implements ASTVisitor<Type> {
 					break;
 				case NEQ: // int or boolean (same type though)
 				case CEQ:
-					if (lhs != rhs) {
+					if (lhs == Type.VOID) {
 						addError(expr.getLeftOperand(), "'"
-								+ expr.getLeftOperand() + "' and '"
-								+ expr.getRightOperand() + "' must be of same type");
+								+ expr.getLeftOperand() + "' cant be of void type");
+					}
+					else if (rhs == Type.VOID) {
+						addError(expr.getRightOperand(), "'"
+								+ expr.getRightOperand() + "' cant be of void type");
 					}
 					else if (lhs.isArray()) {
 						addError(expr.getLeftOperand(), "'"
@@ -193,9 +195,15 @@ public class TypeEvaluationVisitor implements ASTVisitor<Type> {
 						addError(expr.getRightOperand(), "'"
 								+ expr.getRightOperand() + "' cant be an array");
 					}
+					else if (lhs != rhs) {
+						addError(expr.getLeftOperand(), "'"
+								+ expr.getLeftOperand() + "' and '"
+								+ expr.getRightOperand() + "' must be of same type");
+					}
 					else {
 						myType = Type.BOOLEAN;
 					}
+					
 					break;
 			}
 		}
@@ -207,6 +215,8 @@ public class TypeEvaluationVisitor implements ASTVisitor<Type> {
 
 	@Override
 	public Type visit(Block block) {
+		GenericSymbolTable oldScope = currentScope;
+		
 		currentScope = classDesc.getScopeTable().get(block.getBlockId());
 
 		for (VarDecl vd : block.getVarDeclarations()) {
@@ -215,7 +225,9 @@ public class TypeEvaluationVisitor implements ASTVisitor<Type> {
 		for (Statement s : block.getStatements()) {
 			s.accept(this);
 		}
-
+		
+		currentScope = oldScope;
+		
 		return Type.UNDEFINED;
 	}
 
@@ -244,9 +256,9 @@ public class TypeEvaluationVisitor implements ASTVisitor<Type> {
 			arg.accept(this);
 		}
 
-		expr.setType(Type.UNDEFINED);
+		expr.setType(Type.INT);
 
-		return Type.UNDEFINED;
+		return Type.INT;
 	}
 
 	@Override
