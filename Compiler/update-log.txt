@@ -17,5 +17,5 @@
 
 3/10:
 * Fixed bugs in semantic checks
-* Need to confirm loop variable scope nature from TA
+* Need to confirm loop variable scope nature from TA, and if fields and methods can have same name!
 * Fixed bug in scanner/parser checks
