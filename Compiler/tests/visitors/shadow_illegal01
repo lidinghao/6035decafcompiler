@@ -1,0 +1,8 @@
+class Program {
+	void a(int i) {
+		int i;
+	}
+	void main() {
+	
+	}
+}

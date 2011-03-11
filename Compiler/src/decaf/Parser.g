@@ -436,7 +436,7 @@ s=block ;
 unary_minus_term returns [Expression e] {
 	e = null;	
 } : 
-(mt:MINUS e=expr_static { 
+(mt:MINUS e=unary_minus_term { 
 	e = new UnaryOpExpr(UnaryOpType.MINUS,e); 
 	e.setLineNumber(mt.getLine());
 	e.setColumnNumber(mt.getColumn());
@@ -446,7 +446,7 @@ unary_minus_term returns [Expression e] {
 not_term returns [Expression e] {
 	e = null;
 } : 
-(nt:NOT e=unary_minus_term {
+(nt:NOT e=not_term {
 	e = new UnaryOpExpr(UnaryOpType.NOT, e); 
 	e.setLineNumber(nt.getLine());
 	e.setColumnNumber(nt.getColumn());

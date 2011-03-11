@@ -14,3 +14,7 @@
 * Now print file name in errors
 * Updated method check visitor
 * Fixed Int overflow visitor
+
+3/10:
+* Fixed bugs in semantic checks
+* Need to confirm loop variable scope nature from TA
