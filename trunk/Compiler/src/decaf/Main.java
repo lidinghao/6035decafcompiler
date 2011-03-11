@@ -63,7 +63,11 @@ class Main {
         	{
         		DecafScanner lexer = new DecafScanner(new DataInputStream(inputStream));
         		DecafParser parser = new DecafParser (lexer);
-            parser.program();
+            
+            // Check if parse was successful
+            if (parser.program() == null) {
+            	throw new Exception("Class name must be 'Program'");
+            }
         	}
         	else if (CLI.target == CLI.INTER) {
         		DecafScanner lexer = new DecafScanner(new DataInputStream(inputStream));
@@ -71,6 +75,11 @@ class Main {
         		
         		// Parse and generate AST
             ClassDecl cd = parser.program();
+            
+            // Check if parse was successful
+            if (cd == null) {
+            	throw new Exception("Class name must be 'Program'");
+            }
             
             // Set file name
             Error.fileName = getFileName(CLI.infile);

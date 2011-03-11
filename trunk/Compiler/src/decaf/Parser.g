@@ -69,12 +69,6 @@ id returns [StringToken s] {
 	s = new StringToken(myid.getText()); 
 	s.setLineNumber(myid.getLine());
 	s.setColumnNumber(myid.getColumn());
-}) | 
-(pt:TK_Program
-{
-	s = new StringToken("Program"); 
-	s.setLineNumber(pt.getLine());
-	s.setColumnNumber(pt.getColumn());
 }) ;
 
 intLit returns [StringToken s] {
@@ -114,11 +108,16 @@ program returns [ClassDecl classDecl] {
 	classDecl = new ClassDecl(fieldDecls, methodDecls);
 	FieldDecl f;
 	MethodDecl m;
+	StringToken className;
 } : 
-(cl:TK_class TK_Program LCURLY (f=field_decl { fieldDecls.add(f); })* (m=method_decl { methodDecls.add(m); })* RCURLY EOF) 
+(cl:TK_class className=id LCURLY (f=field_decl { fieldDecls.add(f); })* (m=method_decl { methodDecls.add(m); })* RCURLY EOF) 
 {
 	classDecl.setLineNumber(cl.getLine());
 	classDecl.setColumnNumber(cl.getColumn());
+	System.out.println(className.getString());
+	if (!className.getString().equals("Program")) {
+		classDecl = null;
+	}
 } ;
 
 // Field declaration group
