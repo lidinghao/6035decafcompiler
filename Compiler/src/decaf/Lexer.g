@@ -28,7 +28,6 @@ tokens
   "int";
   "boolean";
   "void";
-  "Program";
 }
 
 LCURLY options { paraphrase = "{"; } : "{";
