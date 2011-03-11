@@ -18,3 +18,4 @@
 3/10:
 * Fixed bugs in semantic checks
 * Need to confirm loop variable scope nature from TA
+* Fixed bug in scanner/parser checks
