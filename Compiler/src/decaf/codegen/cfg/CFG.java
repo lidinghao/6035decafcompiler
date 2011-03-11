@@ -1,17 +1,8 @@
-package codegen.cfg;
+package decaf.codegen.cfg;
 
 public abstract class CFG {
-	private CFG nextNode;
 	private CFG beginNode;
 	private CFG endNode;
-	
-	public CFG getNextNode() {
-		return nextNode;
-	}
-	
-	public void setNextNode(CFG nextNode) {
-		this.nextNode = nextNode;
-	}
 	
 	public CFG getBeginNode() {
 		return beginNode;
