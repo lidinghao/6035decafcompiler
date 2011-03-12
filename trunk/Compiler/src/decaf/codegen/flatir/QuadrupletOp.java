@@ -7,7 +7,7 @@ public enum QuadrupletOp {
 	MUL, // *
 	DIV, // /
 	MOD, // %
-	MOV, // Move (=)
+	MOVE, // Move (=)
 	EQ, // ==
 	NEQ, // !=
 	GT, // >
