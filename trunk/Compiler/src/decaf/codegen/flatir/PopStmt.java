@@ -1,7 +1,7 @@
 package decaf.codegen.flatir;
 
 public class PopStmt extends LIRStatement {
-	private Name address;
+	private Name address; // Can be register or memory
 	
 	public PopStmt(Name address) {
 		this.setAddress(address);
