@@ -10,7 +10,6 @@ import decaf.codegen.flatir.JumpStmt;
 import decaf.codegen.flatir.LIRStatement;
 import decaf.codegen.flatir.LabelStmt;
 import decaf.codegen.flatir.Name;
-import decaf.codegen.flatir.PopStmt;
 import decaf.codegen.flatir.PushStmt;
 import decaf.codegen.flatir.QuadrupletOp;
 import decaf.codegen.flatir.QuadrupletStmt;
@@ -223,7 +222,7 @@ public class ExpressionFlatennerVisitor implements ASTVisitor<Name> {
 		
 		// Push other args to stack
 		if (expr.getArguments().size() > 6) {
-			for (int i = 6; i < expr.getArguments().size(); i++) {
+			for (int i = expr.getArguments().size() - 1; i > 5; i--) {
 				this.statements.add(new PushStmt(expr.getArguments().get(i).accept(this)));
 			}
 		}
@@ -288,6 +287,7 @@ public class ExpressionFlatennerVisitor implements ASTVisitor<Name> {
 	public Name visit(VarLocation loc) {
 		String id = loc.getId();
 		VarName varName = new VarName(id);
+		varName.setBlockId(loc.getBlockId());
 		return varName;
 	}
 
