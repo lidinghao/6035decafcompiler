@@ -6,6 +6,10 @@ public class TempName extends Name {
 	public TempName(int id) {
 		this.setId(id);
 	}
+	
+	public TempName() {
+		
+	}
 
 	public void setId(int id) {
 		this.id = id;
