@@ -1,6 +1,6 @@
 package decaf.codegen.flatir;
 
-public class JumpStmt {
+public class JumpStmt extends LIRStatement {
 	private JumpCondOp condition;
 	private LabelStmt label;
 	

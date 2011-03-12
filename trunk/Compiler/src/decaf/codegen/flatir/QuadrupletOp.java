@@ -1,16 +1,17 @@
 package decaf.codegen.flatir;
 
 public enum QuadrupletOp {
-	CMP,
-	ADD,
-	SUB,
-	IMUL,
-	IDIV,
-	EQ, // Move
-	CMOVE, // Conditional moves, required for boolean expressions
-	CMOVNE,
-	CMOVG,
-	CMOVGE,
-	CMOVL,
-	CMOVLE,
+	CMP, // CMP
+	ADD, // +
+	SUB, // -
+	MUL, // *
+	DIV, // /
+	MOD, // %
+	MOV, // Move (=)
+	EQ, // ==
+	NEQ, // !=
+	GT, // >
+	GTE, // >=
+	LT, // <
+	LTE, // <=
 }
