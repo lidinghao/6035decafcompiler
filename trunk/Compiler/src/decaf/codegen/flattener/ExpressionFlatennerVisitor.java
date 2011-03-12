@@ -64,35 +64,31 @@ public class ExpressionFlatennerVisitor implements ASTVisitor<Name> {
 		Name arg1 = expr.getLeftOperand().accept(this);
 		BinOpType op = expr.getOperator();
 		// shortcircuit hack
+		Constant constant = new Constant();
 		if (op == BinOpType.AND) {
 			if(((Constant) arg1).getValue() == 0 ) {
-				Constant constant = new Constant(0);
-				return constant;
+				constant.setValue(0);
 			} else {
 				Name arg2 = expr.getRightOperand().accept(this);
 				if(((Constant) arg2).getValue() == 1) {
-					Constant constant = new Constant(1);
-					return constant;
+					constant.setValue(1);
 				} else {
-					Constant constant = new Constant(0);
-					return constant;
+					constant.setValue(0);
 				}
 			}
+			return constant;
 		} else if (op == BinOpType.OR) {
 			if(((Constant) arg1).getValue() == 1) {
-				Constant constant = new Constant(1);
-				return constant;
+				constant.setValue(1);
 			} else {
 				Name arg2 = expr.getRightOperand().accept(this);
 				if(((Constant) arg2).getValue() == 1) {
-					Constant constant = new Constant(1);
-					return constant;
+					constant.setValue(1);
 				} else {
-					Constant constant = new Constant(0);
-					return constant;
+					constant.setValue(0);
 				}
 			}
-			
+			return constant;
 		} else {
 			Name arg2 = expr.getRightOperand().accept(this);
 			QuadrupletOp qOp = null;
