@@ -25,4 +25,9 @@ public class TempName extends Name {
 	public String toString() {
 		return "t" + id;
 	}
+	
+	@Override
+	public int hashCode() {
+		return ("!@#$%^&*()" + id).hashCode(); // Using forbidden chars
+	}
 }
