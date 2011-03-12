@@ -13,5 +13,5 @@ public enum QuadrupletOp {
 	GT, // >
 	GTE, // >=
 	LT, // <
-	LTE, // <=
+	LTE; // <=
 }

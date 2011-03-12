@@ -14,4 +14,9 @@ public class CallStmt extends LIRStatement {
 	public String getMethodLabel() {
 		return methodLabel;
 	}
+	
+	@Override
+	public String toString() {
+		return "call " + methodLabel;
+	}
 }

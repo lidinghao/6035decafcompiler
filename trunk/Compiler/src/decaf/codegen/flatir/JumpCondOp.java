@@ -8,5 +8,5 @@ public enum JumpCondOp {
 	GTE,
 	LT,
 	LTE,
-	NONE // Unconditional jump
+	NONE; // Unconditional jump
 }
