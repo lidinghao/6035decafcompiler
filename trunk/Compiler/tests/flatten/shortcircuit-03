@@ -1,0 +1,6 @@
+class Program {
+	void main() {
+		boolean a, b, c, d, e;
+		a = (b && c) || (d && e);
+	}
+}

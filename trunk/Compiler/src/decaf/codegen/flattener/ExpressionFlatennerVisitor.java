@@ -91,26 +91,37 @@ public class ExpressionFlatennerVisitor implements ASTVisitor<Name> {
 		switch(op) {
 			case PLUS:
 				qOp = QuadrupletOp.ADD;
+				break;
 			case MINUS:
 				qOp = QuadrupletOp.SUB;
+				break;
 			case MULTIPLY:
 				qOp = QuadrupletOp.MUL;
+				break;
 			case DIVIDE:
 				qOp = QuadrupletOp.DIV;
+				break;
 			case MOD:
 				qOp = QuadrupletOp.MOD;
+				break;
 			case LE:
 				qOp = QuadrupletOp.LT;
+				break;
 			case LEQ:
 				qOp = QuadrupletOp.LTE;
+				break;
 			case GE:
 				qOp = QuadrupletOp.GT;
+				break;
 			case GEQ:
 				qOp = QuadrupletOp.GTE;
+				break;
 			case CEQ:
 				qOp = QuadrupletOp.EQ;
+				break;
 			case NEQ:
 				qOp = QuadrupletOp.NEQ;
+				break;
 		}
 		
 		TempName dest = new TempName();
@@ -251,9 +262,6 @@ public class ExpressionFlatennerVisitor implements ASTVisitor<Name> {
 		
 		Name dest = new TempName();
 		
-		// Initialization block
-		this.statements.add(new LabelStmt(getAndInit()));
-		
 		// Test LHS
 		this.statements.add(new LabelStmt(getAndTestLHS()));
 		Name lhs = expr.getLeftOperand().accept(this);
@@ -281,9 +289,6 @@ public class ExpressionFlatennerVisitor implements ASTVisitor<Name> {
 		
 		Name dest = new TempName();
 		
-		// Initialization block
-		this.statements.add(new LabelStmt(getOrInit()));
-		
 		// Test LHS
 		this.statements.add(new LabelStmt(getOrTestLHS()));
 		Name lhs = expr.getLeftOperand().accept(this);
@@ -305,10 +310,6 @@ public class ExpressionFlatennerVisitor implements ASTVisitor<Name> {
 		return dest;
 	}
 	
-	private String getAndInit() {
-		return methodName + "_and" + currentAndId + "_init";
-	}
-	
 	private String getAndTestLHS() {
 		return methodName + "_and" + currentAndId + "_testLHS";
 	}
@@ -319,10 +320,6 @@ public class ExpressionFlatennerVisitor implements ASTVisitor<Name> {
 	
 	private String getAndEnd() {
 		return methodName + "_and" + currentAndId + "_end";
-	}
-	
-	private String getOrInit() {
-		return methodName + "_or" + currentOrId + "_init";
 	}
 	
 	private String getOrTestLHS() {

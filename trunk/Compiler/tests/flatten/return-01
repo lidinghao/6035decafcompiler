@@ -1,0 +1,14 @@
+class Program {
+   int a() {
+      int a;
+      a = a + 10;
+      return a;
+   }
+
+   void main() {
+      int a, b;
+      a = 5;
+      return;
+      b = 10;
+   }
+}

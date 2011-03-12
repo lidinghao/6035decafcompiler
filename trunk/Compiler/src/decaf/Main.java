@@ -2,6 +2,11 @@ package decaf;
 
 import java.io.*;
 
+import decaf.codegen.flatir.LIRStatement;
+import decaf.codegen.flatir.LabelStmt;
+import decaf.codegen.flattener.MethodFlatennerVisitor;
+import decaf.codegen.flattener.ProgramFlattener;
+import decaf.codegen.flattener.TempNameIndexer;
 import decaf.ir.ast.ClassDecl;
 import decaf.ir.semcheck.*;
 import decaf.test.Error;
@@ -87,6 +92,13 @@ class Main {
             // Check for semantic errors
             if (!SemanticChecker.performSemanticChecks(cd, System.out)) {
             	System.exit(-1);
+            }
+            
+            if (true) {
+            	System.out.println("Flatenning \n");
+            	ProgramFlattener pf = new ProgramFlattener(cd);
+            	pf.flatten();
+            	pf.print();
             }
         	}
         } catch(Exception e) {

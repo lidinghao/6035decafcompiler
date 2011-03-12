@@ -5,8 +5,7 @@ public class LeaveStmt extends LIRStatement {
 	
 	@Override
 	public String toString() {
-		String rtn = "leave\n";
-		rtn += "rtn";
+		String rtn = "leave, rtn";
 		
 		return rtn;
 	}

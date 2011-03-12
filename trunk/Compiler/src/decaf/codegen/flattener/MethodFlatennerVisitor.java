@@ -18,6 +18,7 @@ import decaf.codegen.flatir.RegisterName;
 import decaf.codegen.flatir.VarName;
 import decaf.ir.ASTVisitor;
 import decaf.ir.ast.ArrayLocation;
+import decaf.ir.ast.AssignOpType;
 import decaf.ir.ast.AssignStmt;
 import decaf.ir.ast.BinOpExpr;
 import decaf.ir.ast.Block;
@@ -43,7 +44,7 @@ import decaf.ir.ast.UnaryOpExpr;
 import decaf.ir.ast.VarDecl;
 import decaf.ir.ast.VarLocation;
 
-public class StatementFlatennerVisitor implements ASTVisitor<Integer> {
+public class MethodFlatennerVisitor implements ASTVisitor<Integer> {
 	private List<LIRStatement> statements;
 	private ExpressionFlatennerVisitor exprFlatenner;
 	private String methodName;
@@ -51,8 +52,9 @@ public class StatementFlatennerVisitor implements ASTVisitor<Integer> {
 	private int forCount; 
 	private int currentIfId;
 	private int currentForId;
+	private int totalLocalVars;
 	
-	public StatementFlatennerVisitor(String methodName) {
+	public MethodFlatennerVisitor(String methodName) {
 		this.statements = new ArrayList<LIRStatement>();
 		this.exprFlatenner = new ExpressionFlatennerVisitor(statements, methodName);
 		this.methodName = methodName;
@@ -73,7 +75,16 @@ public class StatementFlatennerVisitor implements ASTVisitor<Integer> {
 		Name dest = stmt.getLocation().accept(exprFlatenner);
 		Name src = stmt.getExpression().accept(exprFlatenner);
 		
-		this.statements.add(new QuadrupletStmt(QuadrupletOp.EQ, dest, src, null));
+		AssignOpType op = stmt.getOperator();
+		if (op == AssignOpType.ASSIGN) {
+			this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE, dest, src, null));
+		}
+		else if (op == AssignOpType.INCREMENT) {
+			this.statements.add(new QuadrupletStmt(QuadrupletOp.ADD, dest, dest, src));
+		}
+		else {
+			this.statements.add(new QuadrupletStmt(QuadrupletOp.SUB, dest, dest, src));
+		}
 		
 		return 0;
 	}
@@ -85,6 +96,10 @@ public class StatementFlatennerVisitor implements ASTVisitor<Integer> {
 
 	@Override
 	public Integer visit(Block block) {
+		for (VarDecl vd: block.getVarDeclarations()) {
+			this.totalLocalVars += vd.getVariables().size();
+		}
+		
 		for (Statement s: block.getStatements()) {
 			s.accept(this);
 		}
@@ -159,12 +174,12 @@ public class StatementFlatennerVisitor implements ASTVisitor<Integer> {
 		this.statements.add(new LabelStmt(getForTest()));
 		Name finalValue = stmt.getFinalValue().accept(this.exprFlatenner);
 		this.statements.add(new QuadrupletStmt(QuadrupletOp.CMP, null, loopId, finalValue));
-		this.statements.add(new JumpStmt(JumpCondOp.LT, new LabelStmt(getForBody())));
-		this.statements.add(new JumpStmt(JumpCondOp.NONE, new LabelStmt(getForEnd())));
+		this.statements.add(new JumpStmt(JumpCondOp.GTE, new LabelStmt(getForEnd())));
 		
 		// Body block
 		this.statements.add(new LabelStmt(getForBody()));
 		stmt.getBlock().accept(this);
+		this.statements.add(new JumpStmt(JumpCondOp.NONE, new LabelStmt(getForTest())));
 		
 		// End block
 		this.statements.add(new LabelStmt(getForEnd()));
@@ -240,7 +255,7 @@ public class StatementFlatennerVisitor implements ASTVisitor<Integer> {
 		this.statements.add(new LeaveStmt());
 		this.statements.add(new LabelStmt(getMethodEnd()));
 		
-		return 0;
+		return this.totalLocalVars;
 	}
 
 	@Override
@@ -250,8 +265,10 @@ public class StatementFlatennerVisitor implements ASTVisitor<Integer> {
 
 	@Override
 	public Integer visit(ReturnStmt stmt) {
-		Name rtn = stmt.getExpression().accept(this.exprFlatenner);
-		this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE, new RegisterName(Register.RAX), rtn, null));
+		if (stmt.getExpression() != null) {
+			Name rtn = stmt.getExpression().accept(this.exprFlatenner);
+			this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE, new RegisterName(Register.RAX), rtn, null));
+		}
 		this.statements.add(new JumpStmt(JumpCondOp.NONE, new LabelStmt(getMethodEpilogue())));
 		
 		return 0;
@@ -277,6 +294,9 @@ public class StatementFlatennerVisitor implements ASTVisitor<Integer> {
 		this.forCount = 0;
 		this.currentForId = 0;
 		this.currentIfId = 0;
+		this.totalLocalVars = 0;
+		this.statements = new ArrayList<LIRStatement>();
+		this.exprFlatenner = new ExpressionFlatennerVisitor(statements, methodName);
 	}
 	
 	private String getIfTest() {
@@ -317,5 +337,10 @@ public class StatementFlatennerVisitor implements ASTVisitor<Integer> {
 	
 	private String getMethodEnd() {
 		return methodName + "_end";
+	}
+	
+	public void setMethodName(String methodName) {
+		this.methodName = methodName;
+		this.reset();
 	}
 }

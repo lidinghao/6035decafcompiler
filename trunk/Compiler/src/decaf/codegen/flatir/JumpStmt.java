@@ -34,25 +34,25 @@ public class JumpStmt extends LIRStatement {
 				rtn += "=";
 				break;
 			case NEQ:
-				rtn = "!=";
+				rtn += "!=";
 				break;
 			case ZERO:
-				rtn = "0";
+				rtn += "0";
 				break;
 			case GT:
-				rtn = ">";
+				rtn += ">";
 				break;
 			case GTE:
-				rtn = ">=";
+				rtn += ">=";
 				break;
 			case LT:
-				rtn = "<";
+				rtn += "<";
 				break;
 			case LTE:
-				rtn = "<=";
+				rtn += "<=";
 				break;
 		}
 		
-		return rtn + ")";
+		return rtn + ") " + "'" + label.getLabel() + "'";
 	}
 }
