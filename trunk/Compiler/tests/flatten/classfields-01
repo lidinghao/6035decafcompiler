@@ -1,0 +1,8 @@
+class Program {
+   int a, b;
+   int c[10];
+   boolean x, y;
+   boolean z[10];
+   void main() {
+   }
+}
