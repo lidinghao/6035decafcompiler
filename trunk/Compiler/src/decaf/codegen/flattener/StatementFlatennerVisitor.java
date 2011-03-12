@@ -54,9 +54,13 @@ public class StatementFlatennerVisitor implements ASTVisitor<Integer> {
 	
 	public StatementFlatennerVisitor(String methodName) {
 		this.statements = new ArrayList<LIRStatement>();
-		this.exprFlatenner = new ExpressionFlatennerVisitor(statements);
+		this.exprFlatenner = new ExpressionFlatennerVisitor(statements, methodName);
 		this.methodName = methodName;
 		this.reset();
+	}
+	
+	public List<LIRStatement> getStatements() {
+		return this.statements;
 	}
 
 	@Override
