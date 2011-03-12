@@ -1,23 +1,23 @@
 package decaf.codegen.flatir;
 
 public class QuadrupletStmt extends LIRStatement {
-	private Operator operator;
+	private QuadrupletOp operator;
 	private Address destination;
 	private Address arg1;
 	private Address arg2;
 	
-	public QuadrupletStmt(Operator operator, Address destination, Address arg1, Address arg2) {
+	public QuadrupletStmt(QuadrupletOp operator, Address destination, Address arg1, Address arg2) {
 		this.operator = operator;
 		this.destination = destination;
 		this.arg1 = arg1;
 		this.arg2 = arg2;
 	}
 
-	public Operator getOperator() {
+	public QuadrupletOp getOperator() {
 		return operator;
 	}
 
-	public void setOperator(Operator operator) {
+	public void setOperator(QuadrupletOp operator) {
 		this.operator = operator;
 	}
 
