@@ -1,9 +1,9 @@
 package decaf.codegen.flatir;
 
-public class TempAddress extends Address {
+public class TempName extends Name {
 	private int id;
 	
-	public TempAddress(int id) {
+	public TempName(int id) {
 		this.setId(id);
 	}
 

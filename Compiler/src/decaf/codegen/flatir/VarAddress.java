@@ -1,6 +1,6 @@
 package decaf.codegen.flatir;
 
-public class VarAddress extends Address {
+public class VarAddress extends Name {
 	private String id;
 	
 	public VarAddress(String id) {

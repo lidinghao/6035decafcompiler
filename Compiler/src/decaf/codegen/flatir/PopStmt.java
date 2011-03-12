@@ -1,17 +1,17 @@
 package decaf.codegen.flatir;
 
 public class PopStmt extends LIRStatement {
-	private Address address;
+	private Name address;
 	
-	public PopStmt(Address address) {
+	public PopStmt(Name address) {
 		this.setAddress(address);
 	}
 
-	public void setAddress(Address address) {
+	public void setAddress(Name address) {
 		this.address = address;
 	}
 
-	public Address getAddress() {
+	public Name getAddress() {
 		return address;
 	}
 }

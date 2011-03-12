@@ -1,9 +1,9 @@
 package decaf.codegen.flatir;
 
-public class RegisterAddress extends Address {
+public class RegisterName extends Name {
 	private Register register;
 	
-	public RegisterAddress(Register register) {
+	public RegisterName(Register register) {
 		this.setRegister(register);
 	}
 
