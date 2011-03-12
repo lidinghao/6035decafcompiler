@@ -1,24 +1,24 @@
 package decaf.codegen.flatir;
 
-public class ArrayAddress extends Address {
-	private Address index;
+public class ArrayName extends Name {
+	private Name index;
 	private String id;
 	
-	public ArrayAddress(int index, String id) {
+	public ArrayName(int index, String id) {
 		this.setIndex(new Constant(index));
 		this.setId(id);
 	}
 	
-	public ArrayAddress(Address index, String id) {
+	public ArrayName(Name index, String id) {
 		this.setIndex(index);
 		this.setId(id);
 	}
 
-	public void setIndex(Address index) {
+	public void setIndex(Name index) {
 		this.index = index;
 	}
 
-	public Address getIndex() {
+	public Name getIndex() {
 		return index;
 	}
 

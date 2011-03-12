@@ -1,6 +1,6 @@
 package decaf.codegen.flatir;
 
-public abstract class Address {
+public abstract class Name {
 	private int stackOffset;
 
 	public void setStackOffset(int stackOffset) {
