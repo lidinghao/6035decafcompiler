@@ -94,6 +94,7 @@ public class SymbolTableGenerationVisitor implements ASTVisitor<Integer> {
 		inLocalScope += 1;
 		
 		GenericSymbolTable newScope = new GenericSymbolTable(currentScope);
+		newScope.setScopeId(block.getBlockId());
 		currentScope = newScope;
 
 		classDescriptor.getScopeTable().put(block.getBlockId(), currentScope);
@@ -329,7 +330,7 @@ public class SymbolTableGenerationVisitor implements ASTVisitor<Integer> {
 
 	@Override
 	public Integer visit(VarLocation loc) {
-		if (!isIdDeclared(loc.getId())) {
+		if (!isIdDeclared(loc)) {
 			addError(loc, "'" + loc.getId() + "'" + " is not declared");
 		}
 		
@@ -352,11 +353,12 @@ public class SymbolTableGenerationVisitor implements ASTVisitor<Integer> {
 		return errors;
 	}
 
-	private boolean isIdDeclared(String id) {
+	private boolean isIdDeclared(VarLocation loc) {
 		GenericSymbolTable scope = currentScope;
 
 		while (scope != null) {
-			if (scope.containsKey(id)) {
+			if (scope.containsKey(loc.getId())) {
+				loc.setBlockId(scope.getScopeId());
 				return true;
 			}
 			scope = scope.getParent();
