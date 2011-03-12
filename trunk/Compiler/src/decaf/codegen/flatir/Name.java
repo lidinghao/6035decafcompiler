@@ -1,13 +1,13 @@
 package decaf.codegen.flatir;
 
 public abstract class Name {
-	private int stackOffset;
+	private Location location;
 
-	public void setStackOffset(int stackOffset) {
-		this.stackOffset = stackOffset;
+	public void setLocation(Location location) {
+		this.location = location;
 	}
 
-	public int getStackOffset() {
-		return stackOffset;
+	public Location getLocation() {
+		return location;
 	}
 }
