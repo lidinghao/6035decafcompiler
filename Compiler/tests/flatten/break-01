@@ -1,0 +1,10 @@
+class Program {
+   void main() {
+      int a, b;
+      for id = 0, 10 {
+         a = b;
+         break;
+         b = 19;
+      }
+   }
+}

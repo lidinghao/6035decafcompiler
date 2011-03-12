@@ -17,6 +17,6 @@ public class LabelStmt extends LIRStatement {
 	
 	@Override
 	public String toString() {
-		return "label '" + label + "'";
+		return label + ":";
 	}
 }

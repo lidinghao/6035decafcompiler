@@ -49,7 +49,7 @@ public class QuadrupletStmt extends LIRStatement {
 	public String toString() {
 		switch (this.operator) {
 			case CMP:
-				return "CMP " + arg1 + ", " + arg2;
+				return "compare " + arg1 + ", " + arg2;
 			case ADD:
 				return dest + " = " + arg1 + " + " + arg2;
 			case SUB:

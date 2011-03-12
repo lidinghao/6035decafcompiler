@@ -1,0 +1,9 @@
+class Program {
+	void main() {
+		boolean a, b, c;
+		if (a || b) {
+			int e;
+			e = 2;
+		}
+	}
+}

@@ -1,0 +1,6 @@
+class Program {
+	void main() {
+		int a, b, c, d;
+		a = ((b + c) + (b * d + c)) + (c * d + a);
+	}
+}
