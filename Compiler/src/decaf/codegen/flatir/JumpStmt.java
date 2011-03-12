@@ -24,4 +24,35 @@ public class JumpStmt extends LIRStatement {
 	public JumpCondOp getCondition() {
 		return condition;
 	}
+	
+	@Override
+	public String toString() {
+		String rtn = "jump (";
+		
+		switch(this.condition) {
+			case EQ:
+				rtn += "=";
+				break;
+			case NEQ:
+				rtn = "!=";
+				break;
+			case ZERO:
+				rtn = "0";
+				break;
+			case GT:
+				rtn = ">";
+				break;
+			case GTE:
+				rtn = ">=";
+				break;
+			case LT:
+				rtn = "<";
+				break;
+			case LTE:
+				rtn = "<=";
+				break;
+		}
+		
+		return rtn + ")";
+	}
 }

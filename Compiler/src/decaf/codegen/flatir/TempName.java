@@ -8,7 +8,7 @@ public class TempName extends Name {
 	}
 	
 	public TempName() {
-		
+		this.setId(-1);
 	}
 
 	public void setId(int id) {
@@ -21,6 +21,10 @@ public class TempName extends Name {
 	
 	@Override
 	public String toString() {
+		if (id == -1) {
+			return "t";
+		}
+		
 		return "t" + id;
 	}
 }

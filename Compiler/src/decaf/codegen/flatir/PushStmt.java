@@ -3,7 +3,7 @@ package decaf.codegen.flatir;
 public class PushStmt extends LIRStatement {
 	private Name address;
 	
-	public PopStmt(Name address) {
+	public PushStmt(Name address) {
 		this.setAddress(address);
 	}
 
@@ -13,5 +13,10 @@ public class PushStmt extends LIRStatement {
 
 	public Name getAddress() {
 		return address;
+	}
+	
+	@Override
+	public String toString() {
+		return "push " + address;
 	}
 }

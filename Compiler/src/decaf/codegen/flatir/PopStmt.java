@@ -14,4 +14,9 @@ public class PopStmt extends LIRStatement {
 	public Name getAddress() {
 		return address;
 	}
+	
+	@Override
+	public String toString() {
+		return "pop " + address;
+	}
 }
