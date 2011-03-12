@@ -3,14 +3,19 @@ package decaf.codegen.flattener;
 import java.util.List;
 
 import decaf.codegen.flatir.ArrayName;
+import decaf.codegen.flatir.CallStmt;
 import decaf.codegen.flatir.Constant;
 import decaf.codegen.flatir.JumpCondOp;
 import decaf.codegen.flatir.JumpStmt;
 import decaf.codegen.flatir.LIRStatement;
 import decaf.codegen.flatir.LabelStmt;
 import decaf.codegen.flatir.Name;
+import decaf.codegen.flatir.PopStmt;
+import decaf.codegen.flatir.PushStmt;
 import decaf.codegen.flatir.QuadrupletOp;
 import decaf.codegen.flatir.QuadrupletStmt;
+import decaf.codegen.flatir.Register;
+import decaf.codegen.flatir.RegisterName;
 import decaf.codegen.flatir.TempName;
 import decaf.codegen.flatir.VarName;
 import decaf.ir.ASTVisitor;
@@ -42,15 +47,17 @@ import decaf.ir.ast.VarDecl;
 import decaf.ir.ast.VarLocation;
 
 public class ExpressionFlatennerVisitor implements ASTVisitor<Name> {
+	private Register[] argumentRegs = { Register.RDI, Register.RSI,
+			Register.RDX, Register.RCX, Register.R8, Register.R9 };
 	private List<LIRStatement> statements;
 	private String methodName;
 	private int andCount;
 	private int orCount;
 	private int currentAndId;
 	private int currentOrId;
-	
-	
-	public ExpressionFlatennerVisitor(List<LIRStatement> statements, String methodName) {
+
+	public ExpressionFlatennerVisitor(List<LIRStatement> statements,
+			String methodName) {
 		this.statements = statements;
 		this.methodName = methodName;
 		this.andCount = 0;
@@ -75,20 +82,20 @@ public class ExpressionFlatennerVisitor implements ASTVisitor<Name> {
 	@Override
 	public Name visit(BinOpExpr expr) {
 		BinOpType op = expr.getOperator();
-		
+
 		if (op == BinOpType.AND) {
 			return shortCircuitAnd(expr);
 		}
-		
+
 		if (op == BinOpType.OR) {
 			return shortCircuitOr(expr);
 		}
-		
+
 		Name arg1 = expr.getLeftOperand().accept(this);
 		Name arg2 = expr.getRightOperand().accept(this);
-		
+
 		QuadrupletOp qOp = null;
-		switch(op) {
+		switch (op) {
 			case PLUS:
 				qOp = QuadrupletOp.ADD;
 				break;
@@ -123,11 +130,11 @@ public class ExpressionFlatennerVisitor implements ASTVisitor<Name> {
 				qOp = QuadrupletOp.NEQ;
 				break;
 		}
-		
+
 		TempName dest = new TempName();
 		QuadrupletStmt qStmt = new QuadrupletStmt(qOp, dest, arg1, arg2);
 		this.statements.add(qStmt);
-		
+
 		return dest;
 	}
 
@@ -205,8 +212,36 @@ public class ExpressionFlatennerVisitor implements ASTVisitor<Name> {
 
 	@Override
 	public Name visit(MethodCallExpr expr) {
-		// TODO: Implement Method Call Expr
-		return null;
+		Name rtnValue = new TempName();
+		
+		// Save args in registers
+		for (int i = 0; i < expr.getArguments().size() && i < argumentRegs.length; i++) {
+			Name src = expr.getArguments().get(i).accept(this);
+			this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE,
+					new RegisterName(argumentRegs[i]), src, null));
+		}
+		
+		// Push other args to stack
+		if (expr.getArguments().size() > 6) {
+			for (int i = 6; i < expr.getArguments().size(); i++) {
+				this.statements.add(new PushStmt(expr.getArguments().get(i).accept(this)));
+			}
+		}
+		
+		// Call method
+		this.statements.add(new CallStmt(expr.getName()));
+		
+		// Pop args off stack
+		if (expr.getArguments().size() > 6) {
+			int sizeToDecrease = expr.getArguments().size() - 6;
+			RegisterName rsp = new RegisterName(Register.RSP);
+			this.statements.add(new QuadrupletStmt(QuadrupletOp.SUB, rsp, rsp, new Constant(sizeToDecrease)));
+		}
+		
+		// Save return value
+		this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE, rtnValue, new RegisterName(Register.RAX), null));
+
+		return rtnValue;
 	}
 
 	@Override
@@ -227,20 +262,20 @@ public class ExpressionFlatennerVisitor implements ASTVisitor<Name> {
 	@Override
 	public Name visit(UnaryOpExpr expr) {
 		Name arg1 = expr.getExpression().accept(this);
-		
+
 		UnaryOpType op = expr.getOperator();
 		QuadrupletOp qOp = null;
-		switch(op) {
+		switch (op) {
 			case NOT:
 				qOp = QuadrupletOp.NOT;
 			case MINUS:
 				qOp = QuadrupletOp.MINUS;
 		}
-		
+
 		TempName dest = new TempName();
 		QuadrupletStmt qStmt = new QuadrupletStmt(qOp, dest, arg1, null);
 		this.statements.add(qStmt);
-		
+
 		return dest;
 	}
 
@@ -255,81 +290,91 @@ public class ExpressionFlatennerVisitor implements ASTVisitor<Name> {
 		VarName varName = new VarName(id);
 		return varName;
 	}
-	
+
 	private Name shortCircuitAnd(BinOpExpr expr) {
 		int oldAndId = currentAndId;
 		currentAndId = ++andCount;
-		
+
 		Name dest = new TempName();
-		
+
 		// Test LHS
 		this.statements.add(new LabelStmt(getAndTestLHS()));
 		Name lhs = expr.getLeftOperand().accept(this);
-		this.statements.add(new QuadrupletStmt(QuadrupletOp.CMP, null, lhs, new Constant(0)));
-		this.statements.add(new JumpStmt(JumpCondOp.NEQ, new LabelStmt(getAndTestRHS())));
-		this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE, dest, new Constant(0), null));
-		this.statements.add(new JumpStmt(JumpCondOp.NONE, new LabelStmt(getAndEnd())));
-		
+		this.statements.add(new QuadrupletStmt(QuadrupletOp.CMP, null, lhs,
+				new Constant(0)));
+		this.statements.add(new JumpStmt(JumpCondOp.NEQ, new LabelStmt(
+				getAndTestRHS())));
+		this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE, dest,
+				new Constant(0), null));
+		this.statements.add(new JumpStmt(JumpCondOp.NONE, new LabelStmt(
+				getAndEnd())));
+
 		// Test RHS
 		this.statements.add(new LabelStmt(getAndTestRHS()));
 		Name rhs = expr.getRightOperand().accept(this);
-		this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE, dest, rhs, null));
-		
+		this.statements
+				.add(new QuadrupletStmt(QuadrupletOp.MOVE, dest, rhs, null));
+
 		// End block
 		this.statements.add(new LabelStmt(getAndEnd()));
-		
+
 		currentAndId = oldAndId;
-		
+
 		return dest;
 	}
 
 	private Name shortCircuitOr(BinOpExpr expr) {
 		int oldOrId = currentOrId;
 		currentOrId = ++orCount;
-		
+
 		Name dest = new TempName();
-		
+
 		// Test LHS
 		this.statements.add(new LabelStmt(getOrTestLHS()));
 		Name lhs = expr.getLeftOperand().accept(this);
-		this.statements.add(new QuadrupletStmt(QuadrupletOp.CMP, null, lhs, new Constant(0)));
-		this.statements.add(new JumpStmt(JumpCondOp.EQ, new LabelStmt(getOrTestRHS())));
-		this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE, dest, new Constant(1), null));
-		this.statements.add(new JumpStmt(JumpCondOp.NONE, new LabelStmt(getOrEnd())));
-		
+		this.statements.add(new QuadrupletStmt(QuadrupletOp.CMP, null, lhs,
+				new Constant(0)));
+		this.statements.add(new JumpStmt(JumpCondOp.EQ, new LabelStmt(
+				getOrTestRHS())));
+		this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE, dest,
+				new Constant(1), null));
+		this.statements.add(new JumpStmt(JumpCondOp.NONE, new LabelStmt(
+				getOrEnd())));
+
 		// Test RHS
 		this.statements.add(new LabelStmt(getOrTestRHS()));
 		Name rhs = expr.getRightOperand().accept(this);
-		this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE, dest, rhs, null));
-		
+		this.statements
+				.add(new QuadrupletStmt(QuadrupletOp.MOVE, dest, rhs, null));
+
 		// End block
 		this.statements.add(new LabelStmt(getOrEnd()));
-		
+
 		currentOrId = oldOrId;
-		
+
 		return dest;
 	}
-	
+
 	private String getAndTestLHS() {
 		return methodName + "_and" + currentAndId + "_testLHS";
 	}
-	
+
 	private String getAndTestRHS() {
 		return methodName + "_and" + currentAndId + "_testRHS";
 	}
-	
+
 	private String getAndEnd() {
 		return methodName + "_and" + currentAndId + "_end";
 	}
-	
+
 	private String getOrTestLHS() {
 		return methodName + "_or" + currentOrId + "_testLHS";
 	}
-	
+
 	private String getOrTestRHS() {
 		return methodName + "_or" + currentOrId + "_testRHS";
 	}
-	
+
 	private String getOrEnd() {
 		return methodName + "_or" + currentOrId + "_end";
 	}
