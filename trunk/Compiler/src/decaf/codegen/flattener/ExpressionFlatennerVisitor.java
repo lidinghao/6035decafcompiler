@@ -1,5 +1,6 @@
 package decaf.codegen.flattener;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import decaf.codegen.flatir.ArrayName;
@@ -54,6 +55,7 @@ public class ExpressionFlatennerVisitor implements ASTVisitor<Name> {
 	private int orCount;
 	private int currentAndId;
 	private int currentOrId;
+	private int strCount;
 
 	public ExpressionFlatennerVisitor(List<LIRStatement> statements,
 			String methodName) {
@@ -63,6 +65,7 @@ public class ExpressionFlatennerVisitor implements ASTVisitor<Name> {
 		this.orCount = 0;
 		this.currentAndId = 0;
 		this.currentOrId = 0;
+		this.strCount = 0;
 	}
 
 	@Override
@@ -154,12 +157,55 @@ public class ExpressionFlatennerVisitor implements ASTVisitor<Name> {
 
 	@Override
 	public Name visit(CalloutArg arg) {
-		return null;
+		if (arg.isString()) {
+			// Store strings as global locations and store strings 
+			// as global locations
+			String uniqueId = methodName + Integer.toString(strCount);
+			strCount++;
+			return new VarName(uniqueId, true, arg.getStringArg());
+		} else {
+			return arg.getExpression().accept(this);
+		}
 	}
 
 	@Override
 	public Name visit(CalloutExpr expr) {
-		return null;
+		Name rtnValue = new TempName();
+		
+		// Go through arguments and generate List<Name>
+		List<Name> argNames = new ArrayList<Name>();
+		for (CalloutArg arg : expr.getArguments()) {
+			Name argName = this.visit(arg);
+			argNames.add(argName);
+		}
+		
+		// Save args in registers
+		for (int i = 0; i < expr.getArguments().size() && i < argumentRegs.length; i++) {
+			this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE,
+					new RegisterName(argumentRegs[i]), argNames.get(i), null));
+		}
+		
+		// Push other args to stack
+		if (expr.getArguments().size() > argumentRegs.length) {
+			for (int i = expr.getArguments().size() - 1; i >= argumentRegs.length; i--) {
+				this.statements.add(new PushStmt(argNames.get(i)));
+			}
+		}
+		
+		// Call method
+		this.statements.add(new CallStmt(expr.getMethodName()));
+		
+		// Pop args off stack
+		if (expr.getArguments().size() > argumentRegs.length) {
+			int sizeToDecrease = expr.getArguments().size() - argumentRegs.length;
+			RegisterName rsp = new RegisterName(Register.RSP);
+			this.statements.add(new QuadrupletStmt(QuadrupletOp.SUB, rsp, rsp, new Constant(sizeToDecrease)));
+		}
+		
+		// Save return value
+		this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE, rtnValue, new RegisterName(Register.RAX), null));
+
+		return rtnValue;
 	}
 
 	@Override
@@ -221,8 +267,8 @@ public class ExpressionFlatennerVisitor implements ASTVisitor<Name> {
 		}
 		
 		// Push other args to stack
-		if (expr.getArguments().size() > 6) {
-			for (int i = expr.getArguments().size() - 1; i > 5; i--) {
+		if (expr.getArguments().size() > argumentRegs.length) {
+			for (int i = expr.getArguments().size() - 1; i >= argumentRegs.length; i--) {
 				this.statements.add(new PushStmt(expr.getArguments().get(i).accept(this)));
 			}
 		}
@@ -231,8 +277,8 @@ public class ExpressionFlatennerVisitor implements ASTVisitor<Name> {
 		this.statements.add(new CallStmt(expr.getName()));
 		
 		// Pop args off stack
-		if (expr.getArguments().size() > 6) {
-			int sizeToDecrease = expr.getArguments().size() - 6;
+		if (expr.getArguments().size() > argumentRegs.length) {
+			int sizeToDecrease = expr.getArguments().size() - argumentRegs.length;
 			RegisterName rsp = new RegisterName(Register.RSP);
 			this.statements.add(new QuadrupletStmt(QuadrupletOp.SUB, rsp, rsp, new Constant(sizeToDecrease)));
 		}
