@@ -1,5 +1,5 @@
 package decaf.codegen.flatir;
 
-public enum Register {
-	
+public enum QuadrupletOp {
+
 }
