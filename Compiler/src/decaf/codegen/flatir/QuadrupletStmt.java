@@ -6,9 +6,9 @@ public class QuadrupletStmt extends LIRStatement {
 	private Name arg1;
 	private Name arg2;
 	
-	public QuadrupletStmt(QuadrupletOp operator, Name destination, Name arg1, Name arg2) {
+	public QuadrupletStmt(QuadrupletOp operator, Name dest, Name arg1, Name arg2) {
 		this.operator = operator;
-		this.destination = destination;
+		this.destination = dest;
 		this.arg1 = arg1;
 		this.arg2 = arg2;
 	}
