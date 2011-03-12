@@ -1,9 +1,9 @@
 package decaf.codegen.flatir;
 
-public class VarAddress extends Name {
+public class VarName extends Name {
 	private String id;
 	
-	public VarAddress(String id) {
+	public VarName(String id) {
 		this.setId(id);
 	}
 
