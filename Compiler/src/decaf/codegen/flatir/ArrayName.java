@@ -4,12 +4,7 @@ public class ArrayName extends Name {
 	private Name index;
 	private String id;
 	
-	public ArrayName(int index, String id) {
-		this.setIndex(new Constant(index));
-		this.setId(id);
-	}
-	
-	public ArrayName(Name index, String id) {
+	public ArrayName(String id, Name index) {
 		this.setIndex(index);
 		this.setId(id);
 	}

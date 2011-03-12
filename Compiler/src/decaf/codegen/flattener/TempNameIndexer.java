@@ -34,8 +34,10 @@ public class TempNameIndexer {
 		
 		if (isTempName(stmt.getDestination())) {
 			TempName temp = (TempName) stmt.getDestination();
-			temp.setId(tempCount);
-			tempCount++;
+			if (temp.getId() != -1) { // Not already set
+				temp.setId(tempCount);
+				tempCount++;
+			}
 		}
 	}
 	
