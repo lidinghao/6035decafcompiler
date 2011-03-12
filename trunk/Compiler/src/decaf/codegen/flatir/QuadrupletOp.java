@@ -6,8 +6,8 @@ public enum QuadrupletOp {
 	SUB,
 	IMUL,
 	IDIV,
-	MOV,
-	CMOVE,
+	EQ, // Move
+	CMOVE, // Conditional moves, required for boolean expressions
 	CMOVNE,
 	CMOVG,
 	CMOVGE,
