@@ -1,17 +1,17 @@
 package decaf.codegen.flatir;
 
 public class ConstantLocation extends Location {
-	int value;
+	String value;
 	
-	public ConstantLocation(int value) {
+	public ConstantLocation(String value) {
 		this.value = value;
 	}
 
-	public int getValue() {
+	public String getValue() {
 		return this.value;
 	}
 
-	public void setValue(int value) {
+	public void setValue(String value) {
 		this.value = value;
 	}
 	
