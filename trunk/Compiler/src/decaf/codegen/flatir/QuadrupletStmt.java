@@ -85,17 +85,18 @@ public class QuadrupletStmt extends LIRStatement {
 	public void generateAssembly(PrintStream out) {
 		switch(this.operator) {
 			case CMP:
-				processCompare(out);
+				processCompareQuadruplet(out);
 				break;
 			case MOVE:
-				processMove(out);
+				processMoveQuadruplet(out);
 				break;
 			case MINUS:
 			case NOT:
+				processUnaryQuadruplet();
 				break;
 			case MOD:
 			case DIV:
-				processDivMod(out, this.operator);
+				processDivModQuadruplet(out, this.operator);
 				break;
 			case LT:
 			case LTE:
@@ -111,13 +112,18 @@ public class QuadrupletStmt extends LIRStatement {
 		}
 	}
 
+	private void processUnaryQuadruplet() {
+		// TODO Auto-generated method stub
+		
+	}
+
 	private void processConditionalQuadruplet(PrintStream out,
 			QuadrupletOp operator2) {
 		// TODO Auto-generated method stub
 		
 	}
 
-	private void processDivMod(PrintStream out, QuadrupletOp op) {
+	private void processDivModQuadruplet(PrintStream out, QuadrupletOp op) {
 		moveToRegister(out, new Constant(0), Register.RDX);
 		moveToRegister(out, this.getArg1(), Register.RAX);
 		moveToRegister(out, this.getArg2(), Register.R10);
@@ -131,7 +137,7 @@ public class QuadrupletStmt extends LIRStatement {
 		}
 	}
 
-	private void processMove(PrintStream out) {
+	private void processMoveQuadruplet(PrintStream out) {
 		moveToRegister(out, this.getArg1(), Register.R10);
 		moveFromRegister(out, Register.R10, this.getDestination(), Register.R11);
 		out.println("\tidiv\t" + Register.R10 + ", " + Register.R11);
@@ -159,7 +165,7 @@ public class QuadrupletStmt extends LIRStatement {
 		moveFromRegister(out, Register.R10, this.getDestination(), Register.R11);
 	}
 	
-	private void processCompare(PrintStream out) {
+	private void processCompareQuadruplet(PrintStream out) {
 		moveToRegister(out, this.getArg1(), Register.R10);
 		moveToRegister(out, this.getArg2(), Register.R11);
 		
