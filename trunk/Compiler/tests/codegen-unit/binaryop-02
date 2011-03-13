@@ -1,19 +1,11 @@
-class Program
-{
-    void main()
-    {
+class Program {
+    void main() {
    		int a, b, c, d, e ,f;
-
         a = 70 + 2;
-        
-        b = 7;
-        
+        b = 7;        
         c = a + (-62) + b;
-        
         callout("printf", "%d\n", c);
-        
         f = b - c + a; 
-        
         callout("printf", "%d\n", f);
     }
 }
