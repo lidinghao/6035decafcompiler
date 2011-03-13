@@ -26,10 +26,12 @@ public class LocationResolver {
 	}
 	
 	public void resolveLocations() {
-		for (Entry<String, List<LIRStatement>> entry: this.pf.getLirMap().entrySet()) {
-			List<LIRStatement> flatIR = entry.getValue();	
+		for (Entry<String, List<LIRStatement>> entry: this.pf.getLirMap().entrySet()) {	
 			methodName = entry.getKey();
 			locationMap.clear();
+			stackOffset = -1;
+			
+			List<LIRStatement> flatIR = entry.getValue();
 			for (LIRStatement stmt: flatIR) {
 				if (stmt.getClass().equals(QuadrupletStmt.class)) {
 					QuadrupletStmt qStmt = (QuadrupletStmt)stmt;
@@ -49,16 +51,15 @@ public class LocationResolver {
 			
 			// DEBUG
 			//System.out.println(entry.getKey() + ": " + (-1 * this.stackOffset -1));
-			
-			this.stackOffset = -1; // Reset
 		}
 	}
 	
 	public void printLocations() {
-		for (Entry<String, List<LIRStatement>> entry: this.pf.getLirMap().entrySet()) {
-			List<LIRStatement> flatIR = entry.getValue();	
+		for (Entry<String, List<LIRStatement>> entry: this.pf.getLirMap().entrySet()) {	
 			System.out.println(entry.getKey() +":");
 			Set<String> out = new HashSet<String>();
+			
+			List<LIRStatement> flatIR = entry.getValue();
 			for (LIRStatement stmt: flatIR) {
 				if (stmt.getClass().equals(QuadrupletStmt.class)) {
 					QuadrupletStmt qStmt = (QuadrupletStmt)stmt;
