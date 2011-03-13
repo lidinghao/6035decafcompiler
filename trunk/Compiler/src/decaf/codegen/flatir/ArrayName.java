@@ -29,4 +29,9 @@ public class ArrayName extends Name {
 	public String toString() {
 		return id + "[" + index + "]";
 	}
+	
+	@Override
+	public int hashCode() {
+		return (id + "-1" + "[" + index + "]").hashCode();
+	}
 }

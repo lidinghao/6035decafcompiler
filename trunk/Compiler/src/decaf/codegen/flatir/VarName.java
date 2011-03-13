@@ -41,7 +41,7 @@ public class VarName extends Name {
 		return blockId;
 	}
 
-	public boolean isForString() {
+	public boolean isString() {
 		return forString;
 	}
 

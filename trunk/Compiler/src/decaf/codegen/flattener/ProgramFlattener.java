@@ -19,14 +19,14 @@ public class ProgramFlattener {
 	private ClassDecl classDecl;
 	private MethodFlatennerVisitor mfv;
 	private HashMap<String, List<LIRStatement>> lirMap;
-	private List<DataStmt> programDataStmtList;
+	private List<DataStmt> dataStmtList;
 	private TempNameIndexer tni;
 	
 	public ProgramFlattener(ClassDecl cd) {
 		this.classDecl = cd;
 		this.mfv = new MethodFlatennerVisitor(null);
 		this.lirMap = new HashMap<String, List<LIRStatement>>();
-		this.programDataStmtList = new ArrayList<DataStmt>();
+		this.dataStmtList = new ArrayList<DataStmt>();
 		this.tni = new TempNameIndexer();
 	}
 	
@@ -55,13 +55,16 @@ public class ProgramFlattener {
 	
 	private void processFieldDecl(FieldDecl fd) {
 		for (Field f: fd.getFields()) {
-			DataStmt ds = new DataStmt(f.getId());
+			DataStmt ds;
 			IntLiteral arrLen = f.getArrayLength();
 			if (arrLen != null) {
-				ds.setArray(true);
-				ds.setArrLength(arrLen.getValue());
+				ds = new DataStmt(f.getId(), arrLen.getValue());
 			}
-			this.programDataStmtList.add(ds);
+			else {
+				ds = new DataStmt(f.getId());
+			}
+			
+			this.dataStmtList.add(ds);
 		}
 	}
 
@@ -70,7 +73,7 @@ public class ProgramFlattener {
 	}
 	
 	public void print() {
-		for (DataStmt ds: programDataStmtList) {
+		for (DataStmt ds: dataStmtList) {
 			System.out.println(ds);
 		}
 		for (Entry<String, List<LIRStatement>> entry: lirMap.entrySet()) {
@@ -83,5 +86,13 @@ public class ProgramFlattener {
 	   		}
 			}
    	}
+	}
+
+	public List<DataStmt> getDataStmtList() {
+		return dataStmtList;
+	}
+
+	public void setDataStmtList(List<DataStmt> dataStmtList) {
+		this.dataStmtList = dataStmtList;
 	}
 }

@@ -1,6 +1,6 @@
 package decaf.codegen.flatir;
 
-public class RegisterLocation {
+public class RegisterLocation extends Location {
 	private Register register;
 	
 	public RegisterLocation(Register register) {

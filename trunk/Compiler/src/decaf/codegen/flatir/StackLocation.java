@@ -1,6 +1,6 @@
 package decaf.codegen.flatir;
 
-public class StackLocation {
+public class StackLocation extends Location {
 	private int offset;
 	
 	public StackLocation(int offset) {
@@ -13,6 +13,11 @@ public class StackLocation {
 
 	public int getOffset() {
 		return offset;
+	}
+	
+	@Override
+	public String toString() {
+		return "stack(" + offset + ")";
 	}
 
 }

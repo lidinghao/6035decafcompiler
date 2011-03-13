@@ -2,36 +2,32 @@ package decaf.codegen.flatir;
 
 public class DataStmt extends LIRStatement {
 	private String name;
-	private boolean isString;
 	private String stringVal;
-	private boolean isArray;
 	private int arrLength;
+	private DataStmtType type;
 	
 	// Create DataStmt for primitive int or boolean
 	public DataStmt(String name) {
 		setName(name);
-		setString(false);
 		setStringVal(null);
-		setArray(false);
 		setArrLength(-1);
+		this.type = DataStmtType.VARIABLE;
 	}
 	
 	// Create DataStmt for an array
 	public DataStmt(String name, int arrLength) {
 		setName(name);
-		setString(false);
 		setStringVal(null);
-		setArray(true);
 		setArrLength(arrLength);
+		this.type = DataStmtType.ARRAY;
 	}
 	
 	// Create DataStmt for a string
 	public DataStmt(String name, String val) {
 		setName(name);
-		setString(true);
 		setStringVal(val);
-		setArray(false);
 		setArrLength(-1);
+		this.type = DataStmtType.STRING;
 	}
 	
 	public String getName() {
@@ -42,13 +38,6 @@ public class DataStmt extends LIRStatement {
 		this.name = name;
 	}
 	
-	public boolean isString() {
-		return isString;
-	}
-	
-	public void setString(boolean isString) {
-		this.isString = isString;
-	}
 	
 	public String getStringVal() {
 		return stringVal;
@@ -56,14 +45,6 @@ public class DataStmt extends LIRStatement {
 	
 	public void setStringVal(String stringVal) {
 		this.stringVal = stringVal;
-	}
-	
-	public boolean isArray() {
-		return isArray;
-	}
-	
-	public void setArray(boolean isArray) {
-		this.isArray = isArray;
 	}
 	
 	public int getArrLength() {
@@ -74,15 +55,28 @@ public class DataStmt extends LIRStatement {
 		this.arrLength = arrLength;
 	}
 	
+	public DataStmtType getType() {
+		return type;
+	}
+
+	public void setType(DataStmtType type) {
+		this.type = type;
+	}
+
 	@Override
 	public String toString() {
-		String ret = "data stmt: " + name;
-		if (isString) {
-			ret += "[String] " + stringVal;
+		String rtn = name + ":\t" + this.toString().toLowerCase();
+		switch(this.type) {
+			case VARIABLE:
+				break;
+			case ARRAY:
+				rtn += "[" + this.arrLength + "]";
+				break;
+			case STRING:
+				rtn += "(" + this.stringVal + ")";
+				break;
 		}
-		if (isArray) {
-			ret += "[Array] size: " + Integer.toString(arrLength);
-		}
-		return ret;
+		
+		return rtn;
 	}
 }
