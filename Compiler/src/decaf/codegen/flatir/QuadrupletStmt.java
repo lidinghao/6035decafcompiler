@@ -120,18 +120,43 @@ public class QuadrupletStmt extends LIRStatement {
 		else if (operator == QuadrupletOp.NOT) {
 			out.println("\tnot\t" + Register.R10);
 		}
-		moveFromRegister(out, Register.R10, this.getDestination(), null);
+		moveFromRegister(out, Register.R10, this.getDestination(), Register.R11);
 	}
 
 	private void processConditionalQuadruplet(PrintStream out,
-			QuadrupletOp operator2) {
+			QuadrupletOp op) {
 		moveToRegister(out, this.getArg1(), Register.R10);
 		moveToRegister(out, this.getArg1(), Register.R11);
+		
 		out.println("\tcmp\t" + Register.R10 + ", " + Register.R11);
-		moveToRegister(out, new Constant(0), Register.R11);
-		moveToRegister(out, new Constant(1), Register.R10);
-		out.println("\tcmove\t" + Register.R10 + ", " + Register.R11);
-		moveFromRegister(out, Register.R11, this.getDestination(), null);
+		
+		moveToRegister(out, new Constant(0), Register.R10);
+		moveToRegister(out, new Constant(1), Register.R11);
+		
+		String instr = "\tcmov";
+		switch (op) {
+			case LT:
+				instr += "l\t";
+				break;
+			case LTE:
+				instr += "le\t";
+				break;
+			case GT:
+				instr += "g\t";
+				break;
+			case GTE:
+				instr += "ge\t";
+				break;
+			case EQ:
+				instr += "e\t";
+				break;
+			case NEQ:
+				instr += "ne\t";
+				break;
+		}
+		
+		out.println(instr + Register.R11 + ", " + Register.R10);
+		moveFromRegister(out, Register.R10, this.getDestination(), Register.R11);
 	}
 
 	private void processDivModQuadruplet(PrintStream out, QuadrupletOp op) {
