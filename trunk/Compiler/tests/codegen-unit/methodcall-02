@@ -1,19 +1,18 @@
-// test fails!!
 class Program {
    boolean greater_than_20_and_true(boolean a, int b, int c, int d, int e, int f, int g, boolean h) {
-   		//if (a) {
+   		if (a) {
    		  if ((b+c+d+e+f+g) > 20) {
-   		  	//if (h) {
+   		  	if (h) {
    		  	  return true;
-   		  	//} else {
-   		  	//  return false; 
-   		  	//}  		  
+   		  	} else {
+   		  	  return false; 
+   		  	}  		  
    		  } else {
    		  	return false;
    		  }
-   		//} else {
-   		//  return false;
-   		//}
+   		} else {
+   		  return false;
+   		}
    }
 
    void main() {
