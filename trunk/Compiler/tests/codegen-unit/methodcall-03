@@ -1,0 +1,17 @@
+class Program {
+
+	  int c[5];
+   int sum(int a, int b, int c, int d,
+         int e, int f, int g, int h) {
+      return (a + b + c + d + e + f + g + h);
+   }
+
+   void main() {
+      c[3] = 8;
+      c[3] = sum(1,1,1,1,c[3]+1,1,1,1);
+      callout("printf", "%d\n", c[3]); // 16
+      c[2] = 5;
+      c[3] = sum(1,1,1,1,1,1,c[2]+1,1);
+      callout("printf", "%d\n", c[3]); // 13
+   }
+}

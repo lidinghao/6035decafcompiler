@@ -1,0 +1,13 @@
+class Program {
+
+      int c[5];
+   int small_sum(int a, int b, int c) {
+   	  return (a+b+c);
+   }	
+
+   void main() {
+      c[3] = 0;
+      c[3] = small_sum(1,2,3);
+      callout("printf", "%d\n", c[3]); // 6
+   }
+}
