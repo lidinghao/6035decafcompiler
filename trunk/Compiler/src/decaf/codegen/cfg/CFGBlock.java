@@ -47,4 +47,18 @@ public class CFGBlock {
 	public void setNext(CFGBlock next) {
 		this.next = next;
 	}
+	
+	@Override
+	public String toString() {
+		String str = "";
+		str.concat(this.getLabel().toString());
+		if (this.getJump() != null) {
+			str.concat("-" + this.getJump().toString() + "\n");
+		} else {
+			str.concat("\n");
+		}
+		str.concat("  |\n" );
+		str.concat(this.getNext().toString() + "\n");
+		return str;
+	}
 }

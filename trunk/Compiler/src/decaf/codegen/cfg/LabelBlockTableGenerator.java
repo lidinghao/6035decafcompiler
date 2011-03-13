@@ -42,5 +42,11 @@ public class LabelBlockTableGenerator {
 			}
 		}
 	}
+	
+	@Override
+	public String toString() {
+		String str = this.labelBlockTable.get("main").toString();
+		return str;
+	}
 }
 
