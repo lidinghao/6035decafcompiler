@@ -180,6 +180,9 @@ public class MethodFlatennerVisitor implements ASTVisitor<Integer> {
 		// Body block
 		this.statements.add(new LabelStmt(getForBody()));
 		stmt.getBlock().accept(this);
+		
+		// Increment loop var and jump to test
+		this.statements.add(new QuadrupletStmt(QuadrupletOp.ADD, loopId, loopId, new Constant(1)));
 		this.statements.add(new JumpStmt(JumpCondOp.NONE, new LabelStmt(getForTest())));
 		
 		// End block
