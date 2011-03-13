@@ -21,7 +21,7 @@ public class RegisterLocation extends Location {
 	
 	@Override
 	public String toString() {
-		return "%" + register.toString().toLowerCase();
+		return register.toString().toLowerCase();
 	}
 
 	@Override
