@@ -1,0 +1,22 @@
+class Program {
+   boolean and(boolean a, boolean b) {
+   		if (a && b) {
+   		  return true;
+   		} else {
+   		  return false;
+   		}
+   }
+
+   void main() {
+      boolean a,b;
+      int ret;
+      a = true;
+      b = true;
+      if (and(a,b)) {
+        ret = 1;
+      } else {
+        ret = 0;
+      }
+      callout("printf","%d",ret); // 1
+   }
+}
