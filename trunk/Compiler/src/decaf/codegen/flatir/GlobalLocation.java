@@ -72,7 +72,7 @@ public class GlobalLocation extends Location {
 	 */
 	public String getASMRepresentation() {
 		if (this.isString) {
-			return "." + this.name;
+			return "$." + this.name;
 		}
 		else if (this.offset == null) {
 			return this.name;

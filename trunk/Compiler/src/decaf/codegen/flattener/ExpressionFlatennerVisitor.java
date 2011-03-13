@@ -212,6 +212,9 @@ public class ExpressionFlatennerVisitor implements ASTVisitor<Name> {
 			}
 		}
 		
+		//Set %rax to 0
+		this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE, new RegisterName(Register.RAX), new Constant(0), null));
+		
 		// Call method
 		this.statements.add(new CallStmt(expr.getMethodName()));
 		

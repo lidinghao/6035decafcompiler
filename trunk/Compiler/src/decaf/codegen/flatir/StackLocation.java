@@ -22,6 +22,6 @@ public class StackLocation extends Location {
 
 	@Override
 	public String getASMRepresentation() {
-		return (offset * 8) + "(%rsp)";
+		return (offset * 8) + "(%rbp)";
 	}
 }

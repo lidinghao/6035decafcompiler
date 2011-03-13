@@ -184,7 +184,6 @@ public class QuadrupletStmt extends LIRStatement {
 	private void processMoveQuadruplet(PrintStream out) {
 		moveToRegister(out, this.getArg1(), Register.R10);
 		moveFromRegister(out, Register.R10, this.getDestination(), Register.R11);
-		out.println("\tidiv\t" + Register.R10 + ", " + Register.R11);
 	}
 
 	private void processArithmeticQuadruplet(PrintStream out, QuadrupletOp op) {

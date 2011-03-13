@@ -31,10 +31,14 @@ public class CodeGenerator {
 		for (MethodDecl md: cd.getMethodDeclarations()) {
 			out.println();
 			List<LIRStatement> lirList = pf.getLirMap().get(md.getId());
+			if (md.getId().equals("main")) {
+				out.println("\t.globl main");
+			}
 			for (LIRStatement s: lirList) {
 				if (md.getId().equals("main") && s.getClass().equals(LeaveStmt.class)) {
 					out.println("\tmov\t$0, %rax");
 				}
+				//out.println(s.toString());
 				s.generateAssembly(out);
 			}
 		}
