@@ -160,7 +160,7 @@ public class ExpressionFlatennerVisitor implements ASTVisitor<Name> {
 		if (arg.isString()) {
 			// Store strings as global locations and store strings 
 			// as global locations
-			String uniqueId = methodName + Integer.toString(strCount);
+			String uniqueId = methodName + "_str" + Integer.toString(strCount);
 			strCount++;
 			return new VarName(uniqueId, true, arg.getStringArg());
 		} else {

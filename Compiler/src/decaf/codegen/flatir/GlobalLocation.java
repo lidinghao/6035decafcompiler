@@ -2,7 +2,7 @@ package decaf.codegen.flatir;
 
 public class GlobalLocation extends Location {
 	private String name;
-	private Name offset; // For arrays
+	private Location offset; // For arrays
 	private boolean isString;
 	private String stringVal;
 	
@@ -44,16 +44,22 @@ public class GlobalLocation extends Location {
 		this.stringVal = stringVal;
 	}
 
-	public void setOffset(Name offset) {
+	public void setOffset(Location offset) {
 		this.offset = offset;
 	}
 
-	public Name getOffset() {
+	public Location getOffset() {
 		return offset;
 	}
 	
 	@Override
 	public String toString() {
-		return "." + name;
+		String rtn = "." + name;
+		
+		if (offset != null) {
+			rtn += "[" + offset + "]";
+		}
+		
+		return rtn;
 	}
 }

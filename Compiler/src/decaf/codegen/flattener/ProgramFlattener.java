@@ -21,7 +21,7 @@ public class ProgramFlattener {
 	private HashMap<String, List<LIRStatement>> lirMap;
 	private List<DataStmt> dataStmtList;
 	private TempNameIndexer tni;
-	
+
 	public ProgramFlattener(ClassDecl cd) {
 		this.classDecl = cd;
 		this.mfv = new MethodFlatennerVisitor(null);
@@ -29,41 +29,40 @@ public class ProgramFlattener {
 		this.dataStmtList = new ArrayList<DataStmt>();
 		this.tni = new TempNameIndexer();
 	}
-	
+
 	public void flatten() {
-		for (MethodDecl md: classDecl.getMethodDeclarations()) {
+		for (MethodDecl md : classDecl.getMethodDeclarations()) {
 			processMethodDecl(md);
 		}
-		for (FieldDecl fd: classDecl.getFieldDeclarations()) {
+		for (FieldDecl fd : classDecl.getFieldDeclarations()) {
 			processFieldDecl(fd);
 		}
 	}
-	
+
 	private void processMethodDecl(MethodDecl md) {
 		this.mfv.setMethodName(md.getId());
 		int stackSize = md.accept(this.mfv);
 		stackSize += tni.indexTemps(this.mfv.getStatements());
 		lirMap.put(md.getId(), this.mfv.getStatements());
-		
+
 		// Set stack size in 'enter' statement
-		for (LIRStatement stmt: this.mfv.getStatements()) {
+		for (LIRStatement stmt : this.mfv.getStatements()) {
 			if (stmt.getClass().equals(EnterStmt.class)) {
 				((EnterStmt) stmt).setStackSize(stackSize);
 			}
 		}
 	}
-	
+
 	private void processFieldDecl(FieldDecl fd) {
-		for (Field f: fd.getFields()) {
+		for (Field f : fd.getFields()) {
 			DataStmt ds;
 			IntLiteral arrLen = f.getArrayLength();
 			if (arrLen != null) {
 				ds = new DataStmt(f.getId(), arrLen.getValue());
-			}
-			else {
+			} else {
 				ds = new DataStmt(f.getId());
 			}
-			
+
 			this.dataStmtList.add(ds);
 		}
 	}
@@ -71,21 +70,20 @@ public class ProgramFlattener {
 	public HashMap<String, List<LIRStatement>> getLirMap() {
 		return lirMap;
 	}
-	
+
 	public void print() {
-		for (DataStmt ds: dataStmtList) {
+		for (DataStmt ds : dataStmtList) {
 			System.out.println(ds);
 		}
-		for (Entry<String, List<LIRStatement>> entry: lirMap.entrySet()) {
-			for (LIRStatement s: entry.getValue()) {
-	   		if (!s.getClass().equals(LabelStmt.class)) {
-	   			System.out.println("\t" + s);
-	   		}
-	   		else {
-	   			System.out.println(s);
-	   		}
+		for (Entry<String, List<LIRStatement>> entry : lirMap.entrySet()) {
+			for (LIRStatement s : entry.getValue()) {
+				if (!s.getClass().equals(LabelStmt.class)) {
+					System.out.println("\t" + s);
+				} else {
+					System.out.println(s);
+				}
 			}
-   	}
+		}
 	}
 
 	public List<DataStmt> getDataStmtList() {

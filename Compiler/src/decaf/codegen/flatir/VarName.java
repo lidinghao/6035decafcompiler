@@ -2,7 +2,7 @@ package decaf.codegen.flatir;
 
 public class VarName extends Name {
 	private String id;
-	private int blockId;
+	private int blockId; // -1 for global field, -2 for parameter
 	private boolean forString;
 	private String stringVal;
 	
@@ -59,6 +59,20 @@ public class VarName extends Name {
 	
 	@Override
 	public int hashCode() {
-		return (id + blockId + "").hashCode();
+		return hashString().hashCode();
+	}
+	
+	public String hashString() {
+		return (id + blockId + "");
+	}
+	
+	@Override 
+	public boolean equals(Object name) {
+		if (this == name) return true;
+		if (!name.getClass().equals(VarName.class)) return false;
+		
+		VarName vName = (VarName)name;
+		
+		return this.hashString().equals(vName.hashString());
 	}
 }

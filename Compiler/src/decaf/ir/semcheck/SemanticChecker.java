@@ -77,8 +77,8 @@ public class SemanticChecker {
 		}
 		
 		// Print again
-		out.println("AST after semantic checks:");
-		cd.accept(pv);
+		//out.println("AST after semantic checks:");
+		//cd.accept(pv);
 		
 		return true;
 	}

@@ -10,38 +10,38 @@ import decaf.codegen.flatir.TempName;
 public class TempNameIndexer {
 	private int tempCount;
 	private int tempNeeded;
-	
+
 	public TempNameIndexer() {
 		reset();
 	}
-	
+
 	public int indexTemps(List<LIRStatement> flatIR) {
 		reset();
-		
-		for (LIRStatement stmt: flatIR) {
+
+		for (LIRStatement stmt : flatIR) {
 			if (stmt.getClass().equals(QuadrupletStmt.class)) {
 				QuadrupletStmt quadruplet = (QuadrupletStmt) stmt;
 				processQuadruplet(quadruplet);
 			}
 		}
-		
+
 		return tempNeeded;
 	}
-	
+
 	private void reset() {
 		tempCount = 0;
 		tempNeeded = 0;
 	}
-	
+
 	private void processQuadruplet(QuadrupletStmt stmt) {
 		if (isTempName(stmt.getArg1())) {
 			tempCount--;
 		}
-		
+
 		if (isTempName(stmt.getArg2())) {
 			tempCount--;
 		}
-		
+
 		if (isTempName(stmt.getDestination())) {
 			TempName temp = (TempName) stmt.getDestination();
 			if (temp.getId() == -1) { // Not already set
@@ -49,20 +49,20 @@ public class TempNameIndexer {
 				tempCount++;
 			}
 		}
-		
+
 		if (tempCount > tempNeeded) {
 			tempNeeded = tempCount;
 		}
 	}
-	
+
 	private boolean isTempName(Name name) {
 		if (name == null) {
 			return false;
 		}
-		
+
 		return name.getClass().equals(TempName.class);
 	}
-	
+
 	public int getTempVarsNeeded() {
 		return tempNeeded;
 	}

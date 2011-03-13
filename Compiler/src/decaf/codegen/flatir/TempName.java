@@ -28,6 +28,20 @@ public class TempName extends Name {
 	
 	@Override
 	public int hashCode() {
-		return ("!@#$%^&*()" + id).hashCode(); // Using forbidden chars
+		return hashString().hashCode(); // Using forbidden chars
+	}
+	
+	public String hashString() {
+		return ("!@#$%^&*()" + id);
+	}
+	
+	@Override 
+	public boolean equals(Object name) {
+		if (this == name) return true;
+		if (!name.getClass().equals(TempName.class)) return false;
+		
+		TempName vName = (TempName)name;
+		
+		return this.hashString().equals(vName.hashString());
 	}
 }

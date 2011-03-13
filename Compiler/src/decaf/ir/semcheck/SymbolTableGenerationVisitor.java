@@ -264,6 +264,7 @@ public class SymbolTableGenerationVisitor implements ASTVisitor<Integer> {
 			methodTable.put(md.getId(), mDesc);
 
 			GenericSymbolTable pTable = new GenericSymbolTable(currentScope);
+			pTable.setScopeId(-2); // Params have -2 scope id
 			mDesc.setParameterSymbolTable(pTable);
 
 			currentScope = pTable;
@@ -298,6 +299,10 @@ public class SymbolTableGenerationVisitor implements ASTVisitor<Integer> {
 
 	@Override
 	public Integer visit(ReturnStmt stmt) {
+		if (stmt.getExpression() != null) {
+			stmt.getExpression().accept(this);
+		}
+		
 		return 0;
 	}
 
@@ -363,7 +368,7 @@ public class SymbolTableGenerationVisitor implements ASTVisitor<Integer> {
 			}
 			scope = scope.getParent();
 		}
-
+		
 		return false;
 	}
 

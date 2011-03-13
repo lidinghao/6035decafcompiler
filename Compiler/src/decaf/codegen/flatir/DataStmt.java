@@ -1,14 +1,14 @@
 package decaf.codegen.flatir;
 
 public class DataStmt extends LIRStatement {
-	private String name;
+	private String label;
 	private String stringVal;
 	private int arrLength;
 	private DataStmtType type;
 	
 	// Create DataStmt for primitive int or boolean
 	public DataStmt(String name) {
-		setName(name);
+		setLabel(name);
 		setStringVal(null);
 		setArrLength(-1);
 		this.type = DataStmtType.VARIABLE;
@@ -16,7 +16,7 @@ public class DataStmt extends LIRStatement {
 	
 	// Create DataStmt for an array
 	public DataStmt(String name, int arrLength) {
-		setName(name);
+		setLabel(name);
 		setStringVal(null);
 		setArrLength(arrLength);
 		this.type = DataStmtType.ARRAY;
@@ -24,18 +24,18 @@ public class DataStmt extends LIRStatement {
 	
 	// Create DataStmt for a string
 	public DataStmt(String name, String val) {
-		setName(name);
+		setLabel(name);
 		setStringVal(val);
 		setArrLength(-1);
 		this.type = DataStmtType.STRING;
 	}
 	
-	public String getName() {
-		return name;
+	public String getLabel() {
+		return label;
 	}
 	
-	public void setName(String name) {
-		this.name = name;
+	public void setLabel(String name) {
+		this.label = name;
 	}
 	
 	
@@ -65,7 +65,7 @@ public class DataStmt extends LIRStatement {
 
 	@Override
 	public String toString() {
-		String rtn = name + ":\t" + this.toString().toLowerCase();
+		String rtn = label + ":\t" + this.type.toString().toLowerCase();
 		switch(this.type) {
 			case VARIABLE:
 				break;
