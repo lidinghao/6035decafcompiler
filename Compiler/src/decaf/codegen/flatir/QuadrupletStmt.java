@@ -127,7 +127,7 @@ public class QuadrupletStmt extends LIRStatement {
 			out.println("\tneg\t" + Register.R10);
 		} 
 		else if (operator == QuadrupletOp.NOT) {
-			out.println("\tcmp\t" + falseLiteral + ", " + Register.R10);
+			out.println("\tcmp\t" + falseLiteral.getLocation() + ", " + Register.R10);
 			moveToRegister(out, falseLiteral, Register.R11);
 			out.println("\tcmovne\t" + Register.R11 + ", " + Register.R10);
 			moveToRegister(out, trueLiteral, Register.R11);
