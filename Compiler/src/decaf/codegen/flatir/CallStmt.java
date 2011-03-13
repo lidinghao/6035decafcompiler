@@ -24,6 +24,9 @@ public class CallStmt extends LIRStatement {
 
 	@Override
 	public void generateAssembly(PrintStream out) {
-		out.println("\tcall\t" + methodLabel);		
+		if (methodLabel.charAt(0) == '"')
+			out.println("\tcall\t" + methodLabel.substring(1,methodLabel.length()-1));		
+		else
+			out.println("\tcall\t" + methodLabel);
 	}
 }
