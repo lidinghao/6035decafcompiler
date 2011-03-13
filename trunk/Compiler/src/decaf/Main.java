@@ -4,6 +4,7 @@ import java.io.*;
 
 import decaf.codegen.flatir.LIRStatement;
 import decaf.codegen.flatir.LabelStmt;
+import decaf.codegen.flattener.CodeGenerator;
 import decaf.codegen.flattener.LocationResolver;
 import decaf.codegen.flattener.MethodFlatennerVisitor;
 import decaf.codegen.flattener.ProgramFlattener;
@@ -103,6 +104,10 @@ class Main {
 					System.out.println();
 					System.out.println("Locations:");
 					lr.printLocations();
+					System.out.println();
+					System.out.println("Code Gen:");
+					CodeGenerator cg = new CodeGenerator(pf, cd);
+					cg.generateCode();
 				}
 			}
 		} catch (Exception e) {
