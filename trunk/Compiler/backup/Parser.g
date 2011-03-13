@@ -460,10 +460,7 @@ mul_term_temp returns [TempExpression e] {
 } : (bt=mul_op se=not_term te=mul_term_temp 
 { 
 	if (te == null) e = new TempExpression(bt, se);
-	else {
-		e = new TempExpression(bt, se);
-		e.setRightDeepChild(te);
-	}
+	else e = new TempExpression(bt, new BinOpExpr(se, te));
 	e.setLineNumber(se.getLineNumber());
 	e.setColumnNumber(se.getColumnNumber()); 
 }) | 
@@ -471,22 +468,12 @@ mul_term_temp returns [TempExpression e] {
 
 mul_term returns [Expression e] {
 	Expression se;
-	Expression temp;
 	TempExpression te;
 	e = null;
 } : se=not_term te=mul_term_temp 
 { 
 	if (te == null)	e = se; 
-	else {
-		temp = se;
-		while (te.isMakeLeftDeep()) {
-			temp = new BinOpExpr(temp, te);
-			te = te.getRightDeepChild();
-		}
-		
-		e = new BinOpExpr(temp,te);
-	}
-	
+	else e = new BinOpExpr(se, te);	
 	e.setLineNumber(se.getLineNumber());
 	e.setColumnNumber(se.getColumnNumber()); 
 } ;
@@ -500,11 +487,7 @@ add_term_temp returns [TempExpression e] {
 } : (bt=add_op se=mul_term te=add_term_temp 
 { 
 	if (te == null) e = new TempExpression(bt, se);
-	else {
-		e = new TempExpression(bt, se);
-		e.setRightDeepChild(te);
-	}
-	
+	else e = new TempExpression(bt, new BinOpExpr(se, te));
 	e.setLineNumber(se.getLineNumber());
 	e.setColumnNumber(se.getColumnNumber()); 
 }) 
@@ -512,22 +495,12 @@ add_term_temp returns [TempExpression e] {
 
 add_term returns [Expression e] {
 	Expression se;
-	Expression temp;
 	TempExpression te;
 	e = null;
 } : se=mul_term te=add_term_temp 
 { 
 	if (te == null)	e = se; 
-	else {
-		temp = se;
-		while (te.isMakeLeftDeep()) {
-			temp = new BinOpExpr(temp, te);
-			te = te.getRightDeepChild();
-		}
-		
-		e = new BinOpExpr(temp,te);
-	}
-	
+	else e = new BinOpExpr(se,te);
 	e.setLineNumber(se.getLineNumber());
 	e.setColumnNumber(se.getColumnNumber()); 
 } ;
@@ -649,3 +622,4 @@ expr returns [Expression e]
 {
 	e = null;	
 }: e=cond_or_term ;
+

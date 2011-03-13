@@ -1,11 +1,21 @@
 class Program {
     void main() {
    		int a, b, c, d, e ,f;
+   		
         a = 70 + 2;
+        callout("printf", "%d\n", a);
+        
+        a = a + 8 -9 + 10;
+        callout("printf", "%d\n", a);
+        
         b = 7;        
-        c = a + (-62) + b;
+        c = a + -62 + b;
         callout("printf", "%d\n", c);
+        
         f = b - c + a; 
+        callout("printf", "%d\n", f);
+        
+        e = -f -a -b;
         callout("printf", "%d\n", f);
     }
 }
