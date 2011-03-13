@@ -64,6 +64,10 @@ public class QuadrupletStmt extends LIRStatement {
 				return dest + " = " + arg1 + " % " + arg2;
 			case MOVE:
 				return dest + " = " + arg1;
+			case NOT:
+				return dest + " = " + "!" + arg1;
+			case MINUS:
+				return dest + " = " + "-" + arg1;
 			case EQ:
 				return dest + " = " + arg1 + " == " + arg2;
 			case NEQ:
