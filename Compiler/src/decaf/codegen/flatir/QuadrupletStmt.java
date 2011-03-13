@@ -203,7 +203,7 @@ public class QuadrupletStmt extends LIRStatement {
 				break;
 		}
 		
-		out.println(instr + Register.R10 + ", " + Register.R11);
+		out.println(instr + Register.R11 + ", " + Register.R10);
 		
 		moveFromRegister(out, Register.R10, this.getDestination(), Register.R11);
 	}
