@@ -92,7 +92,7 @@ public class QuadrupletStmt extends LIRStatement {
 				break;
 			case MINUS:
 			case NOT:
-				processUnaryQuadruplet();
+				processUnaryQuadruplet(out, this.operator);
 				break;
 			case MOD:
 			case DIV:
@@ -112,15 +112,26 @@ public class QuadrupletStmt extends LIRStatement {
 		}
 	}
 
-	private void processUnaryQuadruplet() {
-		// TODO Auto-generated method stub
-		
+	private void processUnaryQuadruplet(PrintStream out, QuadrupletOp operator) {
+		moveToRegister(out, this.getArg1(), Register.R10);
+		if (operator == QuadrupletOp.MINUS) {
+			out.println("\tneg\t" + Register.R10);
+		} 
+		else if (operator == QuadrupletOp.NOT) {
+			out.println("\tnot\t" + Register.R10);
+		}
+		moveFromRegister(out, Register.R10, this.getDestination(), null);
 	}
 
 	private void processConditionalQuadruplet(PrintStream out,
 			QuadrupletOp operator2) {
-		// TODO Auto-generated method stub
-		
+		moveToRegister(out, this.getArg1(), Register.R10);
+		moveToRegister(out, this.getArg1(), Register.R11);
+		out.println("\tcmp\t" + Register.R10 + ", " + Register.R11);
+		moveToRegister(out, new Constant(0), Register.R11);
+		moveToRegister(out, new Constant(1), Register.R10);
+		out.println("\tcmove\t" + Register.R10 + ", " + Register.R11);
+		moveFromRegister(out, Register.R11, this.getDestination(), null);
 	}
 
 	private void processDivModQuadruplet(PrintStream out, QuadrupletOp op) {
