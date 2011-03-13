@@ -96,8 +96,15 @@ public class MethodFlatennerVisitor implements ASTVisitor<Integer> {
 
 	@Override
 	public Integer visit(Block block) {
+		// Initialize local vars to zero/false
 		for (VarDecl vd: block.getVarDeclarations()) {
-			this.totalLocalVars += vd.getVariables().size();
+			for (String v: vd.getVariables()) {
+				VarName varName = new VarName(v);
+				varName.setBlockId(block.getBlockId());
+				this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE, varName, new Constant(0), null));
+			}
+			
+			this.totalLocalVars += vd.getVariables().size(); // Add to the total local vars in method
 		}
 		
 		for (Statement s: block.getStatements()) {

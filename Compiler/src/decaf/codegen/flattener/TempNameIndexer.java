@@ -2,8 +2,8 @@ package decaf.codegen.flattener;
 
 import java.util.List;
 
-import decaf.codegen.flatir.Name;
 import decaf.codegen.flatir.LIRStatement;
+import decaf.codegen.flatir.Name;
 import decaf.codegen.flatir.QuadrupletStmt;
 import decaf.codegen.flatir.TempName;
 

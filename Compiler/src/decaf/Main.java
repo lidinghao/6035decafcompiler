@@ -105,9 +105,9 @@ class Main {
 					System.out.println("Locations:");
 					lr.printLocations();
 					System.out.println();
-					System.out.println("Code Gen:");
+					//System.out.println("Code Gen:");
 					CodeGenerator cg = new CodeGenerator(pf, cd);
-					cg.generateCode();
+					//cg.generateCode();
 				}
 			}
 		} catch (Exception e) {
