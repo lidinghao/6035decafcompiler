@@ -1,0 +1,23 @@
+class Program
+{
+	int A;
+    boolean changeA()
+    {
+        callout("printf","executing second cond\n");
+        return true;
+    }
+
+
+    void main()
+    {
+		A=0;
+
+        if (true || true && changeA())
+	{
+            callout("printf","A = %d\n", A);
+	} 
+     
+    }
+
+}
+
