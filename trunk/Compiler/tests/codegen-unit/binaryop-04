@@ -1,0 +1,11 @@
+class Program
+{
+    void main()
+    {
+   		boolean a;
+   		a = !false; //should be true!!
+   		
+	    callout("printf", "not_false : %d\n", a);  
+ 
+    }
+}
