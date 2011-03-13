@@ -5,12 +5,14 @@ public class GlobalLocation extends Location {
 	private Location offset; // For arrays
 	private boolean isString;
 	private String stringVal;
+	private Location offsetRegister;
 	
 	public GlobalLocation(String name) {
 		this.setName(name);
 		this.setIsString(false);
 		this.setStringVal(null);
 		this.setOffset(null);
+		this.offsetRegister = null;
 	}
 	
 	public GlobalLocation(String name, boolean isString, String stringVal) {
@@ -18,6 +20,7 @@ public class GlobalLocation extends Location {
 		this.setIsString(isString);
 		this.setStringVal(stringVal);
 		this.setOffset(null);
+		this.offsetRegister = null;
 	}
 
 	public void setName(String name) {
@@ -61,5 +64,29 @@ public class GlobalLocation extends Location {
 		}
 		
 		return rtn;
+	}
+
+	@Override
+	/**
+	 * Ensure that you set the offset register before hand!
+	 */
+	public String getASMRepresentation() {
+		if (this.isString) {
+			return "." + this.name;
+		}
+		else if (this.offset == null) {
+			return this.name;
+		}
+		else {
+			return this.name + "(, " + this.offsetRegister.getASMRepresentation() + ", 8)";
+		}
+	}
+
+	public void setOffsetRegister(Location offsetRegister) {
+		this.offsetRegister = offsetRegister;
+	}
+
+	public Location getOffsetRegister() {
+		return offsetRegister;
 	}
 }

@@ -1,5 +1,7 @@
 package decaf.codegen.flatir;
 
+import java.io.PrintStream;
+
 public class LeaveStmt extends LIRStatement {
 	public LeaveStmt() { };
 	
@@ -8,5 +10,10 @@ public class LeaveStmt extends LIRStatement {
 		String rtn = "leave, rtn";
 		
 		return rtn;
+	}
+
+	@Override
+	public void generateAssembly(PrintStream out) {
+		out.println("\tleave");
 	}
 }

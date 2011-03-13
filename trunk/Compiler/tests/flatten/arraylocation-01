@@ -1,0 +1,10 @@
+class Program {
+   int a[10], b[10];
+   
+   void main() {
+      int z;
+      a[2] = a[b[z]];
+      a[3] = z + b[4];
+      a[2] += a[1] + b[4];
+   }
+}

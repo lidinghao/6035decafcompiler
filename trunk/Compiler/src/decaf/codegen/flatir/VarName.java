@@ -75,4 +75,9 @@ public class VarName extends Name {
 		
 		return this.hashString().equals(vName.hashString());
 	}
+
+	@Override
+	public boolean isArray() {
+		return false;
+	}
 }

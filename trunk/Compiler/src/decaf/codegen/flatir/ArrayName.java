@@ -34,4 +34,14 @@ public class ArrayName extends Name {
 	public int hashCode() {
 		return (id + "-1" + "[" + index + "]").hashCode();
 	}
+
+	@Override
+	public boolean isArray() {
+		return true;
+	}
+	
+	public void setOffsetRegister(Register r) {
+		GlobalLocation loc = (GlobalLocation) this.getLocation();
+		loc.setOffsetRegister(new RegisterLocation(r));
+	}
 }

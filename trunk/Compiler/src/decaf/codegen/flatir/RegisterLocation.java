@@ -23,4 +23,9 @@ public class RegisterLocation extends Location {
 	public String toString() {
 		return "%" + register.toString().toLowerCase();
 	}
+
+	@Override
+	public String getASMRepresentation() {
+		return this.toString();
+	}
 }

@@ -19,4 +19,9 @@ public class ConstantLocation extends Location {
 	public String toString() {
 		return "$" + this.value;
 	}
+
+	@Override
+	public String getASMRepresentation() {
+		return this.toString();
+	}
 }

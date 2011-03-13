@@ -1,5 +1,7 @@
 package decaf.codegen.flatir;
 
-public abstract class LIRStatement {
+import java.io.PrintStream;
 
+public abstract class LIRStatement {
+	public abstract void generateAssembly(PrintStream out);
 }

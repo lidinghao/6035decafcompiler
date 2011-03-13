@@ -1,5 +1,7 @@
 package decaf.codegen.flatir;
 
+import java.io.PrintStream;
+
 public class DataStmt extends LIRStatement {
 	private String label;
 	private String stringVal;
@@ -78,5 +80,21 @@ public class DataStmt extends LIRStatement {
 		}
 		
 		return rtn;
+	}
+
+	@Override
+	public void generateAssembly(PrintStream out) {
+		switch(this.type) {
+			case VARIABLE:
+				out.println("\t.comm\t" + this.label + ", 1, 8"); // Length 1, Size 8 bytes (64 bit)
+				break;
+			case ARRAY:
+				out.println("\t.comm\t" + this.label + ", " + this.arrLength + ", 8"); // Length 1, Size 8 bytes (64 bit)
+				break;
+			case STRING:
+				out.println("." + this.label + ":");
+				out.println("\t.string\t" + this.stringVal);
+				break;
+		}
 	}
 }
