@@ -63,7 +63,7 @@ class Main {
 						lexer.consume();
 					}
 				}
-			} else if (CLI.target == CLI.PARSE || CLI.target == CLI.DEFAULT) {
+			} else if (CLI.target == CLI.PARSE) {
 				DecafScanner lexer = new DecafScanner(new DataInputStream(
 						inputStream));
 				DecafParser parser = new DecafParser(lexer);
@@ -72,7 +72,7 @@ class Main {
 				if (parser.program() == null) {
 					throw new Exception("Class name must be 'Program'");
 				}
-			} else if (CLI.target == CLI.INTER) {
+			} else if (CLI.target == CLI.INTER || CLI.target == CLI.DEFAULT) {
 				DecafScanner lexer = new DecafScanner(new DataInputStream(
 						inputStream));
 				DecafParser parser = new DecafParser(lexer);
