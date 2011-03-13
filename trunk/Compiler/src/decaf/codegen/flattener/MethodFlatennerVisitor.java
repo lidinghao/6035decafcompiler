@@ -143,7 +143,7 @@ public class MethodFlatennerVisitor implements ASTVisitor<Integer> {
 	@Override
 	public Integer visit(ContinueStmt stmt) {
 		// Can only occur in for loop
-		this.statements.add(new JumpStmt(JumpCondOp.NONE, new LabelStmt(getForTest())));
+		this.statements.add(new JumpStmt(JumpCondOp.NONE, new LabelStmt(getForIncrement())));
 
 		return 0;
 	}
@@ -182,6 +182,7 @@ public class MethodFlatennerVisitor implements ASTVisitor<Integer> {
 		stmt.getBlock().accept(this);
 		
 		// Increment loop var and jump to test
+		this.statements.add(new LabelStmt(getForIncrement()));
 		this.statements.add(new QuadrupletStmt(QuadrupletOp.ADD, loopId, loopId, new Constant(1)));
 		this.statements.add(new JumpStmt(JumpCondOp.NONE, new LabelStmt(getForTest())));
 		
@@ -331,6 +332,10 @@ public class MethodFlatennerVisitor implements ASTVisitor<Integer> {
 	
 	private String getForBody() {
 		return methodName + "_for" + currentForId + "_body";
+	}
+
+	private String getForIncrement() {
+		return methodName + "_for" + currentForId + "_incr";
 	}
 	
 	private String getForEnd() {
