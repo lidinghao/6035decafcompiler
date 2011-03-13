@@ -2,19 +2,22 @@ package decaf.codegen.flatir;
 
 public class GlobalLocation extends Location {
 	private String name;
-	private boolean forString;
+	private Name offset; // For arrays
+	private boolean isString;
 	private String stringVal;
 	
 	public GlobalLocation(String name) {
 		this.setName(name);
-		this.setForString(false);
+		this.setIsString(false);
 		this.setStringVal(null);
+		this.setOffset(null);
 	}
 	
 	public GlobalLocation(String name, boolean isString, String stringVal) {
 		this.setName(name);
-		this.setForString(isString);
+		this.setIsString(isString);
 		this.setStringVal(stringVal);
+		this.setOffset(null);
 	}
 
 	public void setName(String name) {
@@ -25,12 +28,12 @@ public class GlobalLocation extends Location {
 		return name;
 	}
 	
-	public boolean isForString() {
-		return forString;
+	public boolean isString() {
+		return isString;
 	}
 
-	public void setForString(boolean forString) {
-		this.forString = forString;
+	public void setIsString(boolean isString) {
+		this.isString = isString;
 	}
 
 	public String getStringVal() {
@@ -39,5 +42,18 @@ public class GlobalLocation extends Location {
 
 	public void setStringVal(String stringVal) {
 		this.stringVal = stringVal;
+	}
+
+	public void setOffset(Name offset) {
+		this.offset = offset;
+	}
+
+	public Name getOffset() {
+		return offset;
+	}
+	
+	@Override
+	public String toString() {
+		return "." + name;
 	}
 }
