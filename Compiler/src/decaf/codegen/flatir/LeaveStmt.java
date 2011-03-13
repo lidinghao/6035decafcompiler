@@ -15,5 +15,6 @@ public class LeaveStmt extends LIRStatement {
 	@Override
 	public void generateAssembly(PrintStream out) {
 		out.println("\tleave");
+		out.println("\tret");
 	}
 }

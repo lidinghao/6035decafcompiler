@@ -1,0 +1,17 @@
+class Program {
+
+    int foo(int x) {
+        return x + 3;
+    }
+
+    void main() {
+        int y;
+
+        y = 15;
+        if (y == 15) {
+            callout("printf", "Indeed! \'tis 15!\n");
+        } else {
+            callout("printf", "What! %d\n", y);
+        }
+    }
+}

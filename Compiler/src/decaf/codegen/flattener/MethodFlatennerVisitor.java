@@ -164,6 +164,7 @@ public class MethodFlatennerVisitor implements ASTVisitor<Integer> {
 		currentForId = ++forCount;
 		
 		VarName loopId = new VarName(stmt.getId());
+		loopId.setBlockId(stmt.getBlock().getBlockId());
 		
 		// Initialization block
 		this.statements.add(new LabelStmt(getForInit()));

@@ -17,7 +17,7 @@ public class RegisterName extends Name {
 	
 	@Override
 	public String toString() {
-		return "%" + register;
+		return register.toString();
 	}
 
 	@Override

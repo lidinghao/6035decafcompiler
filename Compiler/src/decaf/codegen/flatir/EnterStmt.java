@@ -36,6 +36,6 @@ public class EnterStmt extends LIRStatement {
 
 	@Override
 	public void generateAssembly(PrintStream out) {
-		out.println("\tenter\t" + "$" + this.stackSize + ", $0");		
+		out.println("\tenter\t" + "$" + (this.stackSize * 8) + ", $0");		
 	}
 }
