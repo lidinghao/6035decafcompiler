@@ -117,13 +117,23 @@ public class QuadrupletStmt extends LIRStatement {
 	}
 
 	private void processUnaryQuadruplet(PrintStream out, QuadrupletOp operator) {
+		Constant falseLiteral = new Constant(0);
+		falseLiteral.setLocation(new ConstantLocation(falseLiteral.getValue()));
+		Constant trueLiteral = new Constant(1);
+		trueLiteral.setLocation(new ConstantLocation(trueLiteral.getValue()));
+		
 		moveToRegister(out, this.getArg1(), Register.R10);
 		if (operator == QuadrupletOp.MINUS) {
 			out.println("\tneg\t" + Register.R10);
 		} 
 		else if (operator == QuadrupletOp.NOT) {
-			out.println("\tnot\t" + Register.R10);
+			out.println("\tcmp\t" + falseLiteral + ", " + Register.R10);
+			moveToRegister(out, falseLiteral, Register.R11);
+			out.println("\tcmovne\t" + Register.R11 + ", " + Register.R10);
+			moveToRegister(out, trueLiteral, Register.R11);
+			out.println("\tcmove\t" + Register.R11 + ", " + Register.R10);
 		}
+		
 		moveFromRegister(out, Register.R10, this.getDestination(), Register.R11);
 	}
 
