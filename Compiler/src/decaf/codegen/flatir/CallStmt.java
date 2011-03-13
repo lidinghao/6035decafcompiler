@@ -1,5 +1,7 @@
 package decaf.codegen.flatir;
 
+import java.io.PrintStream;
+
 public class CallStmt extends LIRStatement {
 	private String methodLabel;
 	
@@ -18,5 +20,10 @@ public class CallStmt extends LIRStatement {
 	@Override
 	public String toString() {
 		return "call " + methodLabel;
+	}
+
+	@Override
+	public void generateAssembly(PrintStream out) {
+		out.println("\tcall\t" + methodLabel);		
 	}
 }

@@ -20,4 +20,8 @@ public class StackLocation extends Location {
 		return "stack(" + offset + ")";
 	}
 
+	@Override
+	public String getASMRepresentation() {
+		return "-" + (offset * 8) + "(%rsp)";
+	}
 }

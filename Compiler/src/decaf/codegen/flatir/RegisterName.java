@@ -19,4 +19,9 @@ public class RegisterName extends Name {
 	public String toString() {
 		return "%" + register;
 	}
+
+	@Override
+	public boolean isArray() {
+		return false;
+	}
 }

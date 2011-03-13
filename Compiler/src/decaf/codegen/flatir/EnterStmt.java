@@ -1,5 +1,7 @@
 package decaf.codegen.flatir;
 
+import java.io.PrintStream;
+
 public class EnterStmt extends LIRStatement {
 	private int stackSize;
 	
@@ -30,5 +32,10 @@ public class EnterStmt extends LIRStatement {
 		}
 		
 		return rtn;
+	}
+
+	@Override
+	public void generateAssembly(PrintStream out) {
+		out.print("\tenter\t" + "$" + this.stackSize + ", $0");		
 	}
 }

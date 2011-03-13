@@ -10,4 +10,6 @@ public abstract class Name {
 	public Location getLocation() {
 		return location;
 	}
+	
+	public abstract boolean isArray();
 }

@@ -56,6 +56,7 @@ public class ExpressionFlatennerVisitor implements ASTVisitor<Name> {
 	private int currentAndId;
 	private int currentOrId;
 	private int strCount;
+	private int inArrayLocation;
 
 	public ExpressionFlatennerVisitor(List<LIRStatement> statements,
 			String methodName) {
@@ -66,14 +67,33 @@ public class ExpressionFlatennerVisitor implements ASTVisitor<Name> {
 		this.currentAndId = 0;
 		this.currentOrId = 0;
 		this.strCount = 0;
+		this.inArrayLocation = 0;
 	}
 
 	@Override
 	public Name visit(ArrayLocation loc) {
-		String id = loc.getId();
-		Name index = loc.getExpr().accept(this);
-		ArrayName arrayName = new ArrayName(id, index);
-		return arrayName;
+		this.inArrayLocation++;
+		
+		Name rtnName = null;
+		
+		if (inArrayLocation <= 1) {
+			String id = loc.getId();
+			Name index = loc.getExpr().accept(this);
+			rtnName = new ArrayName(id, index);
+		}
+		else {
+			String id = loc.getId();
+			Name index = loc.getExpr().accept(this);
+			ArrayName arrayName = new ArrayName(id, index);
+			
+			if (loc.getExpr().getClass().equals(ArrayLocation.class));
+			rtnName = new TempName();
+			this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE, rtnName, arrayName, null));
+		}
+		
+		this.inArrayLocation--;
+		
+		return rtnName;
 	}
 
 	@Override

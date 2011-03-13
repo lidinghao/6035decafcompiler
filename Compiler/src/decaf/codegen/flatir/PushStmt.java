@@ -1,5 +1,7 @@
 package decaf.codegen.flatir;
 
+import java.io.PrintStream;
+
 public class PushStmt extends LIRStatement {
 	private Name address; // Can be register, memory or immediate
 	
@@ -18,5 +20,10 @@ public class PushStmt extends LIRStatement {
 	@Override
 	public String toString() {
 		return "push " + address;
+	}
+	
+	@Override
+	public void generateAssembly(PrintStream out) {
+		out.println("\tpush\t" + this.address.getLocation().getASMRepresentation());
 	}
 }

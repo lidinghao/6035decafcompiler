@@ -16,5 +16,11 @@ public enum Register {
 	R12, // callee-saved register
 	R13, // callee-saved register
 	R14, // callee-saved register
-	R15, // callee-saved register
+	R15; // callee-saved register
+	
+	@Override 
+	public String toString() {
+		String s = super.toString();
+		return "%" + s.toLowerCase();
+	}
 }

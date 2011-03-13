@@ -1,5 +1,7 @@
 package decaf.codegen.flatir;
 
+import java.io.PrintStream;
+
 public class LabelStmt extends LIRStatement {
 	private String label;
 	private boolean isMethodLabel;
@@ -27,5 +29,15 @@ public class LabelStmt extends LIRStatement {
 
 	public boolean isMethodLabel() {
 		return isMethodLabel;
+	}
+
+	@Override
+	public void generateAssembly(PrintStream out) {
+		if (this.isMethodLabel) {
+			out.println(this.label + ":");
+		}
+		else {
+			out.println("." + this.label + ":");
+		}
 	}
 }

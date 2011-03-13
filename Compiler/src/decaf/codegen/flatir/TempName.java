@@ -44,4 +44,10 @@ public class TempName extends Name {
 		
 		return this.hashString().equals(vName.hashString());
 	}
+
+
+	@Override
+	public boolean isArray() {
+		return false;
+	}
 }

@@ -22,4 +22,9 @@ public class Constant extends Name { // Hack for array index
 	public String toString() {
 		return Integer.toString(value);
 	}
+
+	@Override
+	public boolean isArray() {
+		return false;
+	}
 }

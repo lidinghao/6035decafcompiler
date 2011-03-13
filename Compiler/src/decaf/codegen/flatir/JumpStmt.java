@@ -1,5 +1,7 @@
 package decaf.codegen.flatir;
 
+import java.io.PrintStream;
+
 public class JumpStmt extends LIRStatement {
 	private JumpCondOp condition;
 	private LabelStmt label;
@@ -54,5 +56,45 @@ public class JumpStmt extends LIRStatement {
 		}
 		
 		return rtn + ") " + "'" + label.getLabel() + "'";
+	}
+
+	@Override
+	public void generateAssembly(PrintStream out) {
+		String s = "\t";
+		switch(this.condition) {
+			case EQ:
+				s += "je\t";
+				break;
+			case NEQ:
+				s += "jne\t";
+				break;
+			case ZERO:
+				s += "jz\t";
+				break;
+			case GT:
+				s += "jg\t";
+				break;
+			case GTE:
+				s += "jge\t";
+				break;
+			case LT:
+				s += "jl\t";
+				break;
+			case LTE:
+				s += "jle\t";
+				break;
+			case NONE:
+				s += "jmp\t";
+				break;
+		}
+		
+		if (this.label.isMethodLabel()) {
+			s += this.label.getLabel();
+		}
+		else {
+			s += "." + this.label.getLabel();
+		}
+		
+		out.println(s);
 	}
 }
