@@ -1,58 +1,88 @@
 package decaf.codegen.flattener;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.Map.Entry;
 
 import decaf.codegen.flatir.*;
+import decaf.ir.ast.ClassDecl;
+import decaf.ir.ast.MethodDecl;
 
 public class LocationResolver {
 	private int stackOffset;
 	private HashMap<Name, Location> locationMap;
 	private ProgramFlattener pf;
+	private ClassDecl cd;
+	private String methodName; 
 	
-	public LocationResolver(ProgramFlattener pf) {
-		this.stackOffset = 1;
+	public LocationResolver(ProgramFlattener pf, ClassDecl cd) {
+		this.stackOffset = -1;
 		this.locationMap = new HashMap<Name, Location>();
 		this.pf = pf;
+		this.cd = cd;
+		this.methodName = null;
 	}
 	
-	public int resolveLocations(List<LIRStatement> flatIR) {
-		for (LIRStatement stmt: flatIR) {
-			if (stmt.getClass().equals(QuadrupletStmt.class)) {
-				QuadrupletStmt qStmt = (QuadrupletStmt)stmt;
-				resolveName(qStmt.getArg1());
-				resolveName(qStmt.getArg2());
-				resolveName(qStmt.getDestination());
+	public void resolveLocations() {
+		for (Entry<String, List<LIRStatement>> entry: this.pf.getLirMap().entrySet()) {
+			List<LIRStatement> flatIR = entry.getValue();	
+			methodName = entry.getKey();
+			locationMap.clear();
+			for (LIRStatement stmt: flatIR) {
+				if (stmt.getClass().equals(QuadrupletStmt.class)) {
+					QuadrupletStmt qStmt = (QuadrupletStmt)stmt;
+					resolveName(qStmt.getArg1());
+					resolveName(qStmt.getArg2());
+					resolveName(qStmt.getDestination());
+				}
+				else if (stmt.getClass().equals(PopStmt.class)) {
+					PopStmt popStmt = (PopStmt)stmt;
+					resolveName(popStmt.getAddress());
+				}
+				else if (stmt.getClass().equals(PushStmt.class)) {
+					PushStmt pushStmt = (PushStmt)stmt;
+					resolveName(pushStmt.getAddress());
+				}
 			}
-			else if (stmt.getClass().equals(PopStmt.class)) {
-				PopStmt popStmt = (PopStmt)stmt;
-				resolveName(popStmt.getAddress());
-			}
-			else if (stmt.getClass().equals(PushStmt.class)) {
-				PushStmt pushStmt = (PushStmt)stmt;
-				resolveName(pushStmt.getAddress());
-			}
+			
+			// DEBUG
+			//System.out.println(entry.getKey() + ": " + (-1 * this.stackOffset -1));
+			
+			this.stackOffset = -1; // Reset
 		}
-		
-		return stackOffset; // Should equal x+1, where x is the same as enter 'x'
 	}
 	
-	public void printLocations(List<LIRStatement> flatIR) {
-		for (LIRStatement stmt: flatIR) {
-			if (stmt.getClass().equals(QuadrupletStmt.class)) {
-				QuadrupletStmt qStmt = (QuadrupletStmt)stmt;
-				printName(qStmt.getArg1());
-				printName(qStmt.getArg2());
-				printName(qStmt.getDestination());
+	public void printLocations() {
+		for (Entry<String, List<LIRStatement>> entry: this.pf.getLirMap().entrySet()) {
+			List<LIRStatement> flatIR = entry.getValue();	
+			System.out.println(entry.getKey() +":");
+			Set<String> out = new HashSet<String>();
+			for (LIRStatement stmt: flatIR) {
+				if (stmt.getClass().equals(QuadrupletStmt.class)) {
+					QuadrupletStmt qStmt = (QuadrupletStmt)stmt;
+					out.add(getLocationEntry(qStmt.getArg1()));
+					out.add(getLocationEntry(qStmt.getArg2()));
+					out.add(getLocationEntry(qStmt.getDestination()));
+				}
+				else if (stmt.getClass().equals(PopStmt.class)) {
+					PopStmt popStmt = (PopStmt)stmt;
+					out.add(getLocationEntry(popStmt.getAddress()));
+				}
+				else if (stmt.getClass().equals(PushStmt.class)) {
+					PushStmt pushStmt = (PushStmt)stmt;
+					out.add(getLocationEntry(pushStmt.getAddress()));
+				}
 			}
-			else if (stmt.getClass().equals(PopStmt.class)) {
-				PopStmt popStmt = (PopStmt)stmt;
-				printName(popStmt.getAddress());
+			
+			for (String s: out) {
+				if (!s.equals("null")) {
+					System.out.println(s);
+				}
 			}
-			else if (stmt.getClass().equals(PushStmt.class)) {
-				PushStmt pushStmt = (PushStmt)stmt;
-				printName(pushStmt.getAddress());
-			}
+			
+			System.out.println();
 		}
 	}
 	
@@ -64,7 +94,7 @@ public class LocationResolver {
 				Location loc = new StackLocation(stackOffset);
 				name.setLocation(loc);
 				locationMap.put(name, loc);
-				stackOffset++;
+				stackOffset--;
 			}
 			else {
 				name.setLocation(locationMap.get(name)); // Set already defined location
@@ -74,7 +104,7 @@ public class LocationResolver {
 			ArrayName arrayName = (ArrayName)name;
 			GlobalLocation loc = new GlobalLocation(arrayName.getId());
 			resolveName(arrayName.getIndex());
-			loc.setOffset(arrayName.getIndex());
+			loc.setOffset(arrayName.getIndex().getLocation());
 			name.setLocation(loc);
 		}
 		else if (name.getClass().equals(VarName.class)) {
@@ -90,11 +120,15 @@ public class LocationResolver {
 					GlobalLocation gLoc = new GlobalLocation(varName.getId());
 					name.setLocation(gLoc);
 				}
+				else if (varName.getBlockId() == -2) { // Is an argument
+					int argIndex = this.findArgumentIndex(methodName, varName.getId());
+					this.processArgumentLocation(name, argIndex);
+				}
 				else {
 					Location loc = new StackLocation(stackOffset);
 					name.setLocation(loc);
 					locationMap.put(name, loc);
-					stackOffset++;
+					stackOffset--;
 				}
 			}
 			else {
@@ -105,18 +139,59 @@ public class LocationResolver {
 			name.setLocation(new RegisterLocation((RegisterName)name));
 		}
 		else { // Constant
-			name.setLocation(null);
+			Constant c = (Constant) name;
+			name.setLocation(new ConstantLocation(c.getValue()));
 		}
 	}
 	
-	public void printName(Name name) {
-		if (name == null) return;
+	public String getLocationEntry(Name name) {
+		if (name == null) return "null";
+		return (name + ": " + name.getLocation());
+	}
+	
+	public int findArgumentIndex(String methodName, String id) {
+		for (MethodDecl md: cd.getMethodDeclarations()) {
+			if (md.getId().equals(methodName)) {
+				for (int i = 0; i < md.getParameters().size(); i++) {
+					if (id.equals(md.getParameters().get(i).getId())) {
+						return i;
+					}
+				}
+			}
+		}
 		
-		if (name.getClass().equals(Constant.class)) {
-			System.out.println(name + ": $" + name);
+		return 0;
+	}
+	
+	private void processArgumentLocation(Name name, int index) {
+		if (index < 6) {
+			RegisterLocation loc = null;
+			switch (index) {
+				case 0:
+					loc = new RegisterLocation(Register.RDI);
+					break;
+				case 1:
+					loc = new RegisterLocation(Register.RSI);
+					break;
+				case 2:
+					loc = new RegisterLocation(Register.RDX);
+					break;
+				case 3:
+					loc = new RegisterLocation(Register.RCX);
+					break;
+				case 4:
+					loc = new RegisterLocation(Register.R8);
+					break;
+				case 5:
+					loc = new RegisterLocation(Register.R9);
+					break;
+			}
+			
+			name.setLocation(loc);
 		}
 		else {
-			System.out.println(name + ": " + name.getLocation());
+			int stackOffset = index - 4; // Start from -15(%rbp)
+			name.setLocation(new StackLocation(stackOffset));
 		}
 	}
 }

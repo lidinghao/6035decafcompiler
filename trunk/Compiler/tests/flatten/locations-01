@@ -1,0 +1,15 @@
+class Program {
+   int a, b;
+   int c[10];
+   boolean x, y;
+   boolean z[10];
+
+   void main() {
+      int a, b;
+      boolean c;
+      callout("random_2", 1, "blah", 2, 3, 4);
+      a = 10 + b + a;
+      c = z[2];
+      c = z[a + b];
+   }
+}
