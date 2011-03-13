@@ -5,7 +5,7 @@ public class GlobalLocation extends Location {
 	private Location offset; // For arrays
 	private boolean isString;
 	private String stringVal;
-	private Location offsetRegister;
+	private RegisterLocation offsetRegister;
 	
 	public GlobalLocation(String name) {
 		this.setName(name);
@@ -82,7 +82,7 @@ public class GlobalLocation extends Location {
 		}
 	}
 
-	public void setOffsetRegister(Location offsetRegister) {
+	public void setOffsetRegister(RegisterLocation offsetRegister) {
 		this.offsetRegister = offsetRegister;
 	}
 

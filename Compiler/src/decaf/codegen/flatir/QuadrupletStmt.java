@@ -130,8 +130,13 @@ public class QuadrupletStmt extends LIRStatement {
 		
 		out.println("\tcmp\t" + Register.R10 + ", " + Register.R11);
 		
-		moveToRegister(out, new Constant(0), Register.R10);
-		moveToRegister(out, new Constant(1), Register.R11);
+		Constant falseLiteral = new Constant(0);
+		falseLiteral.setLocation(new ConstantLocation(falseLiteral.getValue()));
+		Constant trueLiteral = new Constant(1);
+		trueLiteral.setLocation(new ConstantLocation(trueLiteral.getValue()));
+		
+		moveToRegister(out, falseLiteral, Register.R10);
+		moveToRegister(out, trueLiteral, Register.R11);
 		
 		String instr = "\tcmov";
 		switch (op) {
@@ -160,7 +165,10 @@ public class QuadrupletStmt extends LIRStatement {
 	}
 
 	private void processDivModQuadruplet(PrintStream out, QuadrupletOp op) {
-		moveToRegister(out, new Constant(0), Register.RDX);
+		Constant falseLiteral = new Constant(0);
+		falseLiteral.setLocation(new ConstantLocation(falseLiteral.getValue()));
+		
+		moveToRegister(out, falseLiteral, Register.RDX);
 		moveToRegister(out, this.getArg1(), Register.RAX);
 		moveToRegister(out, this.getArg2(), Register.R10);
 		out.println("\tidiv\t" + Register.R10);
