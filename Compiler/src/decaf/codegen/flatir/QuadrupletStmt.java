@@ -126,7 +126,7 @@ public class QuadrupletStmt extends LIRStatement {
 	private void processConditionalQuadruplet(PrintStream out,
 			QuadrupletOp op) {
 		moveToRegister(out, this.getArg1(), Register.R10);
-		moveToRegister(out, this.getArg1(), Register.R11);
+		moveToRegister(out, this.getArg2(), Register.R11);
 		
 		out.println("\tcmp\t" + Register.R10 + ", " + Register.R11);
 		
