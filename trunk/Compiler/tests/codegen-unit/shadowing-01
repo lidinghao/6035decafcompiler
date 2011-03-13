@@ -1,0 +1,26 @@
+class Program
+{
+	int A;
+    void changeA()
+    {
+    	int A;
+    	A = 20;
+    	callout("printf","A = %d\n", A);
+    	if(true) {
+    		A = 12;
+    		callout("printf", "A = %d\n", A);
+    	}
+    }
+
+
+    void main()
+    {
+    	A=0;
+		callout("printf","A = %d\n", A);
+		changeA();
+		callout("printf","A = %d\n", A);
+     
+    }
+
+}
+

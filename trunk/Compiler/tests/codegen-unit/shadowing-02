@@ -1,0 +1,27 @@
+class Program
+{
+	int A;
+	int z;
+    void changeA()
+    {
+    	int A;
+    	A = 20;
+    	callout("printf","A = %d\n", A);
+    }
+
+
+    void main()
+    {
+    	A = 0;
+    	callout("printf","A = %d\n", A);
+    	for z=0, 2 {
+    		int A;
+    		A = z;
+    		callout("printf","A = %d\n", A);
+    		changeA();
+    	
+    	}
+    }
+
+}
+
