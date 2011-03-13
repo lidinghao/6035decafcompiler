@@ -241,7 +241,9 @@ public class MethodFlatennerVisitor implements ASTVisitor<Integer> {
 	@Override
 	public Integer visit(MethodDecl md) {
 		// Method prologue
-		this.statements.add(new LabelStmt(methodName));
+		LabelStmt methodLabel = new LabelStmt(methodName);
+		methodLabel.setMethodLabel(true);
+		this.statements.add(methodLabel);
 		this.statements.add(new EnterStmt());
 		
 		// Save callee-saved registers
