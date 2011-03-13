@@ -330,14 +330,15 @@ public class ExpressionFlatennerVisitor implements ASTVisitor<Name> {
 	@Override
 	public Name visit(UnaryOpExpr expr) {
 		Name arg1 = expr.getExpression().accept(this);
-
 		UnaryOpType op = expr.getOperator();
 		QuadrupletOp qOp = null;
 		switch (op) {
 			case NOT:
 				qOp = QuadrupletOp.NOT;
+				break;
 			case MINUS:
 				qOp = QuadrupletOp.MINUS;
+				break;
 		}
 
 		TempName dest = new TempName();
