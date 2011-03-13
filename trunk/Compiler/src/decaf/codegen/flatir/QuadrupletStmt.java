@@ -142,7 +142,7 @@ public class QuadrupletStmt extends LIRStatement {
 		moveToRegister(out, this.getArg1(), Register.R10);
 		moveToRegister(out, this.getArg2(), Register.R11);
 		
-		out.println("\tcmp\t" + Register.R10 + ", " + Register.R11);
+		out.println("\tcmp\t" + Register.R11 + ", " + Register.R10);
 		
 		Constant falseLiteral = new Constant(0);
 		falseLiteral.setLocation(new ConstantLocation(falseLiteral.getValue()));
