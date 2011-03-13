@@ -1,7 +1,12 @@
 class Program {
+	
+	int some_method() {
+		return 5;
+	}
+
 	void main() {
 		int i;
-		for i = 0, 10 {
+		for i = 0, some_method() {
 			callout("printf","%d\n",i);
 		}
 	}
