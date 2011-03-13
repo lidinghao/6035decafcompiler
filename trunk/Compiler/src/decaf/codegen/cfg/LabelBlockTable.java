@@ -7,6 +7,6 @@ public class LabelBlockTable extends HashMap<String, CFGBlock> {
 	
 	@Override
 	public String toString() {
-		
+		return null;
 	}
 }
