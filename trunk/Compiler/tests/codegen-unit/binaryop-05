@@ -1,0 +1,26 @@
+class Program
+{
+    void main()
+    {
+   		boolean a, b, c, d, e, f; 
+   		a = false;
+   		b = true;
+   		
+   		c = a || !b;
+   		
+   		callout("printf", "false || not_true : %d\n", c); //should give 0
+   		
+   		c = !a && b;
+   		
+   		callout("printf", "not_false && true : %d\n", c);  //should give 1
+   		
+   		c = (true && false) || (false || true);
+   		
+		callout("printf", "convoluted true : %d\n", c);  //should give 1
+   		
+   		c = !!(true);
+   		
+		callout("printf", "not_not_true : %d\n", c);  //should give 1
+ 
+    }
+}
