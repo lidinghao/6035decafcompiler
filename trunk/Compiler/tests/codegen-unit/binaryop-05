@@ -8,19 +8,19 @@ class Program
    		
    		c = a || !b;
    		
-   		callout("printf", "false || not_true : %d\n", c); //should give 0
+   		callout("printf", "%d\n", c); //should give 0
    		
    		c = !a && b;
    		
-   		callout("printf", "not_false && true : %d\n", c);  //should give 1
+   		callout("printf", "%d\n", c);  //should give 1
    		
    		c = (true && false) || (false || true);
    		
-		callout("printf", "convoluted true : %d\n", c);  //should give 1
+		callout("printf", "%d\n", c);  //should give 1
    		
    		c = !!(true);
    		
-		callout("printf", "not_not_true : %d\n", c);  //should give 1
+		callout("printf", "%d\n", c);  //should give 1
  
     }
 }
