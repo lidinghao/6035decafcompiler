@@ -9,7 +9,7 @@ class Program {
 				if (j > 3) {
 					break;
 				}
-				
+
 				callout("printf","%d\n",j);
 			}
 		}

@@ -31,11 +31,12 @@ public class ProgramFlattener {
 	}
 
 	public void flatten() {
-		for (MethodDecl md : classDecl.getMethodDeclarations()) {
-			processMethodDecl(md);
-		}
 		for (FieldDecl fd : classDecl.getFieldDeclarations()) {
 			processFieldDecl(fd);
+		}
+		
+		for (MethodDecl md : classDecl.getMethodDeclarations()) {
+			processMethodDecl(md);
 		}
 	}
 

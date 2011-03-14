@@ -269,6 +269,9 @@ public class MethodFlatennerVisitor implements ASTVisitor<Integer> {
 		
 		// Method epilogue
 		this.statements.add(new LabelStmt(getMethodEpilogue()));
+		if (this.methodName.equals("main")) {
+			this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE, new RegisterName(Register.RAX), new Constant(0), null));
+		}
 		this.statements.add(new LeaveStmt());
 		this.statements.add(new LabelStmt(getMethodEnd()));
 		
@@ -354,6 +357,10 @@ public class MethodFlatennerVisitor implements ASTVisitor<Integer> {
 	
 	private String getMethodEpilogue() {
 		return methodName + "_epilogue";
+	}
+	
+	private String getMethodException() {
+		return methodName + "_exp";
 	}
 	
 	private String getMethodEnd() {

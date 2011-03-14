@@ -35,10 +35,6 @@ public class CodeGenerator {
 				out.println("\t.globl main");
 			}
 			for (LIRStatement s: lirList) {
-				if (md.getId().equals("main") && s.getClass().equals(LeaveStmt.class)) {
-					out.println("\tmov\t$0, %rax");
-				}
-				//out.println(s.toString());
 				s.generateAssembly(out);
 			}
 		}
