@@ -10,7 +10,6 @@ class Program {
 		for j = 0, 1000 {
             x[j] = j;
             y[j] = 0;
-
         }
     }
 }

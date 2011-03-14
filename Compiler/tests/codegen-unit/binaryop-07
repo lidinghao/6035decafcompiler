@@ -10,7 +10,7 @@ class Program
 
 		c = (false || (false || ( false || false || false || false || (false || true))));
 		
-		callout("%d\n", c);  //should give 1
+		callout("printf","%d\n", c);  //should give 1
 	
 		c = ((false && false) || (true && (false || true))) && ( 30 < 100);
 		
