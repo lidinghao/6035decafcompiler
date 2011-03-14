@@ -1,0 +1,20 @@
+class Program
+{
+	int i1;
+	boolean b1;
+	int ai1[10];
+	boolean ab1[10];
+	
+    void main()
+    {
+   		int i2;
+   		boolean b2;
+   		
+   		callout("printf", "int global: %d\n", i1);
+   		callout("printf", "boolean global: %d\n", b1);
+   		callout("printf", "int array global: %d\n", ai1);
+   		callout("printf", "boolean array global: %d\n", ab1);
+   		callout("printf", "int local: %d\n", i2);
+   		callout("printf", "boolean local: %d\n", b2);
+    }
+}
