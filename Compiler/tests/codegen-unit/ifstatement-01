@@ -1,0 +1,25 @@
+class Program
+{
+    void main()
+    {
+   		int a, b;
+   		boolean c;
+   		
+   		a =70;
+   		b = 35;
+   		c = false;
+   		
+   		if( a != b && !c){
+   			callout("printf", "true \n");  
+   		}else{
+   			callout("printf", "error \n"); 
+   		}
+   		
+   		if( a != b && c){
+   			callout("printf", "error \n");  
+   		}else{
+   			callout("printf", "true \n"); 
+   		}
+
+    }
+}
