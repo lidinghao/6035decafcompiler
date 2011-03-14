@@ -1,8 +1,5 @@
 package decaf.codegen.flatir;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.io.PrintStream;
 
 public class LabelStmt extends LIRStatement {
@@ -35,12 +32,12 @@ public class LabelStmt extends LIRStatement {
 	}
 
 	@Override
-	public void generateAssembly(FileWriter out) throws IOException {
+	public void generateAssembly(PrintStream out) {
 		if (this.isMethodLabel) {
-			out.write(this.label + ":");
+			out.println(this.label + ":");
 		}
 		else {
-			out.write("." + this.label + ":");
+			out.println("." + this.label + ":");
 		}
 	}
 }

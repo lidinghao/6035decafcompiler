@@ -1,9 +1,7 @@
 package decaf.codegen.flatir;
 
-import java.io.FileWriter;
-import java.io.IOException;
-
+import java.io.PrintStream;
 
 public abstract class LIRStatement {
-	public abstract void generateAssembly(FileWriter out) throws IOException;
+	public abstract void generateAssembly(PrintStream out);
 }

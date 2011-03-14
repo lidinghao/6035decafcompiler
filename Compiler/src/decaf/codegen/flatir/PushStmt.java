@@ -1,8 +1,5 @@
 package decaf.codegen.flatir;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.io.PrintStream;
 
 public class PushStmt extends LIRStatement {
@@ -26,7 +23,7 @@ public class PushStmt extends LIRStatement {
 	}
 	
 	@Override
-	public void generateAssembly(FileWriter out) throws IOException {
-		out.write("\tpush\t" + this.address.getLocation().getASMRepresentation());
+	public void generateAssembly(PrintStream out) {
+		out.println("\tpush\t" + this.address.getLocation().getASMRepresentation());
 	}
 }

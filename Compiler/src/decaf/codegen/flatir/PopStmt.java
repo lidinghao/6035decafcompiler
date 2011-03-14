@@ -1,8 +1,5 @@
 package decaf.codegen.flatir;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.io.PrintStream;
 
 public class PopStmt extends LIRStatement {
@@ -26,7 +23,7 @@ public class PopStmt extends LIRStatement {
 	}
 
 	@Override
-	public void generateAssembly(FileWriter out) throws IOException {
-		out.write("\tpop\t" + this.address.getLocation().getASMRepresentation());
+	public void generateAssembly(PrintStream out) {
+		out.println("\tpop\t" + this.address.getLocation().getASMRepresentation());
 	}
 }
