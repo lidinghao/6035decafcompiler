@@ -48,9 +48,6 @@ public class LocationResolver {
 					resolveName(pushStmt.getAddress());
 				}
 			}
-			
-			// DEBUG
-			//System.out.println(entry.getKey() + ": " + (-1 * this.stackOffset -1));
 		}
 	}
 	

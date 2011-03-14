@@ -464,8 +464,8 @@ public class ExpressionFlattenerVisitor implements ASTVisitor<Name> {
 		
 		// Exception Handler
 		this.statements.add(arrayCheckFail);
-		VarName error = new VarName("$." + ProgramFlattener.exceptionErrorLabel);
-		error.isString();
+		VarName error = new VarName(ProgramFlattener.exceptionErrorLabel);
+		error.setIsString(true);
 		
 		// Move args to regs
 		this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE,
