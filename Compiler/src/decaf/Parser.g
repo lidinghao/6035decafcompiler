@@ -287,7 +287,7 @@ assign_op returns [AssignOpType a] {
 	a = null;
 } : 
 (ASSIGNPLUSEQ { a = AssignOpType.INCREMENT; } | 
-ASSIGNPLUSNEQ { a = AssignOpType.DECREMENT; } | 
+ASSIGNMINUSEQ { a = AssignOpType.DECREMENT; } | 
 ASSIGNEQ { a = AssignOpType.ASSIGN; });
 
 // Location

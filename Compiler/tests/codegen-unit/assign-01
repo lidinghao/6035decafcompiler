@@ -1,0 +1,20 @@
+class Program {
+	void main() {
+		int a,b,c;
+		a = 10;
+		b = 15;
+		c = 20;
+		
+		a += 5;
+		callout("printf","%d\n", a);
+		
+		b -= a;
+		callout("printf","%d\n", b);
+		
+		c += a + b;
+		callout("printf","%d\n", c);
+		
+		b -= 11;
+		callout("printf","%d\n", b);
+	}
+}
