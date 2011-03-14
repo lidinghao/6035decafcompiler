@@ -1,0 +1,16 @@
+class Program {
+	int x[1000];
+	int y[1000];
+
+    void main() {
+        int a, b, c, d;
+        int j;
+      
+        // load arrays
+		for j = 0, 1000 {
+            x[j] = j;
+            y[j] = 0;
+
+        }
+    }
+}

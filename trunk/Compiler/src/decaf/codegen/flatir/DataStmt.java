@@ -89,7 +89,7 @@ public class DataStmt extends LIRStatement {
 				out.println("\t.comm\t" + this.label + ", 1, 8"); // Length 1, Size 8 bytes (64 bit)
 				break;
 			case ARRAY:
-				out.println("\t.comm\t" + this.label + ", " + this.arrLength + ", 8"); // Length 1, Size 8 bytes (64 bit)
+				out.println("\t.comm\t" + this.label + ", " + (this.arrLength * 8)); // Length 1, Size 8 bytes (64 bit)
 				break;
 			case STRING:
 				out.println("." + this.label + ":");
