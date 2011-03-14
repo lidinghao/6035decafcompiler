@@ -1,5 +1,8 @@
 package decaf.codegen.flatir;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.PrintStream;
 
 public class JumpStmt extends LIRStatement {
@@ -59,7 +62,7 @@ public class JumpStmt extends LIRStatement {
 	}
 
 	@Override
-	public void generateAssembly(PrintStream out) {
+	public void generateAssembly(FileWriter out) throws IOException {
 		String s = "\t";
 		switch(this.condition) {
 			case EQ:
@@ -95,6 +98,6 @@ public class JumpStmt extends LIRStatement {
 			s += "." + this.label.getLabel();
 		}
 		
-		out.println(s);
+		out.write(s);
 	}
 }

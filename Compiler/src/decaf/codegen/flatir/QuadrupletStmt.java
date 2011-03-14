@@ -1,6 +1,7 @@
 package decaf.codegen.flatir;
 
-import java.io.PrintStream;
+import java.io.FileWriter;
+import java.io.IOException;
 
 public class QuadrupletStmt extends LIRStatement {
 	private QuadrupletOp operator;
@@ -86,7 +87,7 @@ public class QuadrupletStmt extends LIRStatement {
 	}
 
 	@Override
-	public void generateAssembly(PrintStream out) {
+	public void generateAssembly(FileWriter out) throws IOException {
 		switch(this.operator) {
 			case CMP:
 				processCompareQuadruplet(out);
@@ -116,7 +117,7 @@ public class QuadrupletStmt extends LIRStatement {
 		}
 	}
 
-	private void processUnaryQuadruplet(PrintStream out, QuadrupletOp operator) {
+	private void processUnaryQuadruplet(FileWriter out, QuadrupletOp operator) throws IOException {
 		Constant falseLiteral = new Constant(0);
 		falseLiteral.setLocation(new ConstantLocation(falseLiteral.getValue()));
 		Constant trueLiteral = new Constant(1);
@@ -124,25 +125,25 @@ public class QuadrupletStmt extends LIRStatement {
 		
 		moveToRegister(out, this.getArg1(), Register.R10);
 		if (operator == QuadrupletOp.MINUS) {
-			out.println("\tneg\t" + Register.R10);
+			out.write("\tneg\t" + Register.R10);
 		} 
 		else if (operator == QuadrupletOp.NOT) {
-			out.println("\tcmp\t" + falseLiteral.getLocation() + ", " + Register.R10);
+			out.write("\tcmp\t" + falseLiteral.getLocation() + ", " + Register.R10);
 			moveToRegister(out, falseLiteral, Register.R11);
-			out.println("\tcmovne\t" + Register.R11 + ", " + Register.R10);
+			out.write("\tcmovne\t" + Register.R11 + ", " + Register.R10);
 			moveToRegister(out, trueLiteral, Register.R11);
-			out.println("\tcmove\t" + Register.R11 + ", " + Register.R10);
+			out.write("\tcmove\t" + Register.R11 + ", " + Register.R10);
 		}
 		
 		moveFromRegister(out, Register.R10, this.getDestination(), Register.R11);
 	}
 
-	private void processConditionalQuadruplet(PrintStream out,
-			QuadrupletOp op) {
+	private void processConditionalQuadruplet(FileWriter out,
+			QuadrupletOp op) throws IOException {
 		moveToRegister(out, this.getArg1(), Register.R10);
 		moveToRegister(out, this.getArg2(), Register.R11);
 		
-		out.println("\tcmp\t" + Register.R11 + ", " + Register.R10);
+		out.write("\tcmp\t" + Register.R11 + ", " + Register.R10);
 		
 		Constant falseLiteral = new Constant(0);
 		falseLiteral.setLocation(new ConstantLocation(falseLiteral.getValue()));
@@ -174,18 +175,18 @@ public class QuadrupletStmt extends LIRStatement {
 				break;
 		}
 		
-		out.println(instr + Register.R11 + ", " + Register.R10);
+		out.write(instr + Register.R11 + ", " + Register.R10);
 		moveFromRegister(out, Register.R10, this.getDestination(), Register.R11);
 	}
 
-	private void processDivModQuadruplet(PrintStream out, QuadrupletOp op) {
+	private void processDivModQuadruplet(FileWriter out, QuadrupletOp op) throws IOException {
 		Constant falseLiteral = new Constant(0);
 		falseLiteral.setLocation(new ConstantLocation(falseLiteral.getValue()));
 		
 		moveToRegister(out, falseLiteral, Register.RDX);
 		moveToRegister(out, this.getArg1(), Register.RAX);
 		moveToRegister(out, this.getArg2(), Register.R10);
-		out.println("\tidiv\t" + Register.R10);
+		out.write("\tidiv\t" + Register.R10);
 		
 		if(op == QuadrupletOp.DIV) {
 			moveFromRegister(out, Register.RAX, this.getDestination(), Register.R10);
@@ -195,12 +196,12 @@ public class QuadrupletStmt extends LIRStatement {
 		}
 	}
 
-	private void processMoveQuadruplet(PrintStream out) {
+	private void processMoveQuadruplet(FileWriter out) throws IOException {
 		moveToRegister(out, this.getArg1(), Register.R10);
 		moveFromRegister(out, Register.R10, this.getDestination(), Register.R11);
 	}
 
-	private void processArithmeticQuadruplet(PrintStream out, QuadrupletOp op) {
+	private void processArithmeticQuadruplet(FileWriter out, QuadrupletOp op) throws IOException {
 		moveToRegister(out, this.getArg1(), Register.R10);
 		moveToRegister(out, this.getArg2(), Register.R11);
 		
@@ -217,37 +218,37 @@ public class QuadrupletStmt extends LIRStatement {
 				break;
 		}
 		
-		out.println(instr + Register.R11 + ", " + Register.R10);
+		out.write(instr + Register.R11 + ", " + Register.R10);
 		
 		moveFromRegister(out, Register.R10, this.getDestination(), Register.R11);
 	}
 	
-	private void processCompareQuadruplet(PrintStream out) {
+	private void processCompareQuadruplet(FileWriter out) throws IOException {
 		moveToRegister(out, this.getArg1(), Register.R10);
 		moveToRegister(out, this.getArg2(), Register.R11);
 		
-		out.println("\tcmp\t" + Register.R11 + ", " + Register.R10);
+		out.write("\tcmp\t" + Register.R11 + ", " + Register.R10);
 	}
 	
-	private void moveToRegister(PrintStream out, Name name, Register register) {
+	private void moveToRegister(FileWriter out, Name name, Register register) throws IOException {
 		if (name.isArray()) {
 			ArrayName arrayName = (ArrayName) name;
 			String indexLocation = arrayName.getIndex().getLocation().getASMRepresentation();
-			out.println("\tmov\t" + indexLocation + ", " + register);
+			out.write("\tmov\t" + indexLocation + ", " + register);
 			arrayName.setOffsetRegister(register);
 		}
 		
-		out.println("\tmov\t" + name.getLocation().getASMRepresentation() + ", " + register);
+		out.write("\tmov\t" + name.getLocation().getASMRepresentation() + ", " + register);
 	}
 	
-	private void moveFromRegister(PrintStream out, Register from, Name name, Register temp) {
+	private void moveFromRegister(FileWriter out, Register from, Name name, Register temp) throws IOException {
 		if (name.isArray()) {
 			ArrayName arrayName = (ArrayName) name;
 			String indexLocation = arrayName.getIndex().getLocation().getASMRepresentation();
-			out.println("\tmov\t" + indexLocation + ", " + temp);
+			out.write("\tmov\t" + indexLocation + ", " + temp);
 			arrayName.setOffsetRegister(temp);
 		}
 		
-		out.println("\tmov\t" + from + ", " + name.getLocation().getASMRepresentation());		
+		out.write("\tmov\t" + from + ", " + name.getLocation().getASMRepresentation());		
 	}
 }
