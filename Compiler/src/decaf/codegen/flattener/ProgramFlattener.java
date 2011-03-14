@@ -59,15 +59,14 @@ public class ProgramFlattener {
 				ProgramFlattener.exceptionMessage));
 		
 		// Add handler method
-		String label = ProgramFlattener.exceptionHandlerLabel;
-		while (isMethodName(label)) {
-			label += "_"; // Add '_' to make unique
+		while (isMethodName(ProgramFlattener.exceptionHandlerLabel)) {
+			ProgramFlattener.exceptionHandlerLabel += "_"; // Add '_' to make unique
 		}
 
 		List<LIRStatement> instructions = new ArrayList<LIRStatement>();
 
 		// Add label
-		LabelStmt l = new LabelStmt(label);
+		LabelStmt l = new LabelStmt(ProgramFlattener.exceptionHandlerLabel);
 		l.setMethodLabel(true);
 		instructions.add(l);		
 		
@@ -88,7 +87,7 @@ public class ProgramFlattener {
 		// Call interrupt handler
 		instructions.add(new InterruptStmt("$0x80"));
 		
-		this.lirMap.put(label, instructions);
+		this.lirMap.put(ProgramFlattener.exceptionHandlerLabel, instructions);
 	}
 
 	private boolean isMethodName(String label) {

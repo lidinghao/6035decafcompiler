@@ -7,9 +7,9 @@ from os.path import isfile, isdir, join, dirname, abspath
 
 class config:
   scanner_public_dir = join(dirname(abspath(sys.argv[0])), "tests/scanner/")
-  scanner_hidden_dir = None
+  scanner_hidden_dir = join(dirname(abspath(sys.argv[0])), "tests/scanner/hidden")
   parser_public_dir  = join(dirname(abspath(sys.argv[0])), "tests/parser/")
-  parser_hidden_dir  = None
+  parser_hidden_dir  = join(dirname(abspath(sys.argv[0])), "tests/parser/hidden")
   verbose=True
 
 def run_tmpfile(cmd, i):
@@ -139,11 +139,15 @@ def main(filename, tmpdir):
 
   #test the scanner
   cmd.extend(["-target","scan"])
-  scanresult = test_scanner(cmd, config.scanner_public_dir)
+  s1 = test_scanner(cmd, config.scanner_public_dir)
+  s2 = test_scanner(cmd, config.scanner_hidden_dir)
+  scanresult = (s1[0] + s2[0], s1[1] + s2[1])
 
   #test the parser
   cmd[-1]="parse"
-  parseresult = test_parser(cmd, config.parser_public_dir)
+  s1 = test_parser(cmd, config.parser_public_dir)
+  s2 = test_parser(cmd, config.parser_hidden_dir)
+  parseresult = (s1[0] + s2[0], s1[1] + s2[1])
 
   #print results
   print
