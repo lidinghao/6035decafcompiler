@@ -16,6 +16,12 @@ class Program
 	{
             callout("printf","A = %d\n", A);
 	} 
+	
+	 if (true && false || changeA())
+	{
+            callout("printf","A = %d\n", A);
+	} 
+	
      
     }
 
