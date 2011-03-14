@@ -1,9 +1,0 @@
-// 2. No identifier can be used before it is declared 
-class Program {
-  void main() {
-    x = 3;
-    {
-      int x;
-    }
-  }
-}	

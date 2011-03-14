@@ -1,5 +1,0 @@
-class Program {
-  void foo() {
-  }
-}
-}	// extra closing brace

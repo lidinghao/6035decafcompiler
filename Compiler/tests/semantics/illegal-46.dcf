@@ -1,8 +1,0 @@
-// 15. <location> += <expr> must have type int on both sides
-class Program {
-  void main() {
-    boolean b;
-    b = true;
-    b += false;
-  }
-}
