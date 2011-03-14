@@ -1,0 +1,15 @@
+class Program {
+	int a[5];
+	
+	void main() {
+		a[0] = 10;
+		a[1] = a[0] + 1;
+		a[2] = a[0] + a[1];
+		a[3] = 9;
+		a[4] = a[0] * a[1];
+		
+		for i = 0, 5 {
+			callout("printf","%d\n", a[i]);
+		}
+	}
+}

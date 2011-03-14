@@ -173,6 +173,9 @@ public class MethodFlatennerVisitor implements ASTVisitor<Integer> {
 		VarName loopId = new VarName(stmt.getId());
 		loopId.setBlockId(stmt.getBlock().getBlockId());
 		
+		// Increment local variable count (because for loop not "declared" in the body)
+		this.totalLocalVars++;
+		
 		// Initialization block
 		this.statements.add(new LabelStmt(getForInit()));
 		Name initValue = stmt.getInitialValue().accept(this.exprFlatenner);
