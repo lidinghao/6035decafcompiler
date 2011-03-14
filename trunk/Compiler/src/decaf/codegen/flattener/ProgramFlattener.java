@@ -5,10 +5,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
 
+import decaf.codegen.flatir.CallStmt;
+import decaf.codegen.flatir.Constant;
 import decaf.codegen.flatir.DataStmt;
 import decaf.codegen.flatir.EnterStmt;
+import decaf.codegen.flatir.InterruptStmt;
 import decaf.codegen.flatir.LIRStatement;
 import decaf.codegen.flatir.LabelStmt;
+import decaf.codegen.flatir.QuadrupletOp;
+import decaf.codegen.flatir.QuadrupletStmt;
+import decaf.codegen.flatir.Register;
+import decaf.codegen.flatir.RegisterName;
 import decaf.ir.ast.ClassDecl;
 import decaf.ir.ast.Field;
 import decaf.ir.ast.FieldDecl;
@@ -16,6 +23,9 @@ import decaf.ir.ast.IntLiteral;
 import decaf.ir.ast.MethodDecl;
 
 public class ProgramFlattener {
+	public static String exceptionErrorLabel = "outofbounds";
+	public static String exceptionMessage = "\"Array index out of bounds (%d, %d)\\n\"";
+	public static String exceptionHandlerLabel = "arrayexception";
 	private ClassDecl classDecl;
 	private MethodFlatennerVisitor mfv;
 	private HashMap<String, List<LIRStatement>> lirMap;
@@ -34,10 +44,56 @@ public class ProgramFlattener {
 		for (FieldDecl fd : classDecl.getFieldDeclarations()) {
 			processFieldDecl(fd);
 		}
-		
+
 		for (MethodDecl md : classDecl.getMethodDeclarations()) {
 			processMethodDecl(md);
 		}
+
+		// Add array out of bounds handler
+		addExceptionHandler();
+	}
+
+	private void addExceptionHandler() {
+		String label = ProgramFlattener.exceptionHandlerLabel;
+		while (isMethodName(label)) {
+			label += "_"; // Add '_' to make unique
+		}
+
+		List<LIRStatement> instructions = new ArrayList<LIRStatement>();
+
+		// Add label
+		LabelStmt l = new LabelStmt(label);
+		l.setMethodLabel(true);
+		instructions.add(l);		
+		
+		// Set %rax to 0
+		instructions.add(new QuadrupletStmt(QuadrupletOp.MOVE, new RegisterName(
+				Register.RAX), new Constant(0), null));
+		
+		instructions.add(new CallStmt("printf")); // Argument regs already contain the right stuff
+		
+		// Invote syscall 1
+		instructions.add(new QuadrupletStmt(QuadrupletOp.MOVE, new RegisterName(
+				Register.RAX), new Constant(1), null)); 
+		
+		// Exit with non-zero code
+		instructions.add(new QuadrupletStmt(QuadrupletOp.MOVE, new RegisterName(
+				Register.RBX), new Constant(1), null));
+		
+		// Call interrupt handler
+		instructions.add(new InterruptStmt("$0x80"));
+		
+		this.lirMap.put(label, instructions);
+	}
+
+	private boolean isMethodName(String label) {
+		for (MethodDecl md : classDecl.getMethodDeclarations()) {
+			if (md.getId().equals(label)) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	private void processMethodDecl(MethodDecl md) {
@@ -66,6 +122,10 @@ public class ProgramFlattener {
 
 			this.dataStmtList.add(ds);
 		}
+
+		// Add array out of bound exception string
+		this.dataStmtList.add(new DataStmt(ProgramFlattener.exceptionErrorLabel,
+				ProgramFlattener.exceptionMessage));
 	}
 
 	public HashMap<String, List<LIRStatement>> getLirMap() {

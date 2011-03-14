@@ -1,0 +1,13 @@
+class Program {
+	int a[10];
+	
+	void main() {
+		a[0] = 1;
+		callout("printf","Handler allowed correct access\n");
+		
+		callout("printf","Checking greater than length index\n");
+		a[11] = 0;
+		
+		callout("printf","Shit! Not working\n");
+	}
+}

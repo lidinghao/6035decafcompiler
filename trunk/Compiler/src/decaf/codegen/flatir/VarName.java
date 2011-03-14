@@ -3,21 +3,21 @@ package decaf.codegen.flatir;
 public class VarName extends Name {
 	private String id;
 	private int blockId; // -1 for global field, -2 for parameter
-	private boolean forString;
-	private String stringVal;
+	private boolean isString;
+	private String stringValue; // non-null only for string var names
 	
 	public VarName(String id) {
 		this.setId(id);
 		this.setBlockId(-1);
-		this.setForString(false);
-		this.setStringVal(null);
+		this.setIsString(false);
+		this.setStringValue(null);
 	}
 	
 	public VarName(String id, boolean forString, String val) {
 		this.setId(id);
 		this.setBlockId(-1);
-		this.setForString(forString);
-		this.setStringVal(val);
+		this.setIsString(forString);
+		this.setStringValue(val);
 	}
 
 	public void setId(String id) {
@@ -42,19 +42,19 @@ public class VarName extends Name {
 	}
 
 	public boolean isString() {
-		return forString;
+		return isString;
 	}
 
-	public void setForString(boolean forString) {
-		this.forString = forString;
+	public void setIsString(boolean forString) {
+		this.isString = forString;
 	}
 
-	public String getStringVal() {
-		return stringVal;
+	public String getStringValue() {
+		return stringValue;
 	}
 
-	public void setStringVal(String stringVal) {
-		this.stringVal = stringVal;
+	public void setStringValue(String stringVal) {
+		this.stringValue = stringVal;
 	}
 	
 	@Override
