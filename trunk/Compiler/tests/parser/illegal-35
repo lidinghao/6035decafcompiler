@@ -1,4 +1,0 @@
-class Program {
-  void foo(int x,) {	// extra comma
-  }
-}

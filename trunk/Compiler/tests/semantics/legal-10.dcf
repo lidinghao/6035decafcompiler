@@ -1,7 +1,0 @@
-// OK
-class Program {
-  boolean b[10];
-  void main() {
-    if (b[0]) {}
-  }
-}

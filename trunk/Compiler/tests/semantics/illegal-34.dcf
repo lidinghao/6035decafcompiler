@@ -1,7 +1,0 @@
-// Error
-class Program {
-  void main() {
-    main = 3;
-  }
-}
-
