@@ -110,7 +110,7 @@ class Main {
 				Error.fileName = getFileName(CLI.infile);
 
 				// Check for semantic errors
-				if (!SemanticChecker.performSemanticChecks(cd, null)) {
+				if (!SemanticChecker.performSemanticChecks(cd, System.out)) {
 					System.exit(-1);
 				}
 				ProgramFlattener pf = new ProgramFlattener(cd);
