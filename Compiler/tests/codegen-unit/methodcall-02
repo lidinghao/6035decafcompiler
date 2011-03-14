@@ -25,6 +25,6 @@ class Program {
       } else {
         ret = 0;
       }
-      callout("printf","%d",ret); // 1
+      callout("printf","%d\n",ret); // 1
    }
 }
