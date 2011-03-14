@@ -1,27 +1,25 @@
-class Program {
-    void main() {
-   		int a, b, c, d, e ,f;
-   		
-        a = 2 * 4;
-        callout("printf", "%d\n", a);
+class Program
+{
+    void main()
+    {
+   		int a, b, c;
+   		callout("printf", "a: %d\n", a);
+   		callout("printf", "b: %d\n", b);
+   		callout("printf", "c: %d\n", c);
+
+        a = 10;
+        b = 20;
+
+        c = a + b;
+
+        callout("printf", "c = a + b, c: %d\n", c);
         
-        a = a * 2 / 4;
-        callout("printf", "%d\n", a);
+        c = a - b;
         
-        b = 7;        
-        c = a * (b / 2);
-        callout("printf", "%d\n", c);
+        callout("printf", "c = a - b, c: %d\n", c);
         
-        f = 100 / 11 * b; 
-        callout("printf", "%d\n", f);
-        
-        e = 100 / -11 * b;
-        callout("printf", "%d\n", e);
-        
-        e = 100 / -11 * -b;
-        callout("printf", "%d\n", e);
-        
-        a = 100 % 7 * 2;
-        callout("printf", "%d\n", a);
+        c = a - 10;
+
+        callout("printf", "c = a - 10, c: %d\n", c);
     }
 }

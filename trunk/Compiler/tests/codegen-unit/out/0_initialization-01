@@ -1,0 +1,6 @@
+int global: 0
+boolean global: 0
+int array global: 0
+boolean array global: 0
+int local: 0
+boolean local: 0

@@ -1,46 +1,18 @@
 class Program
 {
-    void main() {
-    	int a, b, c, d;
-   		boolean e, f, g;
+    void main()
+    {
+   		boolean a, b, c; 
+   		a = false;
+   		b = true;
    		
-   		a = 10;
-   		b = 15;
-   		c = 20;
-   		d = 10;
+   		c = a || b;
    		
-   		e = !e;
-	    callout("printf", "%d\n", e);
-	    
-	    e = true && false;
-	    callout("printf", "%d\n", e);
-	    
-	    e = true;
-	    e = e || f;
-	    callout("printf", "%d\n", e);
-	    
-	    e = a < b;
-	    callout("printf", "%d\n", e);
-	    
-	    e = c > a;
-	    callout("printf", "%d\n", e);
-	    
-	    e = c >= a;
-	    callout("printf", "%d\n", e);
-	    
-	    e = b <= a;
-	    callout("printf", "%d\n", e);
-	    
-	    e = a == d;
-	    callout("printf", "%d\n", e);
-	    
-	    e = b != a;
-	    callout("printf", "%d\n", e);
-	    
-	    e = d != a;
-	    callout("printf", "%d\n", e);
-	    
-	    e = (b < a) || (a < c);
-	    callout("printf", "%d\n", e);
+   		callout("printf", "false || true : %d\n", c);
+   		
+   		c = a && b ;
+   		
+   		callout("printf", "false && true : %d\n", c);  		
+
     }
 }
