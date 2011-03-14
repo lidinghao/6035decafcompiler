@@ -1,5 +1,8 @@
 package decaf.codegen.flatir;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.PrintStream;
 
 public class DataStmt extends LIRStatement {
@@ -83,17 +86,17 @@ public class DataStmt extends LIRStatement {
 	}
 
 	@Override
-	public void generateAssembly(PrintStream out) {
+	public void generateAssembly(FileWriter out) throws IOException {
 		switch(this.type) {
 			case VARIABLE:
-				out.println("\t.comm\t" + this.label + ", 1, 8"); // Length 1, Size 8 bytes (64 bit)
+				out.write("\t.comm\t" + this.label + ", 1, 8"); // Length 1, Size 8 bytes (64 bit)
 				break;
 			case ARRAY:
-				out.println("\t.comm\t" + this.label + ", " + (this.arrLength * 8)); // Length 1, Size 8 bytes (64 bit)
+				out.write("\t.comm\t" + this.label + ", " + (this.arrLength * 8)); // Length 1, Size 8 bytes (64 bit)
 				break;
 			case STRING:
-				out.println("." + this.label + ":");
-				out.println("\t.string\t" + this.stringVal);
+				out.write("." + this.label + ":");
+				out.write("\t.string\t" + this.stringVal);
 				break;
 		}
 	}

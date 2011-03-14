@@ -1,5 +1,8 @@
 package decaf.codegen.flatir;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.PrintStream;
 
 public class EnterStmt extends LIRStatement {
@@ -35,7 +38,7 @@ public class EnterStmt extends LIRStatement {
 	}
 
 	@Override
-	public void generateAssembly(PrintStream out) {
-		out.println("\tenter\t" + "$" + (this.stackSize * 8) + ", $0");		
+	public void generateAssembly(FileWriter out) throws IOException {
+		out.write("\tenter\t" + "$" + (this.stackSize * 8) + ", $0");		
 	}
 }
