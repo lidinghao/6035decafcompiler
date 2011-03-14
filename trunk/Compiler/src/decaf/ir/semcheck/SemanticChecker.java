@@ -12,9 +12,9 @@ public class SemanticChecker {
 
 	public static boolean performSemanticChecks(ClassDecl cd, PrintStream out) {
 		// Print AST
-		out.println("AST after parsing:");
-		PrettyPrintVisitor pv = new PrettyPrintVisitor();
-		cd.accept(pv);
+		//out.println("AST after parsing:");
+		//PrettyPrintVisitor pv = new PrettyPrintVisitor();
+		//cd.accept(pv);
 		
 		// Check integer overflow (must do before symbol table generation)
 		IntOverflowCheckVisitor ibv = new IntOverflowCheckVisitor();
@@ -25,7 +25,7 @@ public class SemanticChecker {
 		cd.accept(stv);
 		
 		// Print Symbol Tables
-		out.println(stv.getClassDescriptor());
+		//out.println(stv.getClassDescriptor());
 		
 		// Print errors for integer overflow and symbol table generation
 		out.println("Integer overflow check:");
