@@ -73,7 +73,28 @@ class Main {
 				if (parser.program() == null) {
 					throw new Exception("Class name must be 'Program'");
 				}
-			} else if (CLI.target == CLI.INTER || CLI.target == CLI.DEFAULT) {
+			} else if (CLI.target == CLI.INTER) {
+				DecafScanner lexer = new DecafScanner(new DataInputStream(
+						inputStream));
+				DecafParser parser = new DecafParser(lexer);
+
+				// Parse and generate AST
+				ClassDecl cd = parser.program();
+
+				// Check if parse was successful
+				if (cd == null) {
+					throw new Exception("Class name must be 'Program'");
+				}
+
+				// Set file name
+				Error.fileName = getFileName(CLI.infile); 
+
+				// Check for semantic errors
+				if (!SemanticChecker.performSemanticChecks(cd, System.out)) {
+					System.exit(-1);
+				}
+			}
+			else if (CLI.target == CLI.ASSEMBLY || CLI.target == CLI.DEFAULT) {
 				DecafScanner lexer = new DecafScanner(new DataInputStream(
 						inputStream));
 				DecafParser parser = new DecafParser(lexer);
@@ -94,21 +115,26 @@ class Main {
 					System.exit(-1);
 				}
 
-				if (true) {
-					ProgramFlattener pf = new ProgramFlattener(cd);
-					pf.flatten();
-					LocationResolver lr = new LocationResolver(pf, cd);
-					lr.resolveLocations();
-					System.out.println("LIR:");
+				// Generate low-level ir
+				ProgramFlattener pf = new ProgramFlattener(cd);
+				pf.flatten();
+				
+				// Resolve names to locations
+				LocationResolver lr = new LocationResolver(pf, cd);
+				lr.resolveLocations();
+				
+				if (CLI.debug) {
+					System.out.println("Low-level IR:");
 					pf.print();
 					System.out.println();
-					System.out.println("Locations:");
+					
+					System.out.println("Name -> Locations Mapping:");
 					lr.printLocations();
-					System.out.println();
-					System.out.println("Code Gen:");
-					CodeGenerator cg = new CodeGenerator(pf, cd);
-					cg.generateCode();
 				}
+				
+				// Generate code to file
+				CodeGenerator cg = new CodeGenerator(pf, cd, CLI.outfile);
+				cg.generateCode();				
 			}
 		} catch (Exception e) {
 			// print the error:
