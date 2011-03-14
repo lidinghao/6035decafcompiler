@@ -10,15 +10,15 @@ class Program
 
 		c = (false || (false || ( false || false || false || false || (false || true))));
 		
-		callout("printf", "confusing or : %d\n", c);  //should give 1
+		callout("%d\n", c);  //should give 1
 	
 		c = ((false && false) || (true && (false || true))) && ( 30 < 100);
 		
-		callout("printf", "confusing and : %d\n", c);  //should give 1
+		callout("printf", "%d\n", c);  //should give 1
 		
 	    c = !((false && false) || (true && (false || true))) && ( !!(30 < 100));
 	    
-		callout("printf", "NOT confusing and : %d\n", c);  //should give 0
+		callout("printf", "%d\n", c);  //should give 0
 	
     }
 }

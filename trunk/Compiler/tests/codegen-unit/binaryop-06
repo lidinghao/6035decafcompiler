@@ -6,55 +6,55 @@ class Program
 
 		c = 5 < 6;
 		
-		callout("printf", "5 < 6 : %d\n", c);  //should give 1
+		callout("printf", "%d\n", c);  //should give 1
 		
 		c = 5 > 6;
 		
-		callout("printf", "5 > 6 : %d\n", c);  //should give 0		
+		callout("printf", "%d\n", c);  //should give 0		
 		
  		c = (5 > 6) || (15 > -1);
  		
- 		callout("printf", "(5 > 6) || (15 > -1): %d\n", c);  //should give 1		
+ 		callout("printf", "%d\n", c);  //should give 1		
  		
  		c = (5<=5);
  		
- 		callout("printf", "5 <= 5 : %d\n", c);  //should give 1	
+ 		callout("printf", "%d\n", c);  //should give 1	
  		
  		c = (5<=4);
  		
- 		callout("printf", "5 <= 4 : %d\n", c);  //should give 0	
+ 		callout("printf", "%d\n", c);  //should give 0	
  		
  		c = (5<=6);
  		
- 		callout("printf", "5 <= 6 : %d\n", c);  //should give 1
+ 		callout("printf", "%d\n", c);  //should give 1
  		
  		c = (5>=5);
  		
- 		callout("printf", "5 >= 5 : %d\n", c);  //should give 1	
+ 		callout("printf", "%d\n", c);  //should give 1	
  		
  		c = (5>=4);
  		
- 		callout("printf", "5 >= 4 : %d\n", c);  //should give 1
+ 		callout("printf", "%d\n", c);  //should give 1
  		
  		c = (5>=6);
  		
- 		callout("printf", "5 >= 6 : %d\n", c);  //should give 0
+ 		callout("printf", "%d\n", c);  //should give 0
  		
  		c = (5==6);
  		
- 		callout("printf", "5 == 6 : %d\n", c);  //should give 0
+ 		callout("printf", "%d\n", c);  //should give 0
  		
  		c = (5==5);
  		
- 		callout("printf", "5 == 5 : %d\n", c);  //should give 1
+ 		callout("printf", "%d\n", c);  //should give 1
  		
  		c = (5!=6);
  		
- 		callout("printf", "5 != 6 : %d\n", c);  //should give 1
+ 		callout("printf", "%d\n", c);  //should give 1
  		
  		c = (5!=5);
  		
- 		callout("printf", "5 != 5 : %d\n", c);  //should give 0
+ 		callout("printf", "%d\n", c);  //should give 0
 	
     }
 }
