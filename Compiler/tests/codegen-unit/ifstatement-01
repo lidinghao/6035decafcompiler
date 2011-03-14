@@ -10,15 +10,15 @@ class Program
    		c = false;
    		
    		if( a != b && !c){
-   			callout("printf", "true \n");  
+   			callout("printf", "true\n");  
    		}else{
-   			callout("printf", "error \n"); 
+   			callout("printf", "error\n"); 
    		}
    		
    		if( a != b && c){
-   			callout("printf", "error \n");  
+   			callout("printf", "error\n");  
    		}else{
-   			callout("printf", "true \n"); 
+   			callout("printf", "true\n"); 
    		}
 
     }
