@@ -1,0 +1,17 @@
+class Program {
+	void main() {
+		int a,b,c;
+		
+		a = 2147483647;
+		callout("printf","%d\n",a);
+		
+		b = -2147483648;
+		callout("printf","%d\n",b);
+		
+		a += 1;
+		callout("printf","%d\n",a);
+		
+		b -= 1;
+		callout("printf","%d\n",b);
+	}
+}
