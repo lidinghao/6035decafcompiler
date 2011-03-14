@@ -2,6 +2,7 @@ package decaf.ir.semcheck;
 
 import java.io.PrintStream;
 import java.util.List;
+import java6035.tools.CLI.CLI;
 
 import decaf.ir.ast.ClassDecl;
 import decaf.ir.ast.MethodDecl;
@@ -10,12 +11,7 @@ import decaf.test.Error;
 
 public class SemanticChecker {
 
-	public static boolean performSemanticChecks(ClassDecl cd, PrintStream out) {
-		// Print AST
-		out.println("AST after parsing:");
-		PrettyPrintVisitor pv = new PrettyPrintVisitor();
-		cd.accept(pv);
-		
+	public static boolean performSemanticChecks(ClassDecl cd, PrintStream out) {		
 		// Check integer overflow (must do before symbol table generation)
 		IntOverflowCheckVisitor ibv = new IntOverflowCheckVisitor();
 		cd.accept(ibv);
@@ -24,47 +20,68 @@ public class SemanticChecker {
 		SymbolTableGenerationVisitor stv = new SymbolTableGenerationVisitor();
 		cd.accept(stv);
 		
-		// Print Symbol Tables
-		out.println(stv.getClassDescriptor());
-		
-		// Print errors for integer overflow and symbol table generation
-		out.println("Integer overflow check:");
-		out.println(ibv.getErrors());
-		out.println("Symbol table generation:");
-		out.println(stv.getErrors());
-
 		// Type checking and evaluation
 		TypeEvaluationVisitor tev = new TypeEvaluationVisitor(
 				stv.getClassDescriptor());
 		cd.accept(tev);
-		out.println("Type checking and evaluation:");
-		out.println(tev.getErrors());
-
+		
 		// Method calls and return statement type checking
 		MethodCheckVisitor pmv = new MethodCheckVisitor(
 				stv.getClassDescriptor());
 		cd.accept(pmv);
-		out.println("Method argument and return type matching:");
-		out.println(pmv.getErrors());
-
-		// Check if main method with no params exists
-		out.println("'main' method check:");
+		
+		// Check main method
 		Error mainMethodError = checkMainMethod(cd);
-		if (mainMethodError != null) {
-			out.println(mainMethodError);
-		}
-
+		
 		// Break Continue check
 		BreakContinueStmtCheckVisitor tc = new BreakContinueStmtCheckVisitor();
 		cd.accept(tc);
-		out.println("Break/continue statement check:");
-		out.println(tc.getErrors());
-
+		
 		// Array Size check
 		ArraySizeCheckVisitor av = new ArraySizeCheckVisitor();
 		cd.accept(av);
-		System.out.println("Array size check:");
-		System.out.println(av.getErrors());
+		
+		// Print errors if -debug on
+		if (CLI.debug) {
+			// Print AST
+			out.println("AST:");
+			PrettyPrintVisitor pv = new PrettyPrintVisitor();
+			cd.accept(pv);
+			
+			// Print Symbol Tables
+			out.println("Symbol Tables:");
+			out.println(stv.getClassDescriptor());
+			
+			// Print errors for integer overflow
+			out.println("Integer overflow check:");
+			out.println(ibv.getErrors());
+			
+			// Print errors for symbol table generation
+			out.println("Symbol table generation:");
+			out.println(stv.getErrors());
+			
+			// Print type checking errors
+			out.println("Type checking and evaluation:");
+			out.println(tev.getErrors());
+			
+			// Print mehtod check errros
+			out.println("Method argument and return type matching:");
+			out.println(pmv.getErrors());
+			
+			// Print main method errors
+			out.println("'main' method check:");
+			if (mainMethodError != null) {
+				out.println(mainMethodError);
+			}
+			
+			// Print break/continue errors
+			out.println("Break/continue statement check:");
+			out.println(tc.getErrors());
+
+			// Print size check errors
+			out.println("Array size check:");
+			out.println(av.getErrors());
+		}
 		
 		if (ibv.getErrors().size() > 0 ||
 				stv.getErrors().size() > 0 ||
@@ -75,10 +92,6 @@ public class SemanticChecker {
 				mainMethodError != null) {
 			return false;
 		}
-		
-		// Print again
-		//out.println("AST after semantic checks:");
-		//cd.accept(pv);
 		
 		return true;
 	}

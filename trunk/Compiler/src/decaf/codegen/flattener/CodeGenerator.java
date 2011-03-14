@@ -1,5 +1,7 @@
 package decaf.codegen.flattener;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.PrintStream;
 import java.util.List;
 
@@ -13,8 +15,9 @@ public class CodeGenerator {
 	private PrintStream out;
 	private ClassDecl cd;
 	
-	public CodeGenerator(ProgramFlattener pf, ClassDecl cd) {
-		this.out = System.out;
+	public CodeGenerator(ProgramFlattener pf, ClassDecl cd, String filename) throws FileNotFoundException {
+		File f = new File(filename);
+		this.out = new PrintStream(f);
 		this.pf = pf;
 		this.cd = cd;
 	}

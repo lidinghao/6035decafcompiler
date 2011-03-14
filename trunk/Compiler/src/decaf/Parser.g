@@ -114,7 +114,6 @@ program returns [ClassDecl classDecl] {
 {
 	classDecl.setLineNumber(cl.getLine());
 	classDecl.setColumnNumber(cl.getColumn());
-	System.out.println(className.getString());
 	if (!className.getString().equals("Program")) {
 		classDecl = null;
 	}
