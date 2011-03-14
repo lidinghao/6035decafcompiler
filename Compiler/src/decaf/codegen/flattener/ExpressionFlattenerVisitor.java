@@ -46,7 +46,7 @@ import decaf.ir.ast.UnaryOpType;
 import decaf.ir.ast.VarDecl;
 import decaf.ir.ast.VarLocation;
 
-public class ExpressionFlatennerVisitor implements ASTVisitor<Name> {
+public class ExpressionFlattenerVisitor implements ASTVisitor<Name> {	
 	private Register[] argumentRegs = { Register.RDI, Register.RSI,
 			Register.RDX, Register.RCX, Register.R8, Register.R9 };
 	private List<LIRStatement> statements;
@@ -57,8 +57,9 @@ public class ExpressionFlatennerVisitor implements ASTVisitor<Name> {
 	private int currentOrId;
 	private int strCount;
 	private int inArrayLocation;
+	private int arrayBoundId;
 
-	public ExpressionFlatennerVisitor(List<LIRStatement> statements,
+	public ExpressionFlattenerVisitor(List<LIRStatement> statements,
 			String methodName) {
 		this.statements = statements;
 		this.methodName = methodName;
@@ -76,17 +77,18 @@ public class ExpressionFlatennerVisitor implements ASTVisitor<Name> {
 		
 		Name rtnName = null;
 		
+		String id = loc.getId();
+		Name index = loc.getExpr().accept(this);
+		
+		// Add index out of bound check
+		addArrayBoundCheck(loc, index);
+		
+		// Check for nested array accesses
 		if (inArrayLocation <= 1) {
-			String id = loc.getId();
-			Name index = loc.getExpr().accept(this);
 			rtnName = new ArrayName(id, index);
 		}
 		else {
-			String id = loc.getId();
-			Name index = loc.getExpr().accept(this);
 			ArrayName arrayName = new ArrayName(id, index);
-			
-			if (loc.getExpr().getClass().equals(ArrayLocation.class));
 			rtnName = new TempName();
 			this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE, rtnName, arrayName, null));
 		}
@@ -447,5 +449,44 @@ public class ExpressionFlatennerVisitor implements ASTVisitor<Name> {
 
 	private String getOrEnd() {
 		return methodName + "_or" + currentOrId + "_end";
+	}
+	
+	private void addArrayBoundCheck(ArrayLocation loc, Name index) {
+		LabelStmt arrayCheckPass = new LabelStmt(getArrayBoundPass());
+		LabelStmt arrayCheckFail = new LabelStmt(getArrayBoundFail());
+		arrayBoundId++;
+		
+		this.statements.add(new QuadrupletStmt(QuadrupletOp.CMP, null, index, new Constant(loc.getSize())));
+		this.statements.add(new JumpStmt(JumpCondOp.GTE, arrayCheckFail)); // size >= length?
+		this.statements.add(new QuadrupletStmt(QuadrupletOp.CMP, null, index, new Constant(0)));
+		this.statements.add(new JumpStmt(JumpCondOp.LT, arrayCheckFail)); // size < 0?
+		this.statements.add(new JumpStmt(JumpCondOp.NONE, arrayCheckPass)); // passed
+		
+		// Exception Handler
+		this.statements.add(arrayCheckFail);
+		VarName error = new VarName("$." + ProgramFlattener.exceptionErrorLabel);
+		error.isString();
+		
+		// Move args to regs
+		this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE,
+				new RegisterName(argumentRegs[0]), error, null));
+		this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE,
+				new RegisterName(argumentRegs[1]), new Constant(loc.getLineNumber()), null));
+		this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE,
+				new RegisterName(argumentRegs[2]), new Constant(loc.getColumnNumber()), null));
+		
+		// Call exception handler
+		this.statements.add(new CallStmt(ProgramFlattener.exceptionHandlerLabel));
+		
+		this.statements.add(arrayCheckPass); // Array check passed label
+		
+	}
+	
+	private String getArrayBoundFail() {
+		return methodName + "_array" + arrayBoundId + "_fail";
+	}
+	
+	private String getArrayBoundPass() {
+		return methodName + "_array" + arrayBoundId + "_pass";
 	}
 }

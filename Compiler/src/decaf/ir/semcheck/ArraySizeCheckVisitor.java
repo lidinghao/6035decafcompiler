@@ -26,14 +26,13 @@ import decaf.ir.ast.MethodDecl;
 import decaf.ir.ast.Parameter;
 import decaf.ir.ast.ReturnStmt;
 import decaf.ir.ast.Statement;
-import decaf.ir.ast.Type;
 import decaf.ir.ast.UnaryOpExpr;
 import decaf.ir.ast.VarDecl;
 import decaf.ir.ast.VarLocation;
 import decaf.test.Error;
 
 public class ArraySizeCheckVisitor implements ASTVisitor<Integer> {
-	
+	private ClassDecl cd;
 	private ArrayList<Error> errors;
 	
 	public ArraySizeCheckVisitor() {
@@ -42,6 +41,15 @@ public class ArraySizeCheckVisitor implements ASTVisitor<Integer> {
 	
 	@Override
 	public Integer visit(ArrayLocation loc) {
+		// Set size
+		for (FieldDecl fd: cd.getFieldDeclarations()) {
+			for (Field f: fd.getFields()) {
+				if (f.getId().equals(loc.getId())) {
+					loc.setSize(f.getArrayLength().getValue());
+				}
+			}
+		}
+		
 		loc.getExpr().accept(this);
 		return 0;
 	}
@@ -107,6 +115,8 @@ public class ArraySizeCheckVisitor implements ASTVisitor<Integer> {
 
 	@Override
 	public Integer visit(ClassDecl cd) {
+		this.cd = cd;
+		
 		for (FieldDecl fd: cd.getFieldDeclarations()) {
 			fd.accept(this);
 		}

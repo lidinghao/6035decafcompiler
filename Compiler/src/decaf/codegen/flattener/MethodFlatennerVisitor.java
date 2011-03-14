@@ -46,7 +46,7 @@ import decaf.ir.ast.VarLocation;
 
 public class MethodFlatennerVisitor implements ASTVisitor<Integer> {
 	private List<LIRStatement> statements;
-	private ExpressionFlatennerVisitor exprFlatenner;
+	private ExpressionFlattenerVisitor exprFlatenner;
 	private String methodName;
 	private int ifCount; // 0 in if and for count means method local block
 	private int forCount; 
@@ -56,7 +56,7 @@ public class MethodFlatennerVisitor implements ASTVisitor<Integer> {
 	
 	public MethodFlatennerVisitor(String methodName) {
 		this.statements = new ArrayList<LIRStatement>();
-		this.exprFlatenner = new ExpressionFlatennerVisitor(statements, methodName);
+		this.exprFlatenner = new ExpressionFlattenerVisitor(statements, methodName);
 		this.methodName = methodName;
 		this.reset();
 	}
@@ -316,7 +316,7 @@ public class MethodFlatennerVisitor implements ASTVisitor<Integer> {
 		this.currentIfId = 0;
 		this.totalLocalVars = 0;
 		this.statements = new ArrayList<LIRStatement>();
-		this.exprFlatenner = new ExpressionFlatennerVisitor(statements, methodName);
+		this.exprFlatenner = new ExpressionFlattenerVisitor(statements, methodName);
 	}
 	
 	private String getIfTest() {
@@ -357,10 +357,6 @@ public class MethodFlatennerVisitor implements ASTVisitor<Integer> {
 	
 	private String getMethodEpilogue() {
 		return methodName + "_epilogue";
-	}
-	
-	private String getMethodException() {
-		return methodName + "_exp";
 	}
 	
 	private String getMethodEnd() {

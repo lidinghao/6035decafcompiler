@@ -4,10 +4,12 @@ import decaf.ir.ASTVisitor;
 
 public class ArrayLocation extends Location {
 	private Expression expr;
+	private int size;
 	
 	public ArrayLocation(String id, Expression expr) {
 		this.id = id;
 		this.expr = expr;
+		this.size = -1;
 	}
 	
 	public void setExpr(Expression expr) {
@@ -18,6 +20,14 @@ public class ArrayLocation extends Location {
 		return expr;
 	}
 	
+	public int getSize() {
+		return size;
+	}
+
+	public void setSize(int size) {
+		this.size = size;
+	}
+
 	@Override
 	public String toString() {
 		return id + "[" + expr + "]";

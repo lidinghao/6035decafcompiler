@@ -113,9 +113,9 @@ public class LocationResolver {
 				VarName varName = (VarName)name;
 				
 				if (varName.isString()) { // Set as global
-					GlobalLocation gLoc = new GlobalLocation(varName.getId(), true, varName.getStringVal());
+					GlobalLocation gLoc = new GlobalLocation(varName.getId(), true, varName.getStringValue());
 					name.setLocation(gLoc);
-					this.pf.getDataStmtList().add(new DataStmt(varName.getId(), varName.getStringVal()));
+					this.pf.getDataStmtList().add(new DataStmt(varName.getId(), varName.getStringValue()));
 				}
 				else if (varName.getBlockId() == -1) {
 					GlobalLocation gLoc = new GlobalLocation(varName.getId());

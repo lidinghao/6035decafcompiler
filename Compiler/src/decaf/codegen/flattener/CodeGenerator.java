@@ -5,7 +5,6 @@ import java.util.List;
 
 import decaf.codegen.flatir.DataStmt;
 import decaf.codegen.flatir.LIRStatement;
-import decaf.codegen.flatir.LeaveStmt;
 import decaf.ir.ast.ClassDecl;
 import decaf.ir.ast.MethodDecl;
 
@@ -37,6 +36,12 @@ public class CodeGenerator {
 			for (LIRStatement s: lirList) {
 				s.generateAssembly(out);
 			}
+		}
+		
+		// Generate interrupt handler
+		List<LIRStatement> interruptHandler = pf.getLirMap().get(ProgramFlattener.exceptionHandlerLabel);
+		for (LIRStatement s: interruptHandler) {
+			s.generateAssembly(out);
 		}
 	}
 }

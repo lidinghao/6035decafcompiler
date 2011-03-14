@@ -2,6 +2,8 @@ class Program {
 	int a[5];
 	
 	void main() {
+		int i;
+		
 		a[0] = 10;
 		a[1] = a[0] + 1;
 		a[2] = a[0] + a[1];
@@ -11,5 +13,9 @@ class Program {
 		for i = 0, 5 {
 			callout("printf","%d\n", a[i]);
 		}
+		
+		a[0] = 1;
+		i = a[a[0]];
+		callout("printf","%d\n", i);
 	}
 }
