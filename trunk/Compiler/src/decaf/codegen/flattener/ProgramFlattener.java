@@ -102,8 +102,11 @@ public class ProgramFlattener {
 
 	private void processMethodDecl(MethodDecl md) {
 		this.mfv.setMethodName(md.getId());
+		
 		int stackSize = md.accept(this.mfv);
 		stackSize += tni.indexTemps(this.mfv.getStatements());
+		stackSize += Math.min(md.getParameters().size(), 6); // Also save register arguments on stack
+		
 		lirMap.put(md.getId(), this.mfv.getStatements());
 
 		// Set stack size in 'enter' statement

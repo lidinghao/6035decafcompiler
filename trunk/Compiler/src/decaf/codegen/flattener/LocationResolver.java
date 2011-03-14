@@ -29,7 +29,8 @@ public class LocationResolver {
 		for (Entry<String, List<LIRStatement>> entry: this.pf.getLirMap().entrySet()) {	
 			methodName = entry.getKey();
 			locationMap.clear();
-			stackOffset = -1;
+			int offsetForArgs = Math.min(getParamCount(methodName), 6);
+			stackOffset = -(1 + offsetForArgs);
 			
 			List<LIRStatement> flatIR = entry.getValue();
 			for (LIRStatement stmt: flatIR) {
@@ -50,7 +51,7 @@ public class LocationResolver {
 			}
 		}
 	}
-	
+
 	public void printLocations() {
 		for (Entry<String, List<LIRStatement>> entry: this.pf.getLirMap().entrySet()) {	
 			System.out.println(entry.getKey() +":");
@@ -165,33 +166,43 @@ public class LocationResolver {
 	
 	private void processArgumentLocation(Name name, int index) {
 		if (index < 6) {
-			RegisterLocation loc = null;
+			StackLocation loc = null;
 			switch (index) {
 				case 0:
-					loc = new RegisterLocation(Register.RDI);
+					loc = new StackLocation(-1);
 					break;
 				case 1:
-					loc = new RegisterLocation(Register.RSI);
+					loc = new StackLocation(-2);
 					break;
 				case 2:
-					loc = new RegisterLocation(Register.RDX);
+					loc = new StackLocation(-3);
 					break;
 				case 3:
-					loc = new RegisterLocation(Register.RCX);
+					loc = new StackLocation(-4);
 					break;
 				case 4:
-					loc = new RegisterLocation(Register.R8);
+					loc = new StackLocation(-5);
 					break;
 				case 5:
-					loc = new RegisterLocation(Register.R9);
+					loc = new StackLocation(-6);
 					break;
 			}
 			
 			name.setLocation(loc);
 		}
 		else {
-			int stackOffset = index - 4; // Start from -15(%rbp)
+			int stackOffset = index - 4; // Start from -16(%rbp)
 			name.setLocation(new StackLocation(stackOffset));
 		}
+	}
+	
+	private int getParamCount(String methodName) {
+		for (MethodDecl md: cd.getMethodDeclarations()) {
+			if (md.getId().equals(methodName)) {
+				return md.getParameters().size();
+			}
+		}
+		
+		return 0;
 	}
 }
