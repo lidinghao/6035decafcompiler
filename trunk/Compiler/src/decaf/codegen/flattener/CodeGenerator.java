@@ -1,8 +1,6 @@
 package decaf.codegen.flattener;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.PrintStream;
 import java.util.List;
 
 import decaf.codegen.flatir.DataStmt;
@@ -12,28 +10,28 @@ import decaf.ir.ast.MethodDecl;
 
 public class CodeGenerator {
 	private ProgramFlattener pf;
-	private FileWriter out;
+	private PrintStream out;
 	private ClassDecl cd;
 	
-	public CodeGenerator(ProgramFlattener pf, ClassDecl cd, File file) throws IOException {
-        this.out = new FileWriter(file);
+	public CodeGenerator(ProgramFlattener pf, ClassDecl cd) {
+		this.out = System.out;
 		this.pf = pf;
 		this.cd = cd;
 	}
 	
-	public void generateCode() throws IOException {
-		out.write(".data");
+	public void generateCode() {
+		out.println(".data");
 		for (DataStmt s: pf.getDataStmtList()) {
 			s.generateAssembly(out);
 		}
 		
-		out.write("");
-		out.write(".text");
+		out.println();
+		out.println(".text");
 		for (MethodDecl md: cd.getMethodDeclarations()) {
-			out.write("");
+			out.println();
 			List<LIRStatement> lirList = pf.getLirMap().get(md.getId());
 			if (md.getId().equals("main")) {
-				out.write("\t.globl main");
+				out.println("\t.globl main");
 			}
 			for (LIRStatement s: lirList) {
 				s.generateAssembly(out);
@@ -45,6 +43,5 @@ public class CodeGenerator {
 		for (LIRStatement s: interruptHandler) {
 			s.generateAssembly(out);
 		}
-		out.close();
 	}
 }
