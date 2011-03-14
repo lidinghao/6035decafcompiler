@@ -1,0 +1,2 @@
+false || not_true : 1
+not_false && true : 1 		
