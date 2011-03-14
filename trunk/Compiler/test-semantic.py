@@ -17,7 +17,7 @@ class config:
   parser_tests       = False
 
   semantics_public_dir  = join(dirname(abspath(sys.argv[0])), "tests/semantics/")
-  semantics_hidden_dir  = None
+  semantics_hidden_dir  = join(dirname(abspath(sys.argv[0])), "tests/semantics/hidden")
   semantics_tests       = True
 
   verbose=True
@@ -162,7 +162,10 @@ def main(filename, tmpdir):
   
   cmd[-1]="inter"
   if config.semantics_tests:
-    semanticsresult = test_legalillegal(cmd, config.semantics_public_dir)
+    s1 = test_legalillegal(cmd, config.semantics_public_dir)
+    s2 = test_legalillegal(cmd, config.semantics_hidden_dir)
+    semanticsresult = (s1[0] + s2[0], s1[1] + s2[1])
+   
 
   #print results
   print
