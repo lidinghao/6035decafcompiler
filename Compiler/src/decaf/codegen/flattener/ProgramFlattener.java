@@ -54,6 +54,11 @@ public class ProgramFlattener {
 	}
 
 	private void addExceptionHandler() {
+		// Add array out of bound exception message string
+		this.dataStmtList.add(new DataStmt(ProgramFlattener.exceptionErrorLabel,
+				ProgramFlattener.exceptionMessage));
+		
+		// Add handler method
 		String label = ProgramFlattener.exceptionHandlerLabel;
 		while (isMethodName(label)) {
 			label += "_"; // Add '_' to make unique
@@ -122,10 +127,6 @@ public class ProgramFlattener {
 
 			this.dataStmtList.add(ds);
 		}
-
-		// Add array out of bound exception string
-		this.dataStmtList.add(new DataStmt(ProgramFlattener.exceptionErrorLabel,
-				ProgramFlattener.exceptionMessage));
 	}
 
 	public HashMap<String, List<LIRStatement>> getLirMap() {

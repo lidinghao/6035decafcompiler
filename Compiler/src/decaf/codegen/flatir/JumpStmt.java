@@ -69,16 +69,16 @@ public class JumpStmt extends LIRStatement {
 				s += "jne\t";
 				break;
 			case ZERO:
-				s += "jz\t";
+				s += "jz \t";
 				break;
 			case GT:
-				s += "jg\t";
+				s += "jg \t";
 				break;
 			case GTE:
 				s += "jge\t";
 				break;
 			case LT:
-				s += "jl\t";
+				s += "jl \t";
 				break;
 			case LTE:
 				s += "jle\t";
