@@ -63,7 +63,7 @@ class Program {
 		
 		   // Find and display the value left in pennies
 		   callout("printf", "%d penn", left);
-		   if (temp==1) {
+		   if (left==1) {
 		      callout("printf","y\n");
 		   }else{
 		      callout("printf","ies\n");
