@@ -40,8 +40,8 @@ class Program
 				  a[lcv+1] = temp;
 				  lastChange = lcv;
 				}
-	    		limit = lastChange;
-    		}
+	    	}
+	    	limit = lastChange;
     		if(limit == 0) {
     			break;
     		}

@@ -1,0 +1,128 @@
+class Program
+{	
+	int a[15]; 
+	int temp[15];
+	void merge(int left, int mid, int right)
+	{
+	  int i, left_end, num_elements, tmp_pos;
+	 
+	  left_end = mid - 1;
+	  tmp_pos = left;
+	  num_elements = right - left + 1;
+	 
+	
+	  for z = 0, 14 
+	  {
+	  	if((left > left_end) || (mid > right)) {
+	    	break;
+	    }
+	    //callout("printf", "\n mid, left: %d, %d\n", mid, left);
+	    if (a[left] <= a[mid])
+	    {
+	      temp[tmp_pos] = a[left];
+	      tmp_pos = tmp_pos + 1;
+	      left = left +1;
+	    }
+	    else
+	    {
+	      temp[tmp_pos] = a[mid];
+	      tmp_pos = tmp_pos + 1;
+	      mid = mid + 1;
+	    }
+	    
+	  }
+	 
+	
+	  for z = 0, 14
+	  {
+	  	if(left > left_end) {
+	    	break;
+	    }
+	    temp[tmp_pos] = a[left];
+	    left = left + 1;
+	    tmp_pos = tmp_pos + 1;
+	    
+	  }
+	
+	  for z = 0, 14
+	  {
+	  	if(mid > right) {
+	    	break;
+	    }
+	    temp[tmp_pos] = a[mid];
+	    mid = mid + 1;
+	    tmp_pos = tmp_pos + 1;
+	    
+	  }
+	 
+	  for i=0, num_elements
+	  {
+	    a[right] = temp[right];
+	    right = right - 1;
+	  }
+	}
+	void m_sort(int left, int right)
+	{
+	  int mid;
+	  if (right > left)
+	  {
+	    mid = (right + left) / 2;
+	    m_sort(left, mid);
+	    mid +=1;
+	    m_sort(mid, right);
+	    merge(left, mid, right);
+	  }
+	}
+	
+    void main()
+    {
+  		int z, n;
+  		n=15;  
+  		a[0] = 67493;
+  		a[1] = 567;
+  		a[2] = -67493;
+  		a[3] = 6493;
+  		a[4] = 933;
+  		a[5] = 0;
+  		a[6] = 679335;
+  		a[7] = -56;
+  		a[8] = 67493;
+  		a[9] = 9388;
+  		a[10] = 774;
+  		a[11] = 432;
+  		a[12] = 3;
+  		a[13] = 493;
+  		a[14] = 123;
+  		
+  		
+  		callout("printf", "initial :");
+   	 	for j = 0, 15 {
+            callout("printf", "%d ", a[j]);
+        }
+  		m_sort(0, 14);
+  		
+   	 	callout("printf", "\nresult :");
+   	 	for j = 0, 15 {
+            callout("printf", "%d ", a[j]);
+        }
+		callout("printf", "\n");
+}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+ 
