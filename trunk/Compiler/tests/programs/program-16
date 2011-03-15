@@ -1,0 +1,18 @@
+class Program {
+
+	void foo(int x, int y, int z) {
+		x += 3;
+		y += 3;
+		z += 3;
+		callout("printf","%d %d %d\n",x,y,z); // 4 5 6
+	}
+	
+	void main() {
+		int x, y, z;
+		x = 1;
+		y = 2;
+		z = 3;	
+		foo(x,y,z);
+		callout("printf","%d %d %d\n",x,y,z); // 1 2 3
+	}
+}
