@@ -213,7 +213,6 @@ public class SymbolTableGenerationVisitor implements ASTVisitor<Integer> {
 
 	@Override
 	public Integer visit(IfStmt stmt) {
-		System.out.println("AAAAA");
 		stmt.getCondition().accept(this);
 		stmt.getIfBlock().accept(this);
 
