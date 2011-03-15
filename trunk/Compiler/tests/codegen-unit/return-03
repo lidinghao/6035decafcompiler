@@ -1,0 +1,9 @@
+class Program {
+	void a() {
+		callout("printf","a\n");
+	}
+	
+	void main() {
+		a();
+	}
+}

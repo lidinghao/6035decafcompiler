@@ -227,6 +227,8 @@ public class MethodCheckVisitor implements ASTVisitor<Boolean> {
 		}
 
 		currentReturnType = md.getReturnType();
+		
+		md.getBlock().accept(this);
 
 		return false;
 	}

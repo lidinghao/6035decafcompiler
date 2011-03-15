@@ -1,0 +1,32 @@
+class Program {
+	void a() {
+	}
+	
+	void b() {
+		int b;
+		return b;
+	}
+	
+	int c() {
+		boolean c;
+		return c;
+	}
+	
+	int d() {
+		int d;
+		return d;
+	}
+	
+	boolean e() {
+		boolean e;
+		return e;
+	}
+	
+	boolean f() {
+		int f;
+		return f;
+	}
+	
+	void main() {
+	}
+}
