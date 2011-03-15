@@ -1,0 +1,11 @@
+class Program {
+	int exception_handler(){
+		return 1;
+	}
+	
+	void main() {
+		int j;
+		j = exception_handler();
+		callout("printf", "%d\n", 1);
+	}
+}
