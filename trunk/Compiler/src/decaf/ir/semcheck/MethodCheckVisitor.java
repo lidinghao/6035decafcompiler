@@ -73,22 +73,16 @@ public class MethodCheckVisitor implements ASTVisitor<Boolean> {
 
 	@Override
 	public Boolean visit(Block block) {
-		boolean returnFound = false;
-		boolean statementReturns = false;
 
 		for (VarDecl vd : block.getVarDeclarations()) {
 			vd.accept(this);
 		}
 
 		for (Statement s : block.getStatements()) {
-			statementReturns = s.accept(this);
-
-			if (!returnFound) {
-				returnFound = statementReturns;
-			}
+			s.accept(this);
 		}
 
-		return returnFound;
+		return false;
 	}
 
 	@Override
@@ -169,15 +163,12 @@ public class MethodCheckVisitor implements ASTVisitor<Boolean> {
 	public Boolean visit(IfStmt stmt) {
 		stmt.getCondition().accept(this);
 
-		boolean ifReturns = false;
-		boolean elseReturns = false;
-
-		ifReturns = stmt.getIfBlock().accept(this);
+		stmt.getIfBlock().accept(this);
 		if (stmt.getElseBlock() != null) {
-			elseReturns = stmt.getElseBlock().accept(this);
+			stmt.getElseBlock().accept(this);
 		}
 
-		return (ifReturns && elseReturns);
+		return false;
 	}
 
 	@Override
@@ -236,18 +227,6 @@ public class MethodCheckVisitor implements ASTVisitor<Boolean> {
 		}
 
 		currentReturnType = md.getReturnType();
-		boolean mustHaveReturn = false;
-
-		if (currentReturnType != Type.VOID) {
-			mustHaveReturn = true;
-		}
-
-		boolean doesMethodReturn = md.getBlock().accept(this);
-
-		if (mustHaveReturn && !doesMethodReturn) {
-			addError(md.getBlock(), "'" + md.getId()
-					+ "' does not return with type '" + md.getReturnType() + "'");
-		}
 
 		return false;
 	}

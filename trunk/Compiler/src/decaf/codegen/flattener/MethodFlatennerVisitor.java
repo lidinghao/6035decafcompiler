@@ -3,6 +3,7 @@ package decaf.codegen.flattener;
 import java.util.ArrayList;
 import java.util.List;
 
+import decaf.codegen.flatir.CallStmt;
 import decaf.codegen.flatir.Constant;
 import decaf.codegen.flatir.EnterStmt;
 import decaf.codegen.flatir.JumpCondOp;
@@ -15,7 +16,6 @@ import decaf.codegen.flatir.QuadrupletOp;
 import decaf.codegen.flatir.QuadrupletStmt;
 import decaf.codegen.flatir.Register;
 import decaf.codegen.flatir.RegisterName;
-import decaf.codegen.flatir.StackLocation;
 import decaf.codegen.flatir.VarName;
 import decaf.ir.ASTVisitor;
 import decaf.ir.ast.ArrayLocation;
@@ -41,6 +41,7 @@ import decaf.ir.ast.MethodDecl;
 import decaf.ir.ast.Parameter;
 import decaf.ir.ast.ReturnStmt;
 import decaf.ir.ast.Statement;
+import decaf.ir.ast.Type;
 import decaf.ir.ast.UnaryOpExpr;
 import decaf.ir.ast.VarDecl;
 import decaf.ir.ast.VarLocation;
@@ -317,13 +318,33 @@ public class MethodFlatennerVisitor implements ASTVisitor<Integer> {
 		// Method body
 		md.getBlock().accept(this);
 
-		// Method epilogue
-		this.statements.add(new LabelStmt(getMethodEpilogue()));
+		// Main method return value
 		if (this.methodName.equals("main")) {
 			this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE,
 					new RegisterName(Register.RAX), new Constant(0), null));
 		}
-		this.statements.add(new LeaveStmt());
+		
+		// Void method return
+		if (md.getReturnType() == Type.VOID) {
+			this.statements.add(new LeaveStmt());
+		}
+		
+		// Method cf handler
+		this.statements.add(new LabelStmt(getMethodCfHandler()));
+		VarName error = new VarName(ProgramFlattener.methodExceptionErrorLabel);
+		error.setIsString(true);
+		
+		// Move args to regs
+		this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE,
+				new RegisterName(ExpressionFlattenerVisitor.argumentRegs[0]), error, null));
+		this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE,
+				new RegisterName(ExpressionFlattenerVisitor.argumentRegs[1]), new Constant(md.getLineNumber()), null));
+		this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE,
+				new RegisterName(ExpressionFlattenerVisitor.argumentRegs[2]), new Constant(md.getColumnNumber()), null));
+		
+		// Call exception handler
+		this.statements.add(new CallStmt(ProgramFlattener.exceptionHandlerLabel));
+		
 		this.statements.add(new LabelStmt(getMethodEnd()));
 
 		return this.totalLocalVars;
@@ -341,8 +362,10 @@ public class MethodFlatennerVisitor implements ASTVisitor<Integer> {
 			this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE,
 					new RegisterName(Register.RAX), rtn, null));
 		}
-		this.statements.add(new JumpStmt(JumpCondOp.NONE, new LabelStmt(
-				getMethodEpilogue())));
+		
+		this.statements.add(new LeaveStmt());
+//		this.statements.add(new JumpStmt(JumpCondOp.NONE, new LabelStmt(
+//				getMethodEpilogue())));
 
 		return 0;
 	}
@@ -409,8 +432,8 @@ public class MethodFlatennerVisitor implements ASTVisitor<Integer> {
 		return methodName + "_for" + currentForId + "_end";
 	}
 
-	private String getMethodEpilogue() {
-		return methodName + "_epilogue";
+	private String getMethodCfHandler() {
+		return methodName + "_cfendhandler";
 	}
 
 	private String getMethodEnd() {

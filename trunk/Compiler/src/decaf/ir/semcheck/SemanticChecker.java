@@ -26,9 +26,9 @@ public class SemanticChecker {
 		cd.accept(tev);
 		
 		// Method calls and return statement type checking
-		MethodCheckVisitor pmv = new MethodCheckVisitor(
+		MethodCheckVisitor mcv = new MethodCheckVisitor(
 				stv.getClassDescriptor());
-		cd.accept(pmv);
+		cd.accept(mcv);
 		
 		// Check main method
 		Error mainMethodError = checkMainMethod(cd);
@@ -41,8 +41,16 @@ public class SemanticChecker {
 		ArraySizeCheckVisitor av = new ArraySizeCheckVisitor();
 		cd.accept(av);
 		
+		boolean hasErrors = (ibv.getErrors().size() > 0 ||
+				stv.getErrors().size() > 0 ||
+				tev.getErrors().size() > 0 ||
+				mcv.getErrors().size() > 0 ||
+				tc.getErrors().size() > 0 ||
+				av.getErrors().size() > 0 ||
+				mainMethodError != null);
+		
 		// Print errors if -debug on
-		if (CLI.debug) {
+		if (CLI.debug || hasErrors) {
 			// Print AST
 			out.println("AST:");
 			PrettyPrintVisitor pv = new PrettyPrintVisitor();
@@ -66,7 +74,7 @@ public class SemanticChecker {
 			
 			// Print mehtod check errros
 			out.println("Method argument and return type matching:");
-			out.println(pmv.getErrors());
+			out.println(mcv.getErrors());
 			
 			// Print main method errors
 			out.println("'main' method check:");
@@ -83,13 +91,7 @@ public class SemanticChecker {
 			out.println(av.getErrors());
 		}
 		
-		if (ibv.getErrors().size() > 0 ||
-				stv.getErrors().size() > 0 ||
-				tev.getErrors().size() > 0 ||
-				pmv.getErrors().size() > 0 ||
-				tc.getErrors().size() > 0 ||
-				av.getErrors().size() > 0 ||
-				mainMethodError != null) {
+		if (hasErrors) {
 			return false;
 		}
 		
