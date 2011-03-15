@@ -1,0 +1,19 @@
+class Program { //HelloWorld
+	
+	void main() {
+	  int n, val, i;    
+	  
+	  val = 0;
+	  n = 16;
+	  
+	  callout("printf","\t  n  \t    2^n\n");
+	  callout("printf","\t================\n");
+	  
+	  for i = 0, i <= n {
+	    callout("printf","\t%3d \t %6d\n", i, val);
+	    val = 2*val;
+	  }
+	}
+}
+
+

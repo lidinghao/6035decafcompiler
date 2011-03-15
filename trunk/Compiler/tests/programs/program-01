@@ -1,0 +1,6 @@
+class Program { //HelloWorld
+	
+	void main() {
+			callout("printf","Hello World!\n");
+	}
+}
