@@ -1,0 +1,20 @@
+class Program {
+	
+	int foo() {
+		int i;
+		for i = 0, 10 {
+			if (i == 9) {
+				return i;
+				break; // should be ignored
+			} else {
+				continue;
+				return -1; // should be ignored
+			}
+		}
+		return -1;
+	}
+	
+	void main() {
+		callout("printf","%d\n",foo());
+	}
+}

@@ -1,0 +1,15 @@
+class Program {
+	
+	int foo(boolean a) {
+		if (a) {
+			return 1;	
+		} else {
+			return 2;
+		}
+	}
+	
+	void main() {
+		callout("printf","%d\n",foo(true));
+		callout("printf","%d\n",foo(false));
+	}
+}
