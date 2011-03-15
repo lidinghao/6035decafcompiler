@@ -35,11 +35,11 @@ import decaf.test.Error;
 public class BreakContinueStmtCheckVisitor implements ASTVisitor<Integer> {
 	
 	private ArrayList<Error> errors;
-	private boolean inFor;
+	private int inFor;
 	
 	public BreakContinueStmtCheckVisitor() {
 		this.errors = new ArrayList<Error>();
-		this.inFor = false;
+		this.inFor = 0;
 	}
 	
 	@Override
@@ -82,7 +82,7 @@ public class BreakContinueStmtCheckVisitor implements ASTVisitor<Integer> {
 
 	@Override
 	public Integer visit(BreakStmt stmt) {
-		if (this.inFor == false) {
+		if (this.inFor < 1) {
 			int ln = stmt.getLineNumber();
 			int cn = stmt.getColumnNumber();
 			String msg = "break statement outside of for loop";
@@ -128,7 +128,7 @@ public class BreakContinueStmtCheckVisitor implements ASTVisitor<Integer> {
 
 	@Override
 	public Integer visit(ContinueStmt stmt) {
-		if (this.inFor == false) {
+		if (this.inFor < 1) {
 			int ln = stmt.getLineNumber();
 			int cn = stmt.getColumnNumber();
 			String msg = "continue statement outside of for loop";
@@ -153,11 +153,11 @@ public class BreakContinueStmtCheckVisitor implements ASTVisitor<Integer> {
 
 	@Override
 	public Integer visit(ForStmt stmt) {
-		this.inFor = true;
+		this.inFor++;
 		stmt.getInitialValue().accept(this);
 		stmt.getFinalValue().accept(this);
 		stmt.getBlock().accept(this);
-		this.inFor  =false;
+		this.inFor--;
 		return 0;
 	}
 
