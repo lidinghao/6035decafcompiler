@@ -1,0 +1,72 @@
+class Program {
+
+	void main ()
+	{
+		   // Local data ...
+		   int pennies;              // input: count of pennies
+		   int nickels;              // input: count of nickels
+		   int dimes;                // input: count of dimes
+		   int quarters;             // input: count of quarters
+		   int temp, left;           // temporaries for various
+		                             // computations 
+		                             
+		   quarters = 5;
+		   dimes = 10;
+		   nickels = 20;
+		   pennies = 5;
+		
+		   // Compute the total value in cents.
+		   left = 25 * quarters + 10 * dimes + 5 * nickels + pennies;
+		
+		   // Find and display the value in dollars
+		   callout("printf","Your collection is worth\n "); 
+		   temp = left / 100;
+		   callout("printf", "\t%d dollar", temp);
+		   if (temp==1) {
+		      callout("printf",", ");
+		   }else{
+		      callout("printf","s, ");
+		   }
+		   left = left % 100;
+		
+		   // Find and display the value left in quarters
+		   temp = left / 25;
+		   callout("printf", "%d quarter", temp);
+		   if (temp==1) {
+		      callout("printf",", ");
+		   }else{
+		      callout("printf","s, ");
+		   }
+		   left = left % 25;
+		
+		   // Find and display the value left in dimes
+		   temp = left / 10;
+		   callout("printf","%d dime", temp);
+
+		   if (temp==1) {
+		      callout("printf",", ");
+		   }else{
+		      callout("printf","s, ");
+		   }
+		   left = left % 10;
+		
+		   // Find and display the value left in nickels
+		   temp = left / 5;
+		   
+		   callout("printf", "%d nickel", temp);
+		   if (temp==1) {
+		      callout("printf",", ");
+		   }else{
+		      callout("printf","s, ");
+		   }
+		   left = left % 5;
+		
+		   // Find and display the value left in pennies
+		   callout("printf", "%d penn", left);
+		   if (temp==1) {
+		      callout("printf","y\n");
+		   }else{
+		      callout("printf","ies\n");
+		   } 	   
+	}
+}

@@ -1,0 +1,22 @@
+class Program { //HelloWorld
+	
+	int max(int a, int b, int c){
+		int m;
+		m = a;
+		if(a < b){
+			m = b;
+		}
+		
+		if(m < c) {
+			m = c;
+		}
+		
+		return c;
+	}
+	
+	
+	void main() {
+		
+		callout("printf", "max of 3 nums 3,4,5 is %d", max(3,4,5));
+	}
+}

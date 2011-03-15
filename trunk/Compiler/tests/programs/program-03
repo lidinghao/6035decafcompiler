@@ -1,0 +1,18 @@
+class Program { //HelloWorld
+
+	void blockg() {
+	  callout("printf","gggggg\n");
+	  callout("printf","g    g\n");
+	  callout("printf","g\n");
+	  callout("printf","g  ggg\n");
+	  callout("printf","g    g\n");
+	  callout("printf","gggggg\n");
+	}
+	
+	void main() {
+	   callout("printf","\n");
+	   blockg();
+	   callout("printf","\n");
+	   
+	}
+}
