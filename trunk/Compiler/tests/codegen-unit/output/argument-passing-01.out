@@ -1,5 +1,5 @@
 hello world from main
 some values (13,14): 13 14
-agrs:13 + 14 + 14=41
-args:13+13+13+14+14+14=81
+agrs: 13 + 14 + 14=41
+args: 13+13+13+14+14+14=81
 returned a variable, value is 81, should be 81
