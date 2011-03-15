@@ -24,9 +24,9 @@ import decaf.ir.ast.MethodDecl;
 
 public class ProgramFlattener {
 	public static String arrayExceptionErrorLabel = "outofbounds";
-	public static String arrayExceptionMessage = "\"Array index out of bounds (%d, %d)\\n\"";
+	public static String arrayExceptionMessage = "\"RUNTIME ERROR: Array index out of bounds (%d, %d)\\n\"";
 	public static String methodExceptionErrorLabel = "methodcfend";
-	public static String methodExceptionMessage = "\"Method at (%d, %d) reached end of control flow without returning\\n\"";
+	public static String methodExceptionMessage = "\"RUNTIME ERROR: Method at (%d, %d) reached end of control flow without returning\\n\"";
 	public static String exceptionHandlerLabel = "exception_handler";
 	
 	private ClassDecl classDecl;
