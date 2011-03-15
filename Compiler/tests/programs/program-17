@@ -10,7 +10,6 @@ class Program {
 		}
 		return true;
 	}
-	
 	void main() {	
 		int i;
 		for i = 0, 2 {
