@@ -1,0 +1,10 @@
+class Program {
+	
+	int arrayexception() {
+		return 1;
+	}
+	
+	void main() {
+		callout("printf","%d\n",arrayexception());
+	}
+}
