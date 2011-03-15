@@ -11,7 +11,7 @@ import decaf.test.Error;
 
 public class SemanticChecker {
 
-	public static boolean performSemanticChecks(ClassDecl cd, PrintStream out) {		
+	public static boolean performSemanticChecks(ClassDecl cd, PrintStream out) {	
 		// Check integer overflow (must do before symbol table generation)
 		IntOverflowCheckVisitor ibv = new IntOverflowCheckVisitor();
 		cd.accept(ibv);
