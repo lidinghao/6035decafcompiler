@@ -19,7 +19,7 @@ class Program {
 		for i = 0, 2 {
 			a[i] = b[i];
 		}
-		if (arraysequal()) {
+		if (arrayequals()) {
 			callout("printf","true");
 		} else {
 			callout("printf","false");
