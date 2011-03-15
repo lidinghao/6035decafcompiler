@@ -1,0 +1,19 @@
+class Program {
+	int a[10];
+	
+	void main() {
+		int i;
+		for i = 0, 10 {
+			a[i] = i;
+		}
+		for i = 0, 4 {
+			int tmp;
+			tmp = a[9-i];
+			a[9-i] = a[i];
+			a[i] = tmp;
+		}
+		for i = 0, 10 {
+			callout("printf","%d\n",a[i]); // print array in reverse
+		}
+	}
+}
