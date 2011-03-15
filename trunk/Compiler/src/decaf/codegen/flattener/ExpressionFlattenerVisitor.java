@@ -81,7 +81,7 @@ public class ExpressionFlattenerVisitor implements ASTVisitor<Name> {
 		Name index = loc.getExpr().accept(this);
 		
 		// Add index out of bound check
-		addArrayBoundCheck(loc, index);
+		addArrayBoundCheck(loc);
 		
 		// Check for nested array accesses
 		if (inArrayLocation <= 1) {
@@ -451,13 +451,16 @@ public class ExpressionFlattenerVisitor implements ASTVisitor<Name> {
 		return methodName + "_or" + currentOrId + "_end";
 	}
 	
-	private void addArrayBoundCheck(ArrayLocation loc, Name index) {
+	private void addArrayBoundCheck(ArrayLocation loc) {
 		LabelStmt arrayCheckPass = new LabelStmt(getArrayBoundPass());
 		LabelStmt arrayCheckFail = new LabelStmt(getArrayBoundFail());
 		arrayBoundId++;
 		
+		Name index = loc.getExpr().accept(this); // Re-eval expressions
 		this.statements.add(new QuadrupletStmt(QuadrupletOp.CMP, null, index, new Constant(loc.getSize())));
 		this.statements.add(new JumpStmt(JumpCondOp.GTE, arrayCheckFail)); // size >= length?
+		
+		index = loc.getExpr().accept(this); // Re-eval expressions
 		this.statements.add(new QuadrupletStmt(QuadrupletOp.CMP, null, index, new Constant(0)));
 		this.statements.add(new JumpStmt(JumpCondOp.LT, arrayCheckFail)); // size < 0?
 		this.statements.add(new JumpStmt(JumpCondOp.NONE, arrayCheckPass)); // passed

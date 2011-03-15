@@ -15,7 +15,7 @@ public class TempNameIndexer {
 		reset();
 	}
 
-	public int indexTemps(List<LIRStatement> flatIR) {
+	public int indexTemps(List<LIRStatement> flatIR) throws Exception {
 		reset();
 
 		for (LIRStatement stmt : flatIR) {
@@ -33,7 +33,11 @@ public class TempNameIndexer {
 		tempNeeded = 0;
 	}
 
-	private void processQuadruplet(QuadrupletStmt stmt) {
+	private void processQuadruplet(QuadrupletStmt stmt) throws Exception {
+		if (tempCount < 0) {
+			throw new Exception("Temp index cannot be negative");
+		}
+		
 		if (isTempName(stmt.getArg1())) {
 			tempCount--;
 		}

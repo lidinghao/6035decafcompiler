@@ -40,7 +40,7 @@ public class ProgramFlattener {
 		this.tni = new TempNameIndexer();
 	}
 
-	public void flatten() {
+	public void flatten() throws Exception {
 		for (FieldDecl fd : classDecl.getFieldDeclarations()) {
 			processFieldDecl(fd);
 		}
@@ -100,7 +100,7 @@ public class ProgramFlattener {
 		return false;
 	}
 
-	private void processMethodDecl(MethodDecl md) {
+	private void processMethodDecl(MethodDecl md) throws Exception {
 		this.mfv.setMethodName(md.getId());
 		
 		int stackSize = md.accept(this.mfv);

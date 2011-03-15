@@ -317,7 +317,7 @@ public class TypeEvaluationVisitor implements ASTVisitor<Type> {
 			addError(stmt, "'" + stmt.getInitialValue() + "' must be of int type");
 		}
 		if (stmt.getFinalValue().accept(this) != Type.INT) {
-			addError(stmt, "'" + stmt.getInitialValue() + "' must be of int type");
+			addError(stmt, "'" + stmt.getFinalValue() + "' must be of int type");
 		}
 
 		stmt.getBlock().accept(this);
