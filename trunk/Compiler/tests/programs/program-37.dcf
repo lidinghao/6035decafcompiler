@@ -1,0 +1,52 @@
+class Program
+{	
+	int a[15]; 
+    void main()
+    {
+    	int lcv;
+  		int rh;     
+  		int where;   
+  		int temp;
+  		int z, n;
+  		n=15;  
+  		a[0] = 67493;
+  		a[1] = 567;
+  		a[2] = -67493;
+  		a[3] = 6493;
+  		a[4] = 933;
+  		a[5] = 0;
+  		a[6] = 679335;
+  		a[7] = -56;
+  		a[8] = 67493;
+  		a[9] = 9388;
+  		a[10] = 774;
+  		a[11] = 432;
+  		a[12] = 3;
+  		a[13] = 493;
+  		a[14] = 123;
+  		
+  		
+  		callout("printf", "initial :");
+   	 	for j = 0, 15 {
+            callout("printf", "%d ", a[j]);
+        }
+  		rh = n-1;
+  		for z = 1, n-1 {
+    		where = 0;
+		    for lcv = 1, rh {
+		      if (a[lcv]>a[where]) {
+					where = lcv;
+			  }
+			 }
+		    temp = a[where];
+		   	a[where] = a[rh];
+		    a[rh] = temp;
+		    rh-=1;
+   	 	}
+   	 	callout("printf", "\nresult :");
+   	 	for j = 0, 15 {
+            callout("printf", "%d ", a[j]);
+        }
+		callout("printf", "\n");
+	}
+}
