@@ -21,7 +21,7 @@ class config:
   
   codegen_public_dir  = join(dirname(abspath(sys.argv[0])), "tests/programs/")
   codegen_hidden_dir  = join(dirname(abspath(sys.argv[0])), "tests/codegen/hidden")
-	codegen_ignore = [20,21]
+  codegen_ignore = [20,21]
   codegen_tests       = True
 
   pad = 20
@@ -165,13 +165,13 @@ def test_diffoutput(cmd, testdir, subtest, ignore = None):
   correct=0
   total=0
   for f in sorted(os.listdir(testdir)):
-		test = True;
-		if ignore not None:
-			for i in ignore:
-				if f.find(str(i)) != -1:
-					test = False;
-		if not test:
-			continue;
+    test = True;
+    if ignore != None:
+      for i in ignore:
+	if f.find(str(i)) != -1:
+	  test = False;
+    if not test:
+      continue;
     fi=os.path.join(testdir, f)
     fo=os.path.join(testdir,"output",os.path.splitext(f)[0]+".out")
     if isfile(fi) and isfile(fo):
