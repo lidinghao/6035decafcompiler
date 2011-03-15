@@ -1,0 +1,9 @@
+class Program {
+	void main() {
+		int c;
+		callout("printf","\tCharacter  Code\n\t===============\n");
+		for c = 32, 127 {
+			callout("printf","\t  %c     %4d\n", c, c);	
+		}
+	}
+}

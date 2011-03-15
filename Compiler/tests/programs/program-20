@@ -1,0 +1,19 @@
+class Program {
+	int seed, m, c, a;
+	
+	int random() {
+		seed = (a*seed+c)%m;
+		return seed;
+	}
+	
+	void main() {
+		int i;
+		seed = 17;
+		m = 47;
+		c = 123;
+		a = 6;
+		for i = 0, 10 {
+			callout("printf","%d\n",random());
+		}
+	}
+}
