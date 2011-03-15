@@ -41,7 +41,10 @@ public class CodeGenerator {
 			}
 		}
 		
-		// Generate interrupt handler
+		generateExceptionHanlder();
+	}
+
+	private void generateExceptionHanlder() {
 		List<LIRStatement> interruptHandler = pf.getLirMap().get(ProgramFlattener.exceptionHandlerLabel);
 		for (LIRStatement s: interruptHandler) {
 			s.generateAssembly(out);

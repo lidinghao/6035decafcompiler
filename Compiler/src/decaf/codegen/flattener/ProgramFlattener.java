@@ -23,9 +23,12 @@ import decaf.ir.ast.IntLiteral;
 import decaf.ir.ast.MethodDecl;
 
 public class ProgramFlattener {
-	public static String exceptionErrorLabel = "outofbounds";
-	public static String exceptionMessage = "\"Array index out of bounds (%d, %d)\\n\"";
-	public static String exceptionHandlerLabel = "arrayexception";
+	public static String arrayExceptionErrorLabel = "outofbounds";
+	public static String arrayExceptionMessage = "\"Array index out of bounds (%d, %d)\\n\"";
+	public static String methodExceptionErrorLabel = "methodcfend";
+	public static String methodExceptionMessage = "\"Method at (%d, %d) reached end of control flow without returning\\n\"";
+	public static String exceptionHandlerLabel = "exception_handler";
+	
 	private ClassDecl classDecl;
 	private MethodFlatennerVisitor mfv;
 	private HashMap<String, List<LIRStatement>> lirMap;
@@ -41,6 +44,8 @@ public class ProgramFlattener {
 	}
 
 	public void flatten() throws Exception {
+		addExceptionHandlers();
+		
 		for (FieldDecl fd : classDecl.getFieldDeclarations()) {
 			processFieldDecl(fd);
 		}
@@ -48,19 +53,23 @@ public class ProgramFlattener {
 		for (MethodDecl md : classDecl.getMethodDeclarations()) {
 			processMethodDecl(md);
 		}
-
-		// Add array out of bounds handler
-		addExceptionHandler();
 	}
 
-	private void addExceptionHandler() {
+	private void addExceptionHandlers() {
 		// Add array out of bound exception message string
-		this.dataStmtList.add(new DataStmt(ProgramFlattener.exceptionErrorLabel,
-				ProgramFlattener.exceptionMessage));
+		this.dataStmtList.add(new DataStmt(
+				ProgramFlattener.arrayExceptionErrorLabel,
+				ProgramFlattener.arrayExceptionMessage));
 		
+		// Add method cf end exception message string
+		this.dataStmtList.add(new DataStmt(
+				ProgramFlattener.methodExceptionErrorLabel,
+				ProgramFlattener.methodExceptionMessage));
+
 		// Add handler method
 		while (isMethodName(ProgramFlattener.exceptionHandlerLabel)) {
-			ProgramFlattener.exceptionHandlerLabel += "_"; // Add '_' to make unique
+			ProgramFlattener.exceptionHandlerLabel += "_"; // Add '_' to make
+			// unique
 		}
 
 		List<LIRStatement> instructions = new ArrayList<LIRStatement>();
@@ -68,26 +77,28 @@ public class ProgramFlattener {
 		// Add label
 		LabelStmt l = new LabelStmt(ProgramFlattener.exceptionHandlerLabel);
 		l.setMethodLabel(true);
-		instructions.add(l);		
-		
+		instructions.add(l);
+
 		// Set %rax to 0
 		instructions.add(new QuadrupletStmt(QuadrupletOp.MOVE, new RegisterName(
 				Register.RAX), new Constant(0), null));
-		
-		instructions.add(new CallStmt("printf")); // Argument regs already contain the right stuff
-		
-		// Invote syscall 1
+
+		instructions.add(new CallStmt("printf")); // Argument regs already contain
+		// the right stuff
+
+		// Invoke syscall 1
 		instructions.add(new QuadrupletStmt(QuadrupletOp.MOVE, new RegisterName(
-				Register.RAX), new Constant(1), null)); 
-		
+				Register.RAX), new Constant(1), null));
+
 		// Exit with non-zero code
 		instructions.add(new QuadrupletStmt(QuadrupletOp.MOVE, new RegisterName(
 				Register.RBX), new Constant(1), null));
-		
+
 		// Call interrupt handler
 		instructions.add(new InterruptStmt("$0x80"));
-		
-		this.lirMap.put(ProgramFlattener.exceptionHandlerLabel, instructions);
+
+		this.lirMap
+				.put(ProgramFlattener.exceptionHandlerLabel, instructions);
 	}
 
 	private boolean isMethodName(String label) {
@@ -102,11 +113,13 @@ public class ProgramFlattener {
 
 	private void processMethodDecl(MethodDecl md) throws Exception {
 		this.mfv.setMethodName(md.getId());
-		
+
 		int stackSize = md.accept(this.mfv);
 		stackSize += tni.indexTemps(this.mfv.getStatements());
-		stackSize += Math.min(md.getParameters().size(), 6); // Also save register arguments on stack
-		
+		stackSize += Math.min(md.getParameters().size(), 6); // Also save register
+		// arguments on
+		// stack
+
 		lirMap.put(md.getId(), this.mfv.getStatements());
 
 		// Set stack size in 'enter' statement

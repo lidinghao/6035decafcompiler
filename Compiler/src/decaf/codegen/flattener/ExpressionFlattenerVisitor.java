@@ -47,7 +47,7 @@ import decaf.ir.ast.VarDecl;
 import decaf.ir.ast.VarLocation;
 
 public class ExpressionFlattenerVisitor implements ASTVisitor<Name> {	
-	private Register[] argumentRegs = { Register.RDI, Register.RSI,
+	public static Register[] argumentRegs = { Register.RDI, Register.RSI,
 			Register.RDX, Register.RCX, Register.R8, Register.R9 };
 	private List<LIRStatement> statements;
 	private String methodName;
@@ -467,7 +467,7 @@ public class ExpressionFlattenerVisitor implements ASTVisitor<Name> {
 		
 		// Exception Handler
 		this.statements.add(arrayCheckFail);
-		VarName error = new VarName(ProgramFlattener.exceptionErrorLabel);
+		VarName error = new VarName(ProgramFlattener.arrayExceptionErrorLabel);
 		error.setIsString(true);
 		
 		// Move args to regs
