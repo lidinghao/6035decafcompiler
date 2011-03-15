@@ -1,0 +1,29 @@
+class Program {
+	int a[2];
+	int b[2];
+	
+	boolean arrayequals() {
+		for i = 0, 2 {
+			if (a[i] != b[i]) {
+				return false;
+			}
+		}
+		return true;
+	}
+	
+	void main() {	
+		int i;
+		for i = 0, 2 {
+			a[i] = i;
+			b[i] = i+1;
+		}
+		for i = 0, 2 {
+			a[i] = b[i];
+		}
+		if (arrayequals()) {
+			callout("printf","true");
+		} else {
+			callout("printf","false");
+		}
+	}
+}
