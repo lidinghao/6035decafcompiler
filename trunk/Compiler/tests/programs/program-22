@@ -1,0 +1,44 @@
+class Program {
+	int a[10], temp[10], c[10];
+	int num_trials;
+	
+	void shift(int rot_size) {
+		int lcv;
+		if (rot_size < 0) {
+			rot_size = 10-((-rot_size)%10);
+		}
+		for lcv = 0, 10 {
+			temp[(lcv+rot_size)%10] = a[lcv];
+		}
+		for lcv = 0, 10 {
+			c[lcv] = temp[lcv];
+		}
+	}
+	
+	// print values
+	void print_array() {
+		int i;
+		for i = 0, 10 {
+			callout("printf","%d ",c[i]);
+		}
+		callout("printf","\n");
+	}
+	
+	void main() {
+		int i, rotation_size;
+		num_trials = 10;
+		// initialize array
+		callout("printf","Initial array: \n");
+		for i = 0, 10 {
+			a[i] = callout("random");
+			callout("printf","%d ",a[i]);
+		}
+		callout("printf","\n");
+		for i = -10, num_trials {
+			rotation_size = i;
+			callout("printf", "rotation of %d:\n", i);
+			shift(rotation_size);
+			print_array();
+		}
+	}
+}

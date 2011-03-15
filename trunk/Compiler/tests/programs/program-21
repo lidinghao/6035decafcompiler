@@ -1,0 +1,40 @@
+class Program {
+	int a[10];
+	int num_permutations;
+
+	void random_permutation() {
+		// initialize
+		int i;
+		for i = 0, 10 {
+			a[i] = i;
+		}
+		// permute randomly
+		for i = 0, 10 {
+			int k, j, temp;
+			k = 9 - i;
+			j = callout("random") % (k+1);
+			temp = a[j];
+			a[j] = a[k];
+			a[k] = temp;
+		}
+	}
+
+	// print values
+	void print_array() {
+		int i;
+		for i = 0, 10 {
+			callout("printf","%d ",a[i]);
+		}
+		callout("printf","\n");
+	} 
+	
+	void main() {
+		int i;
+		callout("srandom", 17);
+		num_permutations = 20;
+		for i = 0, num_permutations {
+			random_permutation();
+			print_array();
+		}
+	}
+}

@@ -1,0 +1,36 @@
+class Program {
+	int n;
+	int primes[256];
+	
+	// prints primes up till n
+	void main() {
+		int level, i;
+		n = 512;
+		level = 0;
+		for i = 2, n+1 {
+			int j;
+			int flag;
+			flag = 1;
+			for j = 0, level {
+				if (flag != 0) {
+					flag = (i%primes[j]);	
+				} else {
+					break;
+				}
+			}
+			if (flag != 0) {
+				if (level < 256) {
+					primes[level] = i;
+					level+=1;
+				}
+			}
+		}
+		// print primes
+		for i = 0, 256 {
+			if (primes[i] == 0) {
+				break;
+			}
+			callout("printf","%d\n",primes[i]);
+		}
+	}
+}
