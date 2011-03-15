@@ -30,7 +30,7 @@ class Program {
 		// initialize array
 		callout("printf","Initial array: \n");
 		for i = 0, 10 {
-			a[i] = callout("random");
+			a[i] = i;
 			callout("printf","%d ",a[i]);
 		}
 		callout("printf","\n");
