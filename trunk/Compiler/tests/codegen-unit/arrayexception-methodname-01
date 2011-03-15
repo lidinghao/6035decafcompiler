@@ -1,10 +1,10 @@
 class Program {
 	
-	int arrayexception() {
+	int exception_handler() {
 		return 1;
 	}
 	
 	void main() {
-		callout("printf","%d\n",arrayexception());
+		callout("printf","%d\n",exception_handler());
 	}
 }
