@@ -329,7 +329,7 @@ public class TypeEvaluationVisitor implements ASTVisitor<Type> {
 	public Type visit(IfStmt stmt) {
 		Type exprType = stmt.getCondition().accept(this);
 
-		if (exprType != Type.BOOLEAN) {
+		if (exprType != Type.BOOLEAN && exprType != Type.UNDEFINED) {
 			addError(stmt, "'" + stmt.getCondition() + "' must be of boolean type");
 		}
 
@@ -359,7 +359,11 @@ public class TypeEvaluationVisitor implements ASTVisitor<Type> {
 		for (Expression e : expr.getArguments()) {
 			e.accept(this);
 		}
-
+		
+		if (!classDesc.getMethodSymbolTable().containsKey(expr.getName())) {
+			return Type.UNDEFINED;
+		}
+		
 		expr.setType(classDesc.getMethodSymbolTable().get(expr.getName())
 				.getReturnType());
 

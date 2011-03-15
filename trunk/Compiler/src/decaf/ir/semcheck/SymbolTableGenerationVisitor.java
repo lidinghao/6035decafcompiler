@@ -213,6 +213,7 @@ public class SymbolTableGenerationVisitor implements ASTVisitor<Integer> {
 
 	@Override
 	public Integer visit(IfStmt stmt) {
+		System.out.println("AAAAA");
 		stmt.getCondition().accept(this);
 		stmt.getIfBlock().accept(this);
 
@@ -251,7 +252,7 @@ public class SymbolTableGenerationVisitor implements ASTVisitor<Integer> {
 	}
 
 	@Override
-	public Integer visit(MethodDecl md) {
+	public Integer visit(MethodDecl md) {		
 		MethodSymbolTable methodTable = classDescriptor.getMethodSymbolTable();
 
 		if (currentScope.containsKey(md.getId())) {
