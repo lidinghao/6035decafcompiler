@@ -3,8 +3,6 @@ class Program {
 	
 	void main() {
 		int i;
-		
 	    callout("printf","%d\n", a[6]);
-
 	}
 }
