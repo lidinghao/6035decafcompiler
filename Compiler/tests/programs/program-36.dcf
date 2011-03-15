@@ -1,0 +1,43 @@
+class Program
+{	
+	int a[10];
+    int binary_search(int n, int who) 
+    {
+    int p, z, s;
+    p = n/2;
+    s = n;
+
+    for z = 0, s {
+	n = n/2;
+	if (who < a[p]) {
+	    p -= n;
+	} else {
+		if (who > a[p]) {
+	    	p += n;
+		} else {
+	    	return p;
+    	}
+    }
+    if (n <= 0) {
+    	break;
+    }
+    }
+    return -1;    
+    }
+
+    void main()
+    {
+		int result;
+        for j = 0, 10 {
+            a[j] = j*2 ;
+        }
+        
+
+		for j = 0, 10 {
+            callout("printf", "%d ", a[j]);
+        }
+        result = binary_search(10, 6);
+        
+        callout("printf", "result : %d\n", result);
+    }
+}
