@@ -1,4 +1,4 @@
-package decaf.codegen.cfg;
+package decaf.dataflow.cfg;
 
 import java.util.List;
 
