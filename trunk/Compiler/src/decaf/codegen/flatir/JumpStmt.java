@@ -97,4 +97,22 @@ public class JumpStmt extends LIRStatement {
 		
 		out.println(s);
 	}
+	
+	@Override
+	public int hashCode() {
+		return toString().hashCode();
+	}
+	
+	@Override
+	public boolean equals(Object o) {
+		if (o == null) return false;
+		if (!o.getClass().equals(JumpStmt.class)) return false;
+		
+		JumpStmt stmt = (JumpStmt) o;
+		if (stmt.getLabel().equals(this.label) && stmt.getCondition().equals(this.condition)) {
+			return true;
+		}
+		
+		return false;
+	}
 }

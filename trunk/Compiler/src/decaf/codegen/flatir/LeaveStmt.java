@@ -17,4 +17,17 @@ public class LeaveStmt extends LIRStatement {
 		out.println("\tleave");
 		out.println("\tret");
 	}
+	
+	@Override
+	public int hashCode() {
+		return toString().hashCode();
+	}
+	
+	@Override
+	public boolean equals(Object o) {
+		if (o == null) return false;
+		if (!o.getClass().equals(LeaveStmt.class)) return false;
+		
+		return true;
+	}
 }

@@ -21,6 +21,24 @@ public class CallStmt extends LIRStatement {
 	public String toString() {
 		return "call " + methodLabel;
 	}
+	
+	@Override
+	public int hashCode() {
+		return toString().hashCode();
+	}
+	
+	@Override
+	public boolean equals(Object o) {
+		if (o == null) return false;
+		if (!o.getClass().equals(CallStmt.class)) return false;
+		
+		CallStmt stmt = (CallStmt) o;
+		if (stmt.getMethodLabel().equals(this.methodLabel)) {
+			return true;
+		}
+		
+		return false;
+	}
 
 	@Override
 	public void generateAssembly(PrintStream out) {
