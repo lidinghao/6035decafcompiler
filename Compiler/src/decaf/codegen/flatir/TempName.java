@@ -32,7 +32,7 @@ public class TempName extends Name {
 	}
 	
 	public String hashString() {
-		return ("Temp#" + id);
+		return ("Temporary#" + id);
 	}
 	
 	@Override 
