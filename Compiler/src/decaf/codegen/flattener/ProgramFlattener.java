@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import decaf.codegen.flatir.CallStmt;
-import decaf.codegen.flatir.Constant;
+import decaf.codegen.flatir.ConstantName;
 import decaf.codegen.flatir.DataStmt;
 import decaf.codegen.flatir.EnterStmt;
 import decaf.codegen.flatir.InterruptStmt;
@@ -81,18 +81,18 @@ public class ProgramFlattener {
 
 		// Set %rax to 0
 		instructions.add(new QuadrupletStmt(QuadrupletOp.MOVE, new RegisterName(
-				Register.RAX), new Constant(0), null));
+				Register.RAX), new ConstantName(0), null));
 
 		instructions.add(new CallStmt("printf")); // Argument regs already contain
 		// the right stuff
 
 		// Invoke syscall 1
 		instructions.add(new QuadrupletStmt(QuadrupletOp.MOVE, new RegisterName(
-				Register.RAX), new Constant(1), null));
+				Register.RAX), new ConstantName(1), null));
 
 		// Exit with non-zero code
 		instructions.add(new QuadrupletStmt(QuadrupletOp.MOVE, new RegisterName(
-				Register.RBX), new Constant(1), null));
+				Register.RBX), new ConstantName(1), null));
 
 		// Call interrupt handler
 		instructions.add(new InterruptStmt("$0x80"));

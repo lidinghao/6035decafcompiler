@@ -117,9 +117,9 @@ public class QuadrupletStmt extends LIRStatement {
 	}
 
 	private void processUnaryQuadruplet(PrintStream out, QuadrupletOp operator) {
-		Constant falseLiteral = new Constant(0);
+		ConstantName falseLiteral = new ConstantName(0);
 		falseLiteral.setLocation(new ConstantLocation(falseLiteral.getValue()));
-		Constant trueLiteral = new Constant(1);
+		ConstantName trueLiteral = new ConstantName(1);
 		trueLiteral.setLocation(new ConstantLocation(trueLiteral.getValue()));
 		
 		moveToRegister(out, this.getArg1(), Register.R10);
@@ -144,9 +144,9 @@ public class QuadrupletStmt extends LIRStatement {
 		
 		out.println("\tcmp\t" + Register.R11 + ", " + Register.R10);
 		
-		Constant falseLiteral = new Constant(0);
+		ConstantName falseLiteral = new ConstantName(0);
 		falseLiteral.setLocation(new ConstantLocation(falseLiteral.getValue()));
-		Constant trueLiteral = new Constant(1);
+		ConstantName trueLiteral = new ConstantName(1);
 		trueLiteral.setLocation(new ConstantLocation(trueLiteral.getValue()));
 		
 		moveToRegister(out, falseLiteral, Register.R10);
@@ -179,7 +179,7 @@ public class QuadrupletStmt extends LIRStatement {
 	}
 
 	private void processDivModQuadruplet(PrintStream out, QuadrupletOp op) {
-		Constant falseLiteral = new Constant(0);
+		ConstantName falseLiteral = new ConstantName(0);
 		falseLiteral.setLocation(new ConstantLocation(falseLiteral.getValue()));
 		
 		moveToRegister(out, falseLiteral, Register.RDX);

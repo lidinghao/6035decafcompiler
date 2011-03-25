@@ -140,7 +140,7 @@ public class LocationResolver {
 			name.setLocation(new RegisterLocation((RegisterName)name));
 		}
 		else { // Constant
-			Constant c = (Constant) name;
+			ConstantName c = (ConstantName) name;
 			name.setLocation(new ConstantLocation(c.getValue()));
 		}
 	}
