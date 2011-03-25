@@ -29,11 +29,6 @@ public class ArrayName extends Name {
 	public String toString() {
 		return id + "[" + index + "]";
 	}
-	
-	@Override
-	public int hashCode() {
-		return (id + "-1" + "[" + index + "]").hashCode();
-	}
 
 	@Override
 	public boolean isArray() {
@@ -43,5 +38,24 @@ public class ArrayName extends Name {
 	public void setOffsetRegister(Register r) {
 		GlobalLocation loc = (GlobalLocation) this.getLocation();
 		loc.setOffsetRegister(new RegisterLocation(r));
+	}
+	
+	@Override
+	public int hashCode() {
+		return hashString().hashCode(); // Using forbidden chars
+	}
+	
+	public String hashString() {
+		return ("Array#" + id + "[" + index + "]");
+	}
+	
+	@Override 
+	public boolean equals(Object name) {
+		if (this == name) return true;
+		if (!name.getClass().equals(ArrayName.class)) return false;
+		
+		ArrayName aName = (ArrayName)name;
+		
+		return this.hashString().equals(aName.hashString());
 	}
 }

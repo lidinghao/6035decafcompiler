@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import decaf.codegen.flatir.CallStmt;
-import decaf.codegen.flatir.Constant;
+import decaf.codegen.flatir.ConstantName;
 import decaf.codegen.flatir.EnterStmt;
 import decaf.codegen.flatir.JumpCondOp;
 import decaf.codegen.flatir.JumpStmt;
@@ -106,7 +106,7 @@ public class MethodFlatennerVisitor implements ASTVisitor<Integer> {
 				VarName varName = new VarName(v);
 				varName.setBlockId(block.getBlockId());
 				this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE, varName,
-						new Constant(0), null));
+						new ConstantName(0), null));
 			}
 
 			this.totalLocalVars += vd.getVariables().size(); // Add to the total
@@ -206,7 +206,7 @@ public class MethodFlatennerVisitor implements ASTVisitor<Integer> {
 		// Increment loop var and jump to test
 		this.statements.add(new LabelStmt(getForIncrement()));
 		this.statements.add(new QuadrupletStmt(QuadrupletOp.ADD, loopId, loopId,
-				new Constant(1)));
+				new ConstantName(1)));
 		this.statements.add(new JumpStmt(JumpCondOp.NONE, new LabelStmt(
 				getForTest())));
 
@@ -227,7 +227,7 @@ public class MethodFlatennerVisitor implements ASTVisitor<Integer> {
 		this.statements.add(new LabelStmt(getIfTest()));
 		Name condition = stmt.getCondition().accept(this.exprFlatenner);
 		this.statements.add(new QuadrupletStmt(QuadrupletOp.CMP, null, condition,
-				new Constant(0)));
+				new ConstantName(0)));
 		this.statements.add(new JumpStmt(JumpCondOp.NEQ, new LabelStmt(
 				getIfTrue())));
 
@@ -321,7 +321,7 @@ public class MethodFlatennerVisitor implements ASTVisitor<Integer> {
 		// Main method return value
 		if (this.methodName.equals("main")) {
 			this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE,
-					new RegisterName(Register.RAX), new Constant(0), null));
+					new RegisterName(Register.RAX), new ConstantName(0), null));
 		}
 		
 		// Void method return
@@ -338,9 +338,9 @@ public class MethodFlatennerVisitor implements ASTVisitor<Integer> {
 		this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE,
 				new RegisterName(ExpressionFlattenerVisitor.argumentRegs[0]), error, null));
 		this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE,
-				new RegisterName(ExpressionFlattenerVisitor.argumentRegs[1]), new Constant(md.getLineNumber()), null));
+				new RegisterName(ExpressionFlattenerVisitor.argumentRegs[1]), new ConstantName(md.getLineNumber()), null));
 		this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE,
-				new RegisterName(ExpressionFlattenerVisitor.argumentRegs[2]), new Constant(md.getColumnNumber()), null));
+				new RegisterName(ExpressionFlattenerVisitor.argumentRegs[2]), new ConstantName(md.getColumnNumber()), null));
 		
 		// Call exception handler
 		this.statements.add(new CallStmt(ProgramFlattener.exceptionHandlerLabel));

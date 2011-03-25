@@ -32,7 +32,7 @@ public class TempName extends Name {
 	}
 	
 	public String hashString() {
-		return ("!@#$%^&*()" + id);
+		return ("Temp#" + id);
 	}
 	
 	@Override 

@@ -5,7 +5,7 @@ import java.util.List;
 
 import decaf.codegen.flatir.ArrayName;
 import decaf.codegen.flatir.CallStmt;
-import decaf.codegen.flatir.Constant;
+import decaf.codegen.flatir.ConstantName;
 import decaf.codegen.flatir.JumpCondOp;
 import decaf.codegen.flatir.JumpStmt;
 import decaf.codegen.flatir.LIRStatement;
@@ -169,7 +169,7 @@ public class ExpressionFlattenerVisitor implements ASTVisitor<Name> {
 
 	@Override
 	public Name visit(BooleanLiteral lit) {
-		return new Constant(lit.getValue());
+		return new ConstantName(lit.getValue());
 	}
 
 	@Override
@@ -215,7 +215,7 @@ public class ExpressionFlattenerVisitor implements ASTVisitor<Name> {
 		}
 		
 		//Set %rax to 0
-		this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE, new RegisterName(Register.RAX), new Constant(0), null));
+		this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE, new RegisterName(Register.RAX), new ConstantName(0), null));
 		
 		// Call method
 		this.statements.add(new CallStmt(expr.getMethodName()));
@@ -224,7 +224,7 @@ public class ExpressionFlattenerVisitor implements ASTVisitor<Name> {
 		if (expr.getArguments().size() > argumentRegs.length) {
 			int sizeToDecrease = expr.getArguments().size() - argumentRegs.length;
 			RegisterName rsp = new RegisterName(Register.RSP);
-			this.statements.add(new QuadrupletStmt(QuadrupletOp.SUB, rsp, rsp, new Constant(sizeToDecrease)));
+			this.statements.add(new QuadrupletStmt(QuadrupletOp.SUB, rsp, rsp, new ConstantName(sizeToDecrease)));
 		}
 		
 		// Save return value
@@ -236,7 +236,7 @@ public class ExpressionFlattenerVisitor implements ASTVisitor<Name> {
 	@Override
 	public Name visit(CharLiteral lit) {
 		int value = (int) lit.getValue().charAt(0);
-		Constant constant = new Constant(value);
+		ConstantName constant = new ConstantName(value);
 		return constant;
 	}
 
@@ -272,7 +272,7 @@ public class ExpressionFlattenerVisitor implements ASTVisitor<Name> {
 
 	@Override
 	public Name visit(IntLiteral lit) {
-		return new Constant(lit.getValue());
+		return new ConstantName(lit.getValue());
 	}
 
 	@Override
@@ -305,7 +305,7 @@ public class ExpressionFlattenerVisitor implements ASTVisitor<Name> {
 		if (expr.getArguments().size() > argumentRegs.length) {
 			int sizeToDecrease = expr.getArguments().size() - argumentRegs.length;
 			RegisterName rsp = new RegisterName(Register.RSP);
-			this.statements.add(new QuadrupletStmt(QuadrupletOp.SUB, rsp, rsp, new Constant(sizeToDecrease)));
+			this.statements.add(new QuadrupletStmt(QuadrupletOp.SUB, rsp, rsp, new ConstantName(sizeToDecrease)));
 		}
 		
 		// Save return value
@@ -373,11 +373,11 @@ public class ExpressionFlattenerVisitor implements ASTVisitor<Name> {
 		this.statements.add(new LabelStmt(getAndTestLHS()));
 		Name lhs = expr.getLeftOperand().accept(this);
 		this.statements.add(new QuadrupletStmt(QuadrupletOp.CMP, null, lhs,
-				new Constant(0)));
+				new ConstantName(0)));
 		this.statements.add(new JumpStmt(JumpCondOp.NEQ, new LabelStmt(
 				getAndTestRHS())));
 		this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE, dest,
-				new Constant(0), null));
+				new ConstantName(0), null));
 		this.statements.add(new JumpStmt(JumpCondOp.NONE, new LabelStmt(
 				getAndEnd())));
 
@@ -405,11 +405,11 @@ public class ExpressionFlattenerVisitor implements ASTVisitor<Name> {
 		this.statements.add(new LabelStmt(getOrTestLHS()));
 		Name lhs = expr.getLeftOperand().accept(this);
 		this.statements.add(new QuadrupletStmt(QuadrupletOp.CMP, null, lhs,
-				new Constant(0)));
+				new ConstantName(0)));
 		this.statements.add(new JumpStmt(JumpCondOp.EQ, new LabelStmt(
 				getOrTestRHS())));
 		this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE, dest,
-				new Constant(1), null));
+				new ConstantName(1), null));
 		this.statements.add(new JumpStmt(JumpCondOp.NONE, new LabelStmt(
 				getOrEnd())));
 
@@ -457,11 +457,11 @@ public class ExpressionFlattenerVisitor implements ASTVisitor<Name> {
 		arrayBoundId++;
 		
 		Name index = loc.getExpr().accept(this); // Re-eval expressions
-		this.statements.add(new QuadrupletStmt(QuadrupletOp.CMP, null, index, new Constant(loc.getSize())));
+		this.statements.add(new QuadrupletStmt(QuadrupletOp.CMP, null, index, new ConstantName(loc.getSize())));
 		this.statements.add(new JumpStmt(JumpCondOp.GTE, arrayCheckFail)); // size >= length?
 		
 		index = loc.getExpr().accept(this); // Re-eval expressions
-		this.statements.add(new QuadrupletStmt(QuadrupletOp.CMP, null, index, new Constant(0)));
+		this.statements.add(new QuadrupletStmt(QuadrupletOp.CMP, null, index, new ConstantName(0)));
 		this.statements.add(new JumpStmt(JumpCondOp.LT, arrayCheckFail)); // size < 0?
 		this.statements.add(new JumpStmt(JumpCondOp.NONE, arrayCheckPass)); // passed
 		
@@ -474,9 +474,9 @@ public class ExpressionFlattenerVisitor implements ASTVisitor<Name> {
 		this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE,
 				new RegisterName(argumentRegs[0]), error, null));
 		this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE,
-				new RegisterName(argumentRegs[1]), new Constant(loc.getLineNumber()), null));
+				new RegisterName(argumentRegs[1]), new ConstantName(loc.getLineNumber()), null));
 		this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE,
-				new RegisterName(argumentRegs[2]), new Constant(loc.getColumnNumber()), null));
+				new RegisterName(argumentRegs[2]), new ConstantName(loc.getColumnNumber()), null));
 		
 		// Call exception handler
 		this.statements.add(new CallStmt(ProgramFlattener.exceptionHandlerLabel));

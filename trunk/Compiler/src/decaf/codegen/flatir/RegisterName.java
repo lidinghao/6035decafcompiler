@@ -24,4 +24,23 @@ public class RegisterName extends Name {
 	public boolean isArray() {
 		return false;
 	}
+	
+	@Override
+	public int hashCode() {
+		return hashString().hashCode(); // Using forbidden chars
+	}
+	
+	public String hashString() {
+		return ("Register#" + toString());
+	}
+	
+	@Override 
+	public boolean equals(Object name) {
+		if (this == name) return true;
+		if (!name.getClass().equals(RegisterName.class)) return false;
+		
+		RegisterName rName = (RegisterName)name;
+		
+		return this.hashString().equals(rName.hashString());
+	}
 }
