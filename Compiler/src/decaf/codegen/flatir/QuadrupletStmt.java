@@ -250,4 +250,55 @@ public class QuadrupletStmt extends LIRStatement {
 		
 		out.println("\tmov\t" + from + ", " + name.getLocation().getASMRepresentation());		
 	}
+	
+	@Override
+	public int hashCode() {
+		return toString().hashCode();
+	}
+	
+	@Override
+	public boolean equals(Object o) {
+		if (o == null) return false;
+		if (!o.getClass().equals(QuadrupletStmt.class)) return false;
+		
+		QuadrupletStmt stmt = (QuadrupletStmt) o;
+		if (this.operator != stmt.getOperator()) {
+			return false;
+		}
+		
+		if (this.arg1 != null) {
+			if (!this.arg1.equals(stmt.getArg1())) {
+				return false;
+			}
+		} 
+		else {
+			if (stmt.getArg1() != null) {
+				return false;
+			}
+		}
+		
+		if (this.arg2 != null) {
+			if (!this.arg2.equals(stmt.getArg2())) {
+				return false;
+			}
+		} 
+		else {
+			if (stmt.getArg2() != null) {
+				return false;
+			}
+		}
+		
+		if (this.dest != null) {
+			if (!this.dest.equals(stmt.getDestination())) {
+				return false;
+			}
+		} 
+		else {
+			if (stmt.getDestination() != null) {
+				return false;
+			}
+		}
+		
+		return true;
+	}
 }

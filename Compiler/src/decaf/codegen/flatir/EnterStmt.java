@@ -38,4 +38,22 @@ public class EnterStmt extends LIRStatement {
 	public void generateAssembly(PrintStream out) {
 		out.println("\tenter\t" + "$" + (this.stackSize * 8) + ", $0");		
 	}
+	
+	@Override
+	public int hashCode() {
+		return toString().hashCode();
+	}
+	
+	@Override
+	public boolean equals(Object o) {
+		if (o == null) return false;
+		if (!o.getClass().equals(EnterStmt.class)) return false;
+		
+		EnterStmt stmt = (EnterStmt) o;
+		if (stmt.getStackSize() == this.stackSize) {
+			return true;
+		}
+		
+		return false;
+	}
 }

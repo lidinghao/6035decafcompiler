@@ -26,4 +26,22 @@ public class PopStmt extends LIRStatement {
 	public void generateAssembly(PrintStream out) {
 		out.println("\tpop\t" + this.address.getLocation().getASMRepresentation());
 	}
+	
+	@Override
+	public int hashCode() {
+		return toString().hashCode();
+	}
+	
+	@Override
+	public boolean equals(Object o) {
+		if (o == null) return false;
+		if (!o.getClass().equals(PopStmt.class)) return false;
+		
+		PopStmt stmt = (PopStmt) o;
+		if (stmt.getAddress().equals(this.address)) {
+			return true;
+		}
+		
+		return false;
+	}
 }

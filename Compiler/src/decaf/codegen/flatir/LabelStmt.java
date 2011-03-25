@@ -40,4 +40,22 @@ public class LabelStmt extends LIRStatement {
 			out.println("." + this.label + ":");
 		}
 	}
+	
+	@Override
+	public int hashCode() {
+		return toString().hashCode();
+	}
+	
+	@Override
+	public boolean equals(Object o) {
+		if (o == null) return false;
+		if (!o.getClass().equals(LabelStmt.class)) return false;
+		
+		LabelStmt stmt = (LabelStmt) o;
+		if (stmt.getLabel().equals(this.label)) {
+			return true;
+		}
+		
+		return false;
+	}
 }
