@@ -3,62 +3,102 @@ package decaf.dataflow.cfg;
 import java.util.ArrayList;
 import java.util.List;
 
-import decaf.codegen.flatir.JumpStmt;
 import decaf.codegen.flatir.LIRStatement;
-import decaf.codegen.flatir.LabelStmt;
 
 public class CFGBlock {
-	private LabelStmt label;
+	private LIRStatement leader;
 	private List<LIRStatement> statements;
-	private JumpStmt jump;
-	private CFGBlock next;
+	private List<CFGBlock> predecessors;
+	private List<CFGBlock> successors;
+	private int index;
 	
-	public CFGBlock(LabelStmt label) {
-		setLabel(label);
-		statements = new ArrayList<LIRStatement>();
+	public CFGBlock() {
+		this.leader = null;
+		this.statements = new ArrayList<LIRStatement>();
+		this.predecessors = new ArrayList<CFGBlock>();
+		this.successors = new ArrayList<CFGBlock>();
 	}
-	
-	public LabelStmt getLabel() {
-		return label;
+
+	public LIRStatement getLeader() {
+		return leader;
 	}
-	public void setLabel(LabelStmt label) {
-		this.label = label;
+
+	public void setLeader(LIRStatement leader) {
+		this.leader = leader;
 	}
+
 	public List<LIRStatement> getStatements() {
 		return statements;
 	}
+
 	public void setStatements(List<LIRStatement> statements) {
 		this.statements = statements;
 	}
 	
-	public void addStatement(LIRStatement statement) {
-		this.statements.add(statement);
+	public void addStatement(LIRStatement stmt) {
+		this.statements.add(stmt);
+	}
+
+	public List<CFGBlock> getPredecessors() {
+		return predecessors;
+	}
+
+	public void setPredecessors(List<CFGBlock> predecessors) {
+		this.predecessors = predecessors;
 	}
 	
-	public JumpStmt getJump() {
-		return jump;
+	public void addPredecessor(CFGBlock block) {
+		this.predecessors.add(block);
 	}
-	public void setJump(JumpStmt jump) {
-		this.jump = jump;
+
+	public List<CFGBlock> getSuccessors() {
+		return successors;
 	}
-	public CFGBlock getNext() {
-		return next;
+
+	public void setSuccessors(List<CFGBlock> successors) {
+		this.successors = successors;
 	}
-	public void setNext(CFGBlock next) {
-		this.next = next;
+	
+	public void addSuccessor(CFGBlock block) {
+		this.successors.add(block);
+	}
+
+	public void setIndex(int index) {
+		this.index = index;
+	}
+
+	public int getIndex() {
+		return index;
 	}
 	
 	@Override
 	public String toString() {
-		String str = "";
-		str.concat(this.getLabel().toString());
-		if (this.getJump() != null) {
-			str.concat("-" + this.getJump().toString() + "\n");
-		} else {
-			str.concat("\n");
+		String rtn = "ID:" + index + "; SUCC:{";
+		for (CFGBlock cfg: this.successors) {
+			rtn += cfg.getIndex() + ",";
 		}
-		str.concat("  |\n" );
-		str.concat(this.getNext().toString() + "\n");
-		return str;
+		
+		if (rtn.charAt(rtn.length()-1) == ',') {
+			rtn = rtn.substring(0, rtn.length() -1);
+		}
+		
+		rtn += "}";
+		
+		rtn += "; PRE:{";
+		for (CFGBlock cfg: this.predecessors) {
+			rtn += cfg.getIndex() + ",";
+		}
+		
+		if (rtn.charAt(rtn.length()-1) == ',') {
+			rtn = rtn.substring(0, rtn.length() -1);
+		}
+		
+		rtn += "}";
+		
+		for (LIRStatement stmt: this.statements) {
+			rtn += "\n\t" + stmt;
+		}
+		
+		return rtn;
 	}
 }

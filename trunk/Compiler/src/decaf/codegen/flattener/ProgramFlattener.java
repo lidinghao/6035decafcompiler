@@ -1,5 +1,6 @@
 package decaf.codegen.flattener;
 
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -148,16 +149,16 @@ public class ProgramFlattener {
 		return lirMap;
 	}
 
-	public void print() {
+	public void print(PrintStream out) {
 		for (DataStmt ds : dataStmtList) {
-			System.out.println(ds);
+			out.println(ds);
 		}
 		for (Entry<String, List<LIRStatement>> entry : lirMap.entrySet()) {
 			for (LIRStatement s : entry.getValue()) {
 				if (!s.getClass().equals(LabelStmt.class)) {
-					System.out.println("\t" + s);
+					out.println("\t" + s);
 				} else {
-					System.out.println(s);
+					out.println(s);
 				}
 			}
 		}

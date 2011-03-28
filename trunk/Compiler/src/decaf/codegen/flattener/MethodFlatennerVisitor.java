@@ -405,7 +405,7 @@ public class MethodFlatennerVisitor implements ASTVisitor<Integer> {
 	}
 
 	private String getIfElse() {
-		return methodName + "_for" + currentIfId + "_else";
+		return methodName + "_if" + currentIfId + "_else";
 	}
 
 	private String getIfEnd() {

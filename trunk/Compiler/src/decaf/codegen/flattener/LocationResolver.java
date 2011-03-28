@@ -1,5 +1,6 @@
 package decaf.codegen.flattener;
 
+import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -52,9 +53,9 @@ public class LocationResolver {
 		}
 	}
 
-	public void printLocations() {
+	public void printLocations(PrintStream outStream) {
 		for (Entry<String, List<LIRStatement>> entry: this.pf.getLirMap().entrySet()) {	
-			System.out.println(entry.getKey() +":");
+			outStream.println(entry.getKey() +":");
 			Set<String> out = new HashSet<String>();
 			
 			List<LIRStatement> flatIR = entry.getValue();
@@ -77,11 +78,11 @@ public class LocationResolver {
 			
 			for (String s: out) {
 				if (!s.equals("null")) {
-					System.out.println(s);
+					outStream.println(s);
 				}
 			}
 			
-			System.out.println();
+			outStream.println();
 		}
 	}
 	

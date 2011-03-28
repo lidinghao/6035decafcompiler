@@ -7,6 +7,7 @@ public class PushStmt extends LIRStatement {
 	
 	public PushStmt(Name address) {
 		this.setAddress(address);
+		this.isLeader = false;
 	}
 
 	public void setAddress(Name address) {
