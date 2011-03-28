@@ -9,6 +9,8 @@ import decaf.codegen.flattener.LocationResolver;
 import decaf.codegen.flattener.MethodFlatennerVisitor;
 import decaf.codegen.flattener.ProgramFlattener;
 import decaf.codegen.flattener.TempNameIndexer;
+import decaf.dataflow.cfg.CFGBuilder;
+import decaf.dataflow.cfg.LeaderElector;
 import decaf.ir.ast.ClassDecl;
 import decaf.ir.semcheck.*;
 import decaf.test.Error;
@@ -125,12 +127,22 @@ class Main {
 				
 				if (CLI.debug) {
 					System.out.println("Low-level IR:");
-					pf.print();
+					pf.print(System.out);
 					System.out.println();
 					
 					System.out.println("Name -> Locations Mapping:");
-					lr.printLocations();
+					lr.printLocations(System.out);
 				}
+				
+				// Select leaders
+				LeaderElector le = new LeaderElector(pf.getLirMap());
+				le.electLeaders();
+				
+				// Generate cfg for methods
+				CFGBuilder cb = new CFGBuilder(pf.getLirMap());
+				cb.generateCFGs();
+				
+				cb.printCFG(System.out);
 				
 				// Generate code to file
 				CodeGenerator cg = new CodeGenerator(pf, cd, CLI.outfile);

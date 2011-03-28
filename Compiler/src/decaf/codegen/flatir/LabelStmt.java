@@ -8,9 +8,10 @@ public class LabelStmt extends LIRStatement {
 	
 	public LabelStmt(String label) {
 		this.label = label;
+		this.isLeader = false;
 	}
 
-	public String getLabel() {
+	public String getLabelString() {
 		return label;
 	}
 
@@ -52,7 +53,7 @@ public class LabelStmt extends LIRStatement {
 		if (!o.getClass().equals(LabelStmt.class)) return false;
 		
 		LabelStmt stmt = (LabelStmt) o;
-		if (stmt.getLabel().equals(this.label)) {
+		if (stmt.getLabelString().equals(this.label)) {
 			return true;
 		}
 		

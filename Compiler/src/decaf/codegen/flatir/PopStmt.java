@@ -7,6 +7,7 @@ public class PopStmt extends LIRStatement {
 	
 	public PopStmt(Name address) {
 		this.setAddress(address);
+		this.isLeader = false;
 	}
 
 	public void setAddress(Name address) {

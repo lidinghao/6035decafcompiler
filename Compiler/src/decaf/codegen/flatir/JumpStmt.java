@@ -9,6 +9,7 @@ public class JumpStmt extends LIRStatement {
 	public JumpStmt(JumpCondOp condition, LabelStmt label) {
 		this.setCondition(condition);
 		this.setLabel(label);
+		this.isLeader = false;
 	}
 
 	public void setLabel(LabelStmt label) {
@@ -55,7 +56,7 @@ public class JumpStmt extends LIRStatement {
 				break;
 		}
 		
-		return rtn + ") " + "'" + label.getLabel() + "'";
+		return rtn + ") " + "'" + label.getLabelString() + "'";
 	}
 
 	@Override
@@ -89,10 +90,10 @@ public class JumpStmt extends LIRStatement {
 		}
 		
 		if (this.label.isMethodLabel()) {
-			s += this.label.getLabel();
+			s += this.label.getLabelString();
 		}
 		else {
-			s += "." + this.label.getLabel();
+			s += "." + this.label.getLabelString();
 		}
 		
 		out.println(s);

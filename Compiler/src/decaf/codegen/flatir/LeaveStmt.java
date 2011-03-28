@@ -3,7 +3,9 @@ package decaf.codegen.flatir;
 import java.io.PrintStream;
 
 public class LeaveStmt extends LIRStatement {
-	public LeaveStmt() { };
+	public LeaveStmt() { 
+		this.isLeader = false;
+	};
 	
 	@Override
 	public String toString() {
