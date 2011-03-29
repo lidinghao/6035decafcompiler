@@ -4,16 +4,19 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import decaf.codegen.flatir.CallStmt;
 import decaf.codegen.flatir.DynamicVarName;
 import decaf.codegen.flatir.EnterStmt;
 import decaf.codegen.flatir.LIRStatement;
 import decaf.codegen.flatir.Name;
 import decaf.codegen.flatir.QuadrupletOp;
 import decaf.codegen.flatir.QuadrupletStmt;
+import decaf.codegen.flatir.Register;
+import decaf.codegen.flatir.RegisterName;
 import decaf.codegen.flattener.ProgramFlattener;
 import decaf.dataflow.cfg.CFGBlock;
 
-public class CSEOptimizer {
+public class BlockCSEOptimizer {
 	private HashMap<Name, SymbolicValue> varToVal;
 	private HashMap<ValueExpr, SymbolicValue> expToVal;
 	private HashMap<ValueExpr, DynamicVarName> expToTemp;
@@ -21,7 +24,7 @@ public class CSEOptimizer {
 	private ProgramFlattener pf;
 	private int tempCount;
 	
-	public CSEOptimizer(HashMap<String, List<CFGBlock>> cfgMap, ProgramFlattener pf) {
+	public BlockCSEOptimizer(HashMap<String, List<CFGBlock>> cfgMap, ProgramFlattener pf) {
 		this.varToVal = new HashMap<Name, SymbolicValue>();
 		this.expToVal = new HashMap<ValueExpr, SymbolicValue>();
 		this.expToTemp = new HashMap<ValueExpr, DynamicVarName>();
@@ -82,6 +85,9 @@ public class CSEOptimizer {
 		for (LIRStatement stmt: block.getStatements()) {
 			if (!stmt.isExpressionStatement()) {
 				newStmts.add(stmt);
+				if (stmt.getClass().equals(CallStmt.class)) {
+					this.varToVal.put(new RegisterName(Register.RAX), new SymbolicValue()); // Reset symbolic value for %RAX
+				}
 				continue;
 			}
 			

@@ -9,7 +9,7 @@ import decaf.codegen.flattener.LocationResolver;
 import decaf.codegen.flattener.MethodFlatennerVisitor;
 import decaf.codegen.flattener.ProgramFlattener;
 import decaf.codegen.flattener.TempNameIndexer;
-import decaf.dataflow.block.CSEOptimizer;
+import decaf.dataflow.block.BlockCSEOptimizer;
 import decaf.dataflow.cfg.CFGBuilder;
 import decaf.dataflow.cfg.LeaderElector;
 import decaf.ir.ast.ClassDecl;
@@ -136,7 +136,7 @@ class Main {
 				CFGBuilder cb = new CFGBuilder(pf.getLirMap());
 				cb.generateCFGs();
 				
-				CSEOptimizer copt = new CSEOptimizer(cb.getCfgMap(), pf);
+				BlockCSEOptimizer copt = new BlockCSEOptimizer(cb.getCfgMap(), pf);
 				copt.performCSE();
 				
 				// Resolve names to locations
