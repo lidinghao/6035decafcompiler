@@ -21,7 +21,7 @@ public class TempName extends Name {
 	
 	@Override
 	public String toString() {
-		return "@t" + id;
+		return "$t" + id;
 	}
 	
 	@Override

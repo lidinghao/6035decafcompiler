@@ -13,10 +13,18 @@ import decaf.codegen.flatir.LabelStmt;
 public class CFGBuilder {
 	private HashMap<String, List<LIRStatement>> lirMap;
 	private HashMap<String, List<CFGBlock>> cfgMap;
-	
+
 	public CFGBuilder(HashMap<String, List<LIRStatement>> lirMap) {
 		this.lirMap = lirMap;
 		this.cfgMap = new HashMap<String, List<CFGBlock>>();
+	}
+	
+	public HashMap<String, List<CFGBlock>> getCfgMap() {
+		return cfgMap;
+	}
+
+	public void setCfgMap(HashMap<String, List<CFGBlock>> cfgMap) {
+		this.cfgMap = cfgMap;
 	}
 	
 	public void generateCFGs() {
