@@ -118,8 +118,7 @@ public class ProgramFlattener {
 		int stackSize = md.accept(this.mfv);
 		stackSize += tni.indexTemps(this.mfv.getStatements());
 		stackSize += Math.min(md.getParameters().size(), 6); // Also save register
-		// arguments on
-		// stack
+		// arguments on stack
 
 		lirMap.put(md.getId(), this.mfv.getStatements());
 

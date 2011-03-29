@@ -49,6 +49,9 @@ public class ValueExpr {
 	
 	@Override
 	public int hashCode() {
+		if (val2 == null) {
+			return 17 * val1.hashCode() + 23 * op.toString().hashCode();
+		}
 		return 17 * val1.hashCode() + 19 * val2.hashCode() + 23 * op.toString().hashCode();
 	}
 	
@@ -69,5 +72,18 @@ public class ValueExpr {
 		}
 		
 		return expr.getVal2().equals(this.getVal2());
+	}
+	
+	@Override
+	public String toString() {
+		if (op == ValueExprOp.NONE) {
+			return val1.toString();
+		}
+		else if (op == ValueExprOp.NOT || op == ValueExprOp.MINUS) {
+			return op + " " + val1;
+		}
+		else {
+			return val1 + " " + op + " " + val2;
+		}
 	}
 }

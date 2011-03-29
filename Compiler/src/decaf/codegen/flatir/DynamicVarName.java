@@ -8,12 +8,16 @@ package decaf.codegen.flatir;
 
 public class DynamicVarName extends Name {
 	public static int ID = 0;
-	public static String NAME = "@tmp";
+	public static String NAME = "$tmp";
 	private int myId;
 	
 	public DynamicVarName() {
 		this.myId = ID;
 		ID++;
+	}
+	
+	public static void reset() {
+		ID = 0;
 	}
 
 	public int getMyId() {
@@ -31,7 +35,7 @@ public class DynamicVarName extends Name {
 	
 	@Override 
 	public String toString() {
-		return "@tmp" + myId;
+		return NAME + myId;
 	}
 	
 	@Override

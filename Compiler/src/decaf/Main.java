@@ -9,6 +9,7 @@ import decaf.codegen.flattener.LocationResolver;
 import decaf.codegen.flattener.MethodFlatennerVisitor;
 import decaf.codegen.flattener.ProgramFlattener;
 import decaf.codegen.flattener.TempNameIndexer;
+import decaf.dataflow.block.CSEOptimizer;
 import decaf.dataflow.cfg.CFGBuilder;
 import decaf.dataflow.cfg.LeaderElector;
 import decaf.ir.ast.ClassDecl;
@@ -121,17 +122,10 @@ class Main {
 				ProgramFlattener pf = new ProgramFlattener(cd);
 				pf.flatten();
 				
-				// Resolve names to locations
-				LocationResolver lr = new LocationResolver(pf, cd);
-				lr.resolveLocations();
-				
 				if (CLI.debug) {
 					System.out.println("Low-level IR:");
 					pf.print(System.out);
 					System.out.println();
-					
-					System.out.println("Name -> Locations Mapping:");
-					lr.printLocations(System.out);
 				}
 				
 				// Select leaders
@@ -141,6 +135,18 @@ class Main {
 				// Generate CFGs for methods
 				CFGBuilder cb = new CFGBuilder(pf.getLirMap());
 				cb.generateCFGs();
+				
+				CSEOptimizer copt = new CSEOptimizer(cb.getCfgMap(), pf);
+				copt.performCSE();
+				
+				// Resolve names to locations
+				LocationResolver lr = new LocationResolver(pf, cd);
+				lr.resolveLocations();
+				
+				if (CLI.debug) {
+					System.out.println("Name -> Locations Mapping:");
+					lr.printLocations(System.out);
+				}
 				
 				cb.printCFG(System.out);
 				

@@ -9,6 +9,10 @@ public class SymbolicValue {
 		ID++;
 	}
 	
+	public static void reset() {
+		ID = 0;
+	}
+	
 	public int getMyId() {
 		return myId;
 	}
@@ -30,5 +34,10 @@ public class SymbolicValue {
 		SymbolicValue val = (SymbolicValue) o;
 		
 		return (this.getMyId() == val.getMyId());
+	}
+	
+	@Override
+	public String toString() {
+		return "v" + myId;
 	}
 }
