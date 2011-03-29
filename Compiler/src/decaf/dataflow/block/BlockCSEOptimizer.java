@@ -13,6 +13,8 @@ import decaf.codegen.flatir.QuadrupletOp;
 import decaf.codegen.flatir.QuadrupletStmt;
 import decaf.codegen.flatir.Register;
 import decaf.codegen.flatir.RegisterName;
+import decaf.codegen.flatir.VarName;
+import decaf.codegen.flattener.ExpressionFlattenerVisitor;
 import decaf.codegen.flattener.ProgramFlattener;
 import decaf.dataflow.cfg.CFGBlock;
 
@@ -85,8 +87,26 @@ public class BlockCSEOptimizer {
 		for (LIRStatement stmt: block.getStatements()) {
 			if (!stmt.isExpressionStatement()) {
 				newStmts.add(stmt);
-				if (stmt.getClass().equals(CallStmt.class)) {
-					this.varToVal.put(new RegisterName(Register.RAX), new SymbolicValue()); // Reset symbolic value for %RAX
+				
+				// TODO: May have to change this after RegisterAllocator is implemented
+				if (stmt.getClass().equals(CallStmt.class)) {			
+					// Invalidate arg registers
+					for (int i = 0; i < ExpressionFlattenerVisitor.argumentRegs.length; i++) {
+						this.varToVal.put(new RegisterName(ExpressionFlattenerVisitor.argumentRegs[i]), new SymbolicValue());
+					}
+					
+					// Reset symbolic value for %RAX
+					this.varToVal.put(new RegisterName(Register.RAX), new SymbolicValue()); 
+					
+					// Invalidate global vars;
+					for (Name name: this.varToVal.keySet()) {
+						if (name.getClass().equals(VarName.class)) {
+							VarName var = (VarName) name;
+							if (var.getBlockId() == -1) { // Global
+								this.varToVal.put(name, new SymbolicValue()); 
+							}
+						}
+					}
 				}
 				continue;
 			}
@@ -107,12 +127,6 @@ public class BlockCSEOptimizer {
 	private void processStatement(QuadrupletStmt qStmt, List<LIRStatement> newStmts) {
 		ValueExpr expr = getValueExpression(qStmt);
 		SymbolicValue dest;
-		
-		System.out.println(varToVal);
-//		System.out.println(expToVal);
-		System.out.println(expToTemp);
-		System.out.println();
-//		System.out.println(newStmts);
 		
 		if (!expToVal.containsKey(expr)) {
 			dest = new SymbolicValue();

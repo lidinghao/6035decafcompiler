@@ -1,6 +1,8 @@
 package decaf;
 
 import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
 
 import decaf.codegen.flatir.LIRStatement;
 import decaf.codegen.flatir.LabelStmt;
@@ -141,21 +143,15 @@ class Main {
 				BlockCSEOptimizer copt = new BlockCSEOptimizer(cb.getCfgMap(), pf);
 				copt.performCSE();
 				
-//				// Generate CFGs after CSE optimizations
-//				cb = new CFGBuilder(pf.getLirMap());
-//				cb.generateCFGs();
-//				
-//				CopyPropagationOptimizer copyOpt = new CopyPropagationOptimizer(cb.getCfgMap(), pf);
-//				copyOpt.performCopyProp();
-//				
-//				// Generate CFGs after copy propagation optimizations
-//				cb = new CFGBuilder(pf.getLirMap());
-//				cb.generateCFGs();
-//				
-//				DeadCodeOptimizer dcOpt = new DeadCodeOptimizer(cb.getCfgMap(), pf);
-//				dcOpt.performDeadCode();
+				BlockCopyPropagationOptimizer copyOpt = new BlockCopyPropagationOptimizer(cb.getCfgMap(), pf);
+				copyOpt.performCopyProp();
+		
+				BlockDeadCodeOptimizer dcOpt = new BlockDeadCodeOptimizer(cb.getCfgMap(), pf);
+				dcOpt.performDeadCode();
 				
 				// TODO: repeat the optimizations till there is no change in pf
+				
+				pf.print(System.out);
 				
 				// Resolve names to locations
 				LocationResolver lr = new LocationResolver(pf, cd);
