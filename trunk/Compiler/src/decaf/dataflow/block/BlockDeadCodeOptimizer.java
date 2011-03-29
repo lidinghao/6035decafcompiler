@@ -95,6 +95,8 @@ public class BlockDeadCodeOptimizer {
 			// Add to the beginning since we are going backwards
 			newStmts.add(0, stmt);
 		}
+		
+		block.setStatements(newStmts);
 	}
 	
 	public void addToNeededSet(Name arg) {
