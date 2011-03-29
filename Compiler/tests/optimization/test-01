@@ -1,37 +1,11 @@
 class Program {
 	void main() {
-		int a;
-		boolean b;
+		int a, b, c;
 		a = 10;
-		b = true;
+		b = 20;
+		c = 30;
 		
-		if (a > 10) {
-			a = 15;
-			for i = 0, 10 {
-				a += 1;
-			}
-		}
-		else {
-			a = 5;
-		}
-	}
-	
-	int add(int n, int k) {
-		int s, a, b;
-		s = 0;
-		a = 4;
-		
-		if (k == 0) {
-			b = 1;
-		}
-		else {
-			b = 2;
-		}
-		
-		for i = 0, n {
-			s = s + a*b;
-		}
-		
-		return s;
+		a = b + c;
+		b = b + c;
 	}
 }

@@ -2,12 +2,10 @@ package decaf.codegen.flatir;
 
 public class TempName extends Name {
 	private int id;
-	
-	
+		
 	public TempName(int id) {
 		this.setId(id);
 	}
-	
 	
 	public TempName() {
 		this.setId(-1);
@@ -23,7 +21,7 @@ public class TempName extends Name {
 	
 	@Override
 	public String toString() {
-		return "t" + id;
+		return "@t" + id;
 	}
 	
 	@Override
@@ -44,7 +42,6 @@ public class TempName extends Name {
 		
 		return this.hashString().equals(vName.hashString());
 	}
-
 
 	@Override
 	public boolean isArray() {
