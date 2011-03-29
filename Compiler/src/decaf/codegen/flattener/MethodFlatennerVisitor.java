@@ -16,6 +16,7 @@ import decaf.codegen.flatir.QuadrupletOp;
 import decaf.codegen.flatir.QuadrupletStmt;
 import decaf.codegen.flatir.Register;
 import decaf.codegen.flatir.RegisterName;
+import decaf.codegen.flatir.TempName;
 import decaf.codegen.flatir.VarName;
 import decaf.ir.ASTVisitor;
 import decaf.ir.ast.ArrayLocation;
@@ -194,10 +195,16 @@ public class MethodFlatennerVisitor implements ASTVisitor<Integer> {
 		// Test block
 		this.statements.add(new LabelStmt(getForTest()));
 		Name finalValue = stmt.getFinalValue().accept(this.exprFlatenner);
-		this.statements.add(new QuadrupletStmt(QuadrupletOp.CMP, null, loopId,
-				finalValue));
-		this.statements.add(new JumpStmt(JumpCondOp.GTE, new LabelStmt(
+		TempName dest = new TempName();
+		this.statements.add(new QuadrupletStmt(QuadrupletOp.LT, dest, loopId, finalValue));
+		this.statements.add(new QuadrupletStmt(QuadrupletOp.CMP, null, dest,
+				new ConstantName(0)));
+		this.statements.add(new JumpStmt(JumpCondOp.EQ, new LabelStmt(
 				getForEnd())));
+//		this.statements.add(new QuadrupletStmt(QuadrupletOp.CMP, null, loopId,
+//				finalValue));
+//		this.statements.add(new JumpStmt(JumpCondOp.GTE, new LabelStmt(
+//				getForEnd())));
 
 		// Body block
 		this.statements.add(new LabelStmt(getForBody()));

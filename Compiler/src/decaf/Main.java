@@ -138,7 +138,7 @@ class Main {
 				LeaderElector le = new LeaderElector(pf.getLirMap());
 				le.electLeaders();
 				
-				// Generate cfg for methods
+				// Generate CFGs for methods
 				CFGBuilder cb = new CFGBuilder(pf.getLirMap());
 				cb.generateCFGs();
 				
