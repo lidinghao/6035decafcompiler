@@ -49,5 +49,12 @@ public class CSEOptimizer {
 			val1 = new SymbolicValue();
 			varToVal.put(qStmt.getArg1(), val1);
 		}
+		
+		ValueExprOp op = null;
+		switch(qStmt.getOperator()) {
+			
+		}
+		
+		return null;
 	}
 }
