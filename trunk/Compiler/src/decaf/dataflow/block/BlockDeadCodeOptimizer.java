@@ -72,28 +72,28 @@ public class BlockDeadCodeOptimizer {
 		List<LIRStatement> blockStmts = block.getStatements();
 		List<LIRStatement> newStmts = new ArrayList<LIRStatement>();
 		
-		for (int i = 1; i <= totalStmts; i++) {
+		for (int i = totalStmts - 1; i >= 0; i--) {
 			LIRStatement stmt = blockStmts.get(i);
 			if (!stmt.isExpressionStatement()) {
 				continue;
 			}
+			
 			QuadrupletStmt qStmt = (QuadrupletStmt)stmt;
 			Name dest = qStmt.getDestination();
-			boolean updateNeededSet = true;
 			
 			// If assigning to a DynamicVarName
 			if (dest.getClass().equals(DynamicVarName.class)) {
 				if (!neededSet.contains(dest)) {
 					this.tempCount--;
-					updateNeededSet = false;
+					continue;
 				}
 			}
-			if (updateNeededSet) {
-				addToNeededSet(qStmt.getArg1());
-				addToNeededSet(qStmt.getArg2());
-				// Add to the beginning since we are going backwards
-				newStmts.add(0, stmt);
-			}
+
+			addToNeededSet(qStmt.getArg1());
+			addToNeededSet(qStmt.getArg2());
+			
+			// Add to the beginning since we are going backwards
+			newStmts.add(0, stmt);
 		}
 	}
 	
