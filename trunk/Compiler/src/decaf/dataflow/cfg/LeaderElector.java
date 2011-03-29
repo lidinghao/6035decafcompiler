@@ -12,7 +12,6 @@ import decaf.codegen.flatir.LabelStmt;
 public class LeaderElector {
 	private HashMap<String, List<LIRStatement>> lirMap;
 	private List<String> labelsToMakeLeaders;
-	private boolean isFirst;
 	
 	public LeaderElector(HashMap<String, List<LIRStatement>> lirMap) {
 		this.lirMap = lirMap;
@@ -21,13 +20,13 @@ public class LeaderElector {
 	
 	public void electLeaders() {
 		for (String s: lirMap.keySet()) {
-			isFirst = true;
 			processMethod(lirMap.get(s));
 			labelsToMakeLeaders.clear(); // Clear list
 		}
 	}
 
 	private void processMethod(List<LIRStatement> list) {
+		boolean isFirst = true;
 		boolean justSawJump = false;
 		for (LIRStatement stmt: list) {
 			// First statement in method (entry statement)
@@ -52,11 +51,11 @@ public class LeaderElector {
 		}
 		
 		if (!labelsToMakeLeaders.isEmpty()) {
-			markMethodLabel(list);
+			markLeaderLabel(list);
 		}
 	}
 	
-	private void markMethodLabel(List<LIRStatement> list) {
+	private void markLeaderLabel(List<LIRStatement> list) {
 		for (LIRStatement stmt: list) {
 			// If label is target of some jump
 			if (stmt.getClass().equals(LabelStmt.class)) {
