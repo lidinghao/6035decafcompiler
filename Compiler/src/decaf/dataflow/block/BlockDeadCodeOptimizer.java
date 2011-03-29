@@ -75,6 +75,7 @@ public class BlockDeadCodeOptimizer {
 		for (int i = totalStmts - 1; i >= 0; i--) {
 			LIRStatement stmt = blockStmts.get(i);
 			if (!stmt.isExpressionStatement()) {
+				newStmts.add(0, stmt);
 				continue;
 			}
 			
