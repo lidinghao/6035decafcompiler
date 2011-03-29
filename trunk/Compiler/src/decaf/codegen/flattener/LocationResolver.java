@@ -90,59 +90,86 @@ public class LocationResolver {
 		if (name == null) return;
 		
 		if (name.getClass().equals(TempName.class)) {
-			if (!locationMap.containsKey(name)) {
+			resolveTempName(name);
+		}
+		else if (name.getClass().equals(ArrayName.class)) {
+			resolveArrayName(name);
+		}
+		else if (name.getClass().equals(VarName.class)) {
+			resolveVarName(name);
+		}
+		else if (name.getClass().equals(RegisterName.class)){
+			name.setLocation(new RegisterLocation((RegisterName)name));
+		}
+		else if (name.getClass().equals(DynamicVarName.class)) {
+			resolveDynamicVarName(name);
+		}
+		else {
+			ConstantName c = (ConstantName) name;
+			name.setLocation(new ConstantLocation(c.getValue()));
+		}
+	}
+
+	private void resolveDynamicVarName(Name name) {
+		if (!locationMap.containsKey(name)) {
+			Location loc = new StackLocation(stackOffset);
+			name.setLocation(loc);
+			locationMap.put(name, loc);
+			stackOffset--;
+		}
+		else {
+			name.setLocation(locationMap.get(name)); // Set already defined location
+		}		
+	}
+
+	private void resolveTempName(Name name) {
+		if (!locationMap.containsKey(name)) {
+			Location loc = new StackLocation(stackOffset);
+			name.setLocation(loc);
+			locationMap.put(name, loc);
+			stackOffset--;
+		}
+		else {
+			name.setLocation(locationMap.get(name)); // Set already defined location
+		}
+	}
+
+	private void resolveArrayName(Name name) {
+		ArrayName arrayName = (ArrayName)name;
+		GlobalLocation loc = new GlobalLocation(arrayName.getId());
+		resolveName(arrayName.getIndex());
+		loc.setOffset(arrayName.getIndex().getLocation());
+		name.setLocation(loc);
+	}
+
+	private void resolveVarName(Name name) {
+		if (!locationMap.containsKey(name)) {
+			VarName varName = (VarName)name;
+			
+			if (varName.isString()) { // Set as global
+				GlobalLocation gLoc = new GlobalLocation(varName.getId(), true, varName.getStringValue());
+				name.setLocation(gLoc);
+				if (varName.getStringValue() != null) {
+					this.pf.getDataStmtList().add(new DataStmt(varName.getId(), varName.getStringValue()));
+				}
+			}
+			else if (varName.getBlockId() == -1) {
+				GlobalLocation gLoc = new GlobalLocation(varName.getId());
+				name.setLocation(gLoc);
+			}
+			else if (varName.getBlockId() == -2) { // Is an argument
+				int argIndex = this.findArgumentIndex(methodName, varName.getId());
+				this.processArgumentLocation(name, argIndex);
+			}
+			else {
 				Location loc = new StackLocation(stackOffset);
 				name.setLocation(loc);
 				locationMap.put(name, loc);
 				stackOffset--;
 			}
-			else {
-				name.setLocation(locationMap.get(name)); // Set already defined location
-			}
 		}
-		else if (name.getClass().equals(ArrayName.class)) {
-			ArrayName arrayName = (ArrayName)name;
-			GlobalLocation loc = new GlobalLocation(arrayName.getId());
-			resolveName(arrayName.getIndex());
-			loc.setOffset(arrayName.getIndex().getLocation());
-			name.setLocation(loc);
-		}
-		else if (name.getClass().equals(VarName.class)) {
-			if (!locationMap.containsKey(name)) {
-				VarName varName = (VarName)name;
-				
-				if (varName.isString()) { // Set as global
-					GlobalLocation gLoc = new GlobalLocation(varName.getId(), true, varName.getStringValue());
-					name.setLocation(gLoc);
-					if (varName.getStringValue() != null) {
-						this.pf.getDataStmtList().add(new DataStmt(varName.getId(), varName.getStringValue()));
-					}
-				}
-				else if (varName.getBlockId() == -1) {
-					GlobalLocation gLoc = new GlobalLocation(varName.getId());
-					name.setLocation(gLoc);
-				}
-				else if (varName.getBlockId() == -2) { // Is an argument
-					int argIndex = this.findArgumentIndex(methodName, varName.getId());
-					this.processArgumentLocation(name, argIndex);
-				}
-				else {
-					Location loc = new StackLocation(stackOffset);
-					name.setLocation(loc);
-					locationMap.put(name, loc);
-					stackOffset--;
-				}
-			}
-			else {
-				name.setLocation(locationMap.get(name)); // Set already defined location
-			}
-		}
-		else if (name.getClass().equals(RegisterName.class)){
-			name.setLocation(new RegisterLocation((RegisterName)name));
-		}
-		else { // Constant
-			ConstantName c = (ConstantName) name;
-			name.setLocation(new ConstantLocation(c.getValue()));
+		else {
+			name.setLocation(locationMap.get(name)); // Set already defined location
 		}
 	}
 	

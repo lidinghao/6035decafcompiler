@@ -14,4 +14,8 @@ public abstract class LIRStatement {
 	public void setIsLeader(boolean bool) {
 		isLeader = bool;
 	}
+	
+	public boolean isExpressionStatement() {
+		return false;
+	}
 }

@@ -302,4 +302,13 @@ public class QuadrupletStmt extends LIRStatement {
 		
 		return true;
 	}
+	
+	@Override
+	public boolean isExpressionStatement() {
+		if (this.operator == QuadrupletOp.CMP) {
+			return false;
+		}
+		
+		return true;
+	}
 }
