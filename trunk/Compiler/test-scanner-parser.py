@@ -72,9 +72,12 @@ def testcase_parser(cmd, testname, i):
   rv, students, tmpfilename = run_tmpfile(cmd, i)
   if testname[0:5]=="legal":
     islegal=True
-  else:
-    assert testname[0:7]=="illegal"
+  elif testname[0:7]=="illegal":
+    #print "testname:",testname[0:7]
+    #assert testname[0:7]=="illegal"
     islegal=False
+  else:
+    return 0
   if islegal == (rv==0):
     print testname.ljust(10), "CORRECT"
     return 1
@@ -113,8 +116,10 @@ def test_parser(cmd, testdir):
 
 def main(filename, tmpdir):
   #untar filename to tmpdir/
+  print "tempdir:", tmpdir, "fname:", filename
   if isfile(filename):
-    tarfile.open(filename).extractall(tmpdir)
+	  print "filname:", filename
+	  tarfile.open(filename).extractall(tmpdir)
   elif isdir(filename):
     shutil.copytree(filename, os.path.join(tmpdir,'t'))
   else:

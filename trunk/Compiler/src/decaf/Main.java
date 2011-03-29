@@ -10,6 +10,8 @@ import decaf.codegen.flattener.MethodFlatennerVisitor;
 import decaf.codegen.flattener.ProgramFlattener;
 import decaf.codegen.flattener.TempNameIndexer;
 import decaf.dataflow.block.BlockCSEOptimizer;
+import decaf.dataflow.block.BlockCopyPropagationOptimizer;
+import decaf.dataflow.block.BlockDeadCodeOptimizer;
 import decaf.dataflow.cfg.CFGBuilder;
 import decaf.dataflow.cfg.LeaderElector;
 import decaf.ir.ast.ClassDecl;
@@ -138,6 +140,22 @@ class Main {
 				
 				BlockCSEOptimizer copt = new BlockCSEOptimizer(cb.getCfgMap(), pf);
 				copt.performCSE();
+				
+//				// Generate CFGs after CSE optimizations
+//				cb = new CFGBuilder(pf.getLirMap());
+//				cb.generateCFGs();
+//				
+//				CopyPropagationOptimizer copyOpt = new CopyPropagationOptimizer(cb.getCfgMap(), pf);
+//				copyOpt.performCopyProp();
+//				
+//				// Generate CFGs after copy propagation optimizations
+//				cb = new CFGBuilder(pf.getLirMap());
+//				cb.generateCFGs();
+//				
+//				DeadCodeOptimizer dcOpt = new DeadCodeOptimizer(cb.getCfgMap(), pf);
+//				dcOpt.performDeadCode();
+				
+				// TODO: repeat the optimizations till there is no change in pf
 				
 				// Resolve names to locations
 				LocationResolver lr = new LocationResolver(pf, cd);
