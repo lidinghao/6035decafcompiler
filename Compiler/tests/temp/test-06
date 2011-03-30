@@ -1,0 +1,18 @@
+class Program
+{
+    void main()
+    {
+   		boolean a, b, c; 
+   		a = false;
+   		b = true;
+   		
+   		c = a || b;
+   		
+   		callout("printf", "false || true : %d\n", c);
+   		
+   		c = a && b ;
+   		
+   		callout("printf", "false && true : %d\n", c);  		
+
+    }
+}
