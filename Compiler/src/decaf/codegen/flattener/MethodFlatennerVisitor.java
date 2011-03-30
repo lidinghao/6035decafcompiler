@@ -81,8 +81,20 @@ public class MethodFlatennerVisitor implements ASTVisitor<Integer> {
 
 		AssignOpType op = stmt.getOperator();
 		if (op == AssignOpType.ASSIGN) {
-			this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE, dest, src,
-					null));
+			if (!src.getClass().equals(TempName.class)) {
+				this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE, dest, src, null));
+			}
+			else {
+			// OPTIMIZE
+				if (this.statements.get(this.statements.size() - 1).getClass().equals(QuadrupletStmt.class)) {
+					QuadrupletStmt qStmt = (QuadrupletStmt) this.statements.get(this.statements.size() - 1);
+					qStmt.setDestination(dest);
+				}
+				else {
+					this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE, dest, src, null));
+				}
+			}
+			
 		} else if (op == AssignOpType.INCREMENT) {
 			this.statements.add(new QuadrupletStmt(QuadrupletOp.ADD, dest, dest,
 					src));
@@ -266,9 +278,8 @@ public class MethodFlatennerVisitor implements ASTVisitor<Integer> {
 
 	@Override
 	public Integer visit(InvokeStmt stmt) {
-		// TODO: Modify because we don't want to save return value of method call
-		// in this case
 		stmt.getMethodCall().accept(this.exprFlatenner);
+		this.statements.remove(this.statements.size() - 1);
 
 		return 0;
 	}
