@@ -140,14 +140,14 @@ class Main {
 				CFGBuilder cb = new CFGBuilder(pf.getLirMap());
 				cb.generateCFGs();
 				
-				BlockCSEOptimizer copt = new BlockCSEOptimizer(cb.getCfgMap(), pf);
-				copt.performCSE();
+//				BlockCSEOptimizer copt = new BlockCSEOptimizer(cb.getCfgMap(), pf);
+//				copt.performCSE();
 				
-				BlockCopyPropagationOptimizer copyOpt = new BlockCopyPropagationOptimizer(cb.getCfgMap(), pf);
-				copyOpt.performCopyProp();
+//				BlockCopyPropagationOptimizer copyOpt = new BlockCopyPropagationOptimizer(cb.getCfgMap(), pf);
+//				copyOpt.performCopyProp();
 		
-				BlockDeadCodeOptimizer dcOpt = new BlockDeadCodeOptimizer(cb.getCfgMap(), pf);
-				dcOpt.performDeadCode();
+//				BlockDeadCodeOptimizer dcOpt = new BlockDeadCodeOptimizer(cb.getCfgMap(), pf);
+//				dcOpt.performDeadCode();
 				
 				// TODO: repeat the optimizations till there is no change in pf
 				
