@@ -21,9 +21,5 @@ public class BlockOptimizer {
 		copy.performCopyPropagation();
 		cons.performConsPropagation();
 		dc.performDeadCodeElimination();
-		
-		if (cse.didChange()) {
-			optimizeBlocks();
-		}
 	}
 }

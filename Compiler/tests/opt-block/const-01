@@ -18,7 +18,7 @@ class Program {
 		
 		x = A; // x = 5
 		
-		y = x + z;
+		y = x + z; // y = 5 + 10
 		
 		z = y; // None
 		
