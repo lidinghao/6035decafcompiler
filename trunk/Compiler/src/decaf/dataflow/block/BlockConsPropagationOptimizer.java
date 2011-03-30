@@ -113,8 +113,89 @@ public class BlockConsPropagationOptimizer {
 			}
 		}
 		else {
+			Integer arg1 = null;
+			Integer arg2 = null;
+			
+			// Check arg1
+			if (this.constantMap.containsKey(qStmt.getArg1())) {
+				int val = this.constantMap.get(qStmt.getArg1());
+				qStmt.setArg1(new ConstantName(val));
+				this.constantMap.put(qStmt.getDestination(), val);
+				
+				arg1 = val;
+			}
+			
+			// Check arg2
+			if (this.constantMap.containsKey(qStmt.getArg2())) {
+				int val = this.constantMap.get(qStmt.getArg2());
+				qStmt.setArg2(new ConstantName(val));
+				this.constantMap.put(qStmt.getDestination(), val);
+				
+				arg2 = val;
+			}
+			
+			// Remove dest
 			this.constantMap.remove(qStmt.getDestination());
+			
+			// Static evaluation!
+			if (arg1 != null && arg2 != null) {
+				evaluateExpression(qStmt, arg1, arg2);
+			}
 		}
+	}
+
+	private void evaluateExpression(QuadrupletStmt qStmt, int arg1, int arg2) {
+		int result = 0;
+		Boolean boolResult = null;
+		
+		switch (qStmt.getOperator()) {
+			case ADD:
+				result = arg1 + arg2;
+				break;
+			case SUB:
+				result = arg1 - arg2;
+				break;
+			case MUL:
+				result = arg1 * arg2;
+				break;
+			case DIV:
+				result = arg1 / arg2;
+				break;
+			case MOD:
+				result = arg1 % arg2;
+				break;
+			case LT:
+				boolResult = arg1 < arg2;
+				break;
+			case LTE:
+				boolResult = arg1 <= arg2;
+				break;
+			case GT:
+				boolResult = arg1 > arg2;
+				break;
+			case GTE:
+				boolResult = arg1 >= arg2;
+				break;
+			case EQ:
+				boolResult = arg1 == arg2;
+				break;
+			case NEQ:
+				boolResult = arg1 != arg2;
+				break;
+		}
+		
+		if (boolResult != null) {
+			if (boolResult) { 
+				result = 1;
+			}
+			else { 
+				result = 0;
+			}
+		}
+		
+		qStmt.setArg1(new ConstantName(result));
+		qStmt.setOperator(QuadrupletOp.MOVE);
+		this.constantMap.put(qStmt.getDestination(), result);
 	}
 
 	private CFGBlock getBlockWithIndex(int i, List<CFGBlock> list) {
