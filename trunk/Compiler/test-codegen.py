@@ -19,8 +19,8 @@ class config:
   semantics_hidden_dir  = join(dirname(abspath(sys.argv[0])), "tests/semantics/hidden")
   semantics_tests       = False
   
-  codegen_public_dir  = join(dirname(abspath(sys.argv[0])), "test/codegen")
-  codegen_hidden_dir  = join(dirname(abspath(sys.argv[0])), "test/codegen/hidden")
+  codegen_public_dir  = join(dirname(abspath(sys.argv[0])), "tests/codegen")
+  codegen_hidden_dir  = join(dirname(abspath(sys.argv[0])), "tests/codegen/hidden")
   codegen_tests       = True
 
   pad = 20

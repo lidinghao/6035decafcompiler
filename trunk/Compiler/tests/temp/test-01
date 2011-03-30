@@ -3,6 +3,7 @@ class Program {
 		int a, b;
 		
 		a = 10 + 3;
+		a += 2 + 3;
 		b = 10 + 3;
 		
 		callout("printf","%d\n",a);

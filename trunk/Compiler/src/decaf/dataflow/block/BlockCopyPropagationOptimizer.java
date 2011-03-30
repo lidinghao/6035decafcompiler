@@ -32,7 +32,7 @@ public class BlockCopyPropagationOptimizer {
 		this.pf = pf;
 	}
 	
-	public void performCopyProp() {
+	public void performCopyPropagation() {
 		for (String s: this.cfgMap.keySet()) {
 			if (s.equals(ProgramFlattener.exceptionHandlerLabel)) continue;
 			

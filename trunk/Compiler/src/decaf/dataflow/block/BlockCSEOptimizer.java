@@ -25,6 +25,7 @@ public class BlockCSEOptimizer {
 	private HashMap<String, List<CFGBlock>> cfgMap;
 	private ProgramFlattener pf;
 	private int tempCount;
+	private boolean didChange;
 	
 	public BlockCSEOptimizer(HashMap<String, List<CFGBlock>> cfgMap, ProgramFlattener pf) {
 		this.varToVal = new HashMap<Name, SymbolicValue>();
@@ -33,9 +34,12 @@ public class BlockCSEOptimizer {
 		this.cfgMap = cfgMap;
 		this.pf = pf;
 		this.tempCount = 0;
+		this.didChange = false;
 	}
 	
 	public void performCSE() {
+		this.didChange = false;
+		
 		for (String s: this.cfgMap.keySet()) {
 			if (s.equals(ProgramFlattener.exceptionHandlerLabel)) continue;
 			
@@ -70,7 +74,7 @@ public class BlockCSEOptimizer {
 		}
 	}
 	
-	public CFGBlock getBlockWithIndex(int i, List<CFGBlock> list) {
+	private CFGBlock getBlockWithIndex(int i, List<CFGBlock> list) {
 		for (CFGBlock block: list) {
 			if (block.getIndex() == i) {
 				return block;
@@ -215,5 +219,9 @@ public class BlockCSEOptimizer {
 		}
 		
 		return new ValueExpr(op, val1, val2);
+	}
+	
+	public boolean didChange() {
+		return this.didChange;
 	}
 }

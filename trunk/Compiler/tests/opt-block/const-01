@@ -1,0 +1,29 @@
+class Program {
+	int A;
+	
+	void foo() {
+		// Dont care
+	}
+	
+	void main() {
+		int x, y, z;
+		
+		x = A; // None
+		
+		A = 5;
+		x = 10;
+		
+		y = x; // y = 10
+		z = y; // z = 10
+		
+		x = A; // x = 5
+		
+		y = x + z;
+		
+		z = y; // None
+		
+		foo(); // Invalidates globals and regs
+		
+		x = A; // None	
+	}
+}

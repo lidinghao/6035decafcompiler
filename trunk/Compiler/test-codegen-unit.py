@@ -20,7 +20,7 @@ class config:
   semantics_tests       = False
   
   codegen_public_dir  = join(dirname(abspath(sys.argv[0])), "tests/codegen-unit/")
-  codegen_hidden_dir  = join(dirname(abspath(sys.argv[0])), "tests/codegen/hidden")
+  codegen_hidden_dir  = None
   codegen_tests       = True
 
   pad = 20

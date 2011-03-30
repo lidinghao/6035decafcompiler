@@ -26,7 +26,7 @@ public class BlockDeadCodeOptimizer {
 		this.tempCount = 0;
 	}
 
-	public void performDeadCode() {
+	public void performDeadCodeElimination() {
 		for (String s: this.cfgMap.keySet()) {
 			for (CFGBlock block: this.cfgMap.get(s)) {
 				optimize(block);
