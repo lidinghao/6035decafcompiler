@@ -3,7 +3,9 @@ package decaf.codegen.flatir;
 import java.io.PrintStream;
 
 public class QuadrupletStmt extends LIRStatement {
+	private static int ID = 0;
 	private QuadrupletOp operator;
+	private int myId;
 	private Name dest;
 	private Name arg1;
 	private Name arg2;
@@ -310,5 +312,14 @@ public class QuadrupletStmt extends LIRStatement {
 		}
 		
 		return true;
+	}
+	
+	public int getMyId() {
+		return myId;
+	}
+
+	public void setMyId() {
+		this.myId = ID;
+		QuadrupletStmt.ID++;
 	}
 }
