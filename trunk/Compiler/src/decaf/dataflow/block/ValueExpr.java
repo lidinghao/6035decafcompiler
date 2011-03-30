@@ -64,6 +64,10 @@ public class ValueExpr {
 		if (expr.getOp() != this.getOp()) return false;
 		
 		// Check for commutative shit
+		if (this.getOp() == ValueExprOp.ADD ||
+				this.getOp() == ValueExprOp.MUL) {
+			return checkCommutative(expr);
+		}
 		
 		if (!expr.getVal1().equals(expr.getVal1())) return false;
 		
@@ -74,6 +78,18 @@ public class ValueExpr {
 		return expr.getVal2().equals(this.getVal2());
 	}
 	
+	private boolean checkCommutative(ValueExpr expr) {
+		if (expr.getVal1().equals(this.getVal1()) && expr.getVal2().equals(this.getVal2())) {
+			return true;
+		}
+		
+		if (expr.getVal2().equals(this.getVal1()) && expr.getVal1().equals(this.getVal2())) {
+			return true;
+		}
+		
+		return false;
+	}
+
 	@Override
 	public String toString() {
 		if (op == ValueExprOp.NONE) {
