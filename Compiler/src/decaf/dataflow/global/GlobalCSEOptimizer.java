@@ -143,7 +143,7 @@ public class GlobalCSEOptimizer {
 			DynamicVarName temp = exprToTemp.get(expr);
 			// If available
 			if (bFlow.getIn().get(expr.getMyId())) {
-				if (!exprsClobbered.contains(expr)) {
+				if (!exprsClobbered.contains(expr.getMyId())) {
 					// Replace AvailableExpression with corresponding temporary
 					qStmt.setArg1(temp);
 					qStmt.setArg2(null);
