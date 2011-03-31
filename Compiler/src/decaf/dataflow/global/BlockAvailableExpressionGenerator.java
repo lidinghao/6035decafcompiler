@@ -28,7 +28,7 @@ public class BlockAvailableExpressionGenerator {
 	// Map from Name to IDs of QuadrupletStmt which assign to that Name
 	private HashMap<Name, HashSet<Integer>> nameToExprIds;
 	private int totalExpressionStmts;
-	
+
 	public BlockAvailableExpressionGenerator(HashMap<String, List<CFGBlock>> cMap) {
 		cfgMap = cMap;
 		nameToExprIds = new HashMap<Name, HashSet<Integer>>();
@@ -228,5 +228,14 @@ public class BlockAvailableExpressionGenerator {
 	public void setBlockExpressions(
 			HashMap<CFGBlock, List<AvailableExpression>> blockExpressions) {
 		this.blockExpressions = blockExpressions;
+	}
+	
+	
+	public int getTotalExpressionStmts() {
+		return totalExpressionStmts;
+	}
+
+	public void setTotalExpressionStmts(int totalExpressionStmts) {
+		this.totalExpressionStmts = totalExpressionStmts;
 	}
 }
