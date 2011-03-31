@@ -54,7 +54,6 @@ public class BlockAvailableExpressionGenerator {
 		cfgBlocksToProcess.remove(entry);
 		orderProcessed.add(entry);
 		blockAvailableDefs.put(entry, entryBlockFlow);
-		printBlockAvailableExpressions(System.out, entry);
 		
 		while (cfgBlocksToProcess.size() != 0) {
 			CFGBlock block = (CFGBlock)(cfgBlocksToProcess.toArray())[0];

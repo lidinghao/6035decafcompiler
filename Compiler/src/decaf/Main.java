@@ -18,6 +18,7 @@ import decaf.dataflow.block.BlockOptimizer;
 import decaf.dataflow.cfg.CFGBuilder;
 import decaf.dataflow.cfg.LeaderElector;
 import decaf.dataflow.global.GlobalCSEOptimizer;
+import decaf.dataflow.global.GlobalOptimizer;
 import decaf.ir.ast.ClassDecl;
 import decaf.ir.semcheck.*;
 import decaf.test.Error;
@@ -147,17 +148,27 @@ class Main {
 				BlockOptimizer bo = new BlockOptimizer(cb, pf);
 				bo.optimizeBlocks();
 				
-				pf.print(System.out);
+				if (CLI.debug) {
+					System.out.println("\nAFTER LOCAL OPTIMIZATIONS: \n");
+					pf.print(System.out);
+					System.out.println();
+				}
 				
 				// Global optimizations
 				
-				System.out.println("\nGLOBAL OPTIMIZATIONS: ");
-				GlobalCSEOptimizer globalCSE = new GlobalCSEOptimizer(cb.getCfgMap(), pf);
-				globalCSE.getAvailableGenerator().printBlocksAvailableExpressions(System.out);
-				System.out.println("\nAFTER GLOBAL CSE: ");
-				globalCSE.performGlobalCSE();
-				globalCSE.printExprToTemp(System.out);
-				pf.print(System.out);
+				GlobalOptimizer go = new GlobalOptimizer(cb, pf);
+				go.optimizeBlocks();
+				
+				if (CLI.debug) {
+					System.out.println("\nAFTER GLOBAL OPTIMIZATIONS: \n");
+					GlobalCSEOptimizer globalCSE = go.getCse();
+					globalCSE.getAvailableGenerator().printBlocksAvailableExpressions(System.out);
+					System.out.println();
+					globalCSE.printExprToTemp(System.out);
+					System.out.println();
+					pf.print(System.out);
+					System.out.println();
+				}
 				
 				// Resolve names to locations
 				LocationResolver lr = new LocationResolver(pf, cd);

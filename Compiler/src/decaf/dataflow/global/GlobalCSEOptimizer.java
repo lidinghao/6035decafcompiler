@@ -172,6 +172,8 @@ public class GlobalCSEOptimizer {
 			}
 			exprIndex++;
 		}
+		
+		block.setStatements(newStmts);
 	}
 	
 	public void printExprToTemp(PrintStream out) {
