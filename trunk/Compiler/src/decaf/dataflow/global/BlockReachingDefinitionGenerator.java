@@ -6,9 +6,15 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
+import decaf.codegen.flatir.CallStmt;
 import decaf.codegen.flatir.LIRStatement;
 import decaf.codegen.flatir.Name;
 import decaf.codegen.flatir.QuadrupletStmt;
+import decaf.codegen.flatir.Register;
+import decaf.codegen.flatir.RegisterName;
+import decaf.codegen.flatir.VarName;
+import decaf.codegen.flattener.ExpressionFlattenerVisitor;
+import decaf.codegen.flattener.ProgramFlattener;
 import decaf.dataflow.cfg.CFGBlock;
 
 public class BlockReachingDefinitionGenerator {
@@ -44,7 +50,12 @@ public class BlockReachingDefinitionGenerator {
 	}
 	
 	private void initialize() {
+		// QuadrupletStmt IDs that we assign should start from 0, so they can
+		// correspond to the appropriate index in the BitSet
+		QuadrupletStmt.setID(0);
 		for (String s: this.cfgMap.keySet()) {
+			if (s.equals(ProgramFlattener.exceptionHandlerLabel)) continue;
+			
 			for (CFGBlock block: this.cfgMap.get(s)) {
 				List<LIRStatement> blockStmts = block.getStatements();
 				for (int i = 0; i < blockStmts.size(); i++) {
@@ -96,26 +107,51 @@ public class BlockReachingDefinitionGenerator {
 	
 	private void calculateGenKillSets(CFGBlock block, BlockFlow bFlow) {
 		BitSet gen = bFlow.getGen();
-		BitSet in = bFlow.getIn();
-		BitSet kill = bFlow.getKill();
 		List<LIRStatement> blockStmts = block.getStatements();
+		
 		for (LIRStatement stmt : blockStmts) {
 			if (!stmt.isExpressionStatement()) {
+				if (stmt.getClass().equals(CallStmt.class)) {
+					// Invalidate arg registers
+					for (int i = 0; i < ExpressionFlattenerVisitor.argumentRegs.length; i++) {
+						updateKillSet(new RegisterName(ExpressionFlattenerVisitor.argumentRegs[i]), bFlow);
+					}
+					
+					// Reset symbolic value for %RAX
+					updateKillSet(new RegisterName(Register.RAX), bFlow);
+					
+					// Invalidate global vars;
+					for (Name name: this.nameToStmtIds.keySet()) {
+						if (name.getClass().equals(VarName.class)) {
+							VarName var = (VarName) name;
+							if (var.getBlockId() == -1) { // Global
+								updateKillSet(name, bFlow);
+							}
+						}
+					}
+				}
 				continue;
 			}
+			
 			QuadrupletStmt qStmt = (QuadrupletStmt)stmt;
 			Name dest = qStmt.getDestination();
-			HashSet<Integer> stmtIdsForDest = nameToStmtIds.get(dest);
-			// Kill if it is part of In
-			Iterator<Integer> it = stmtIdsForDest.iterator();
-			while (it.hasNext()) {
-				int index = it.next();
-				if (in.get(index)) {
-					kill.set(index, true); // Ensures Kill is always a subset of In
-				}
-			}
+			updateKillSet(dest, bFlow);
 			// Gen - add current statement id
 			gen.set(qStmt.getMyId(), true);
+		}
+	}
+	
+	private void updateKillSet(Name newDest, BlockFlow bFlow) {
+		BitSet kill = bFlow.getKill();
+		BitSet in = bFlow.getIn();
+		HashSet<Integer> stmtIdsForDest = nameToStmtIds.get(newDest);
+		// Kill if it is part of In
+		Iterator<Integer> it = stmtIdsForDest.iterator();
+		while (it.hasNext()) {
+			int index = it.next();
+			if (in.get(index)) {
+				kill.set(index, true); // Ensures Kill is always a subset of In
+			}
 		}
 	}
 	
