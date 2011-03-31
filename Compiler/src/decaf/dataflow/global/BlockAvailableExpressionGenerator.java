@@ -7,10 +7,14 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
+import decaf.codegen.flatir.CallStmt;
 import decaf.codegen.flatir.LIRStatement;
 import decaf.codegen.flatir.Name;
-import decaf.codegen.flatir.QuadrupletOp;
 import decaf.codegen.flatir.QuadrupletStmt;
+import decaf.codegen.flatir.Register;
+import decaf.codegen.flatir.RegisterName;
+import decaf.codegen.flatir.VarName;
+import decaf.codegen.flattener.ExpressionFlattenerVisitor;
 import decaf.codegen.flattener.ProgramFlattener;
 import decaf.dataflow.cfg.CFGBlock;
 
@@ -59,33 +63,29 @@ public class BlockAvailableExpressionGenerator {
 				List<LIRStatement> blockStmts = block.getStatements();
 				for (int i = 0; i < blockStmts.size(); i++) {
 					LIRStatement stmt = blockStmts.get(i);
-					if (stmt.isExpressionStatement()) {
+					if (stmt.isAvailableExpression()) {
 						QuadrupletStmt qStmt = (QuadrupletStmt)stmt;
-						QuadrupletOp qOp = qStmt.getOperator();
-						// Ensure it is of the form [var op var] or [op var]
-						if (qOp != QuadrupletOp.MOVE) {
-							Name arg1 = qStmt.getArg1();
-							Name arg2 = qStmt.getArg2();
-							AvailableExpression expr = new AvailableExpression(arg1, 
-									arg2, qStmt.getOperator());
-							// Update mapping from CFGBlock to AvailableExpression list
-							if (!blockExpressions.containsKey(block)) {
-								blockExpressions.put(block, new ArrayList<AvailableExpression>());
+						Name arg1 = qStmt.getArg1();
+						Name arg2 = qStmt.getArg2();
+						AvailableExpression expr = new AvailableExpression(arg1, 
+								arg2, qStmt.getOperator());
+						// Update mapping from CFGBlock to AvailableExpression list
+						if (!blockExpressions.containsKey(block)) {
+							blockExpressions.put(block, new ArrayList<AvailableExpression>());
+						}
+						blockExpressions.get(block).add(expr);
+						// Update mapping between Name and the AvailableExpressions that 
+						// contain that Name
+						if (!nameToStmtIds.containsKey(arg1)) {
+							nameToStmtIds.put(arg1, new HashSet<Integer>());
+						}
+						nameToStmtIds.get(arg1).add(expr.getMyId());
+						if (arg2 != null) {
+							if (!nameToStmtIds.containsKey(arg2)) {
+								nameToStmtIds.put(arg2, new HashSet<Integer>());
 							}
-							blockExpressions.get(block).add(expr);
-							// Update mapping between Name and the AvailableExpressions that 
-							// contain that Name
-							if (!nameToStmtIds.containsKey(arg1)) {
-								nameToStmtIds.put(arg1, new HashSet<Integer>());
-							}
-							nameToStmtIds.get(arg1).add(expr.getMyId());
-							if (arg2 != null) {
-								if (!nameToStmtIds.containsKey(arg2)) {
-									nameToStmtIds.put(arg2, new HashSet<Integer>());
-								}
-								nameToStmtIds.get(arg2).add(expr.getMyId());
-								totalExpressionStmts++;
-							}
+							nameToStmtIds.get(arg2).add(expr.getMyId());
+							totalExpressionStmts++;
 						}
 					}
 				}
@@ -130,53 +130,56 @@ public class BlockAvailableExpressionGenerator {
 	private void calculateGenKillSets(CFGBlock block, BlockFlow bFlow) {
 		BitSet gen = bFlow.getGen();
 		List<AvailableExpression> blockExprs = blockExpressions.get(block);
+		List<LIRStatement> blockStmts = block.getStatements();
 		
-		for (AvailableExpression expr : blockExprs) {
-//			if (!stmt.isExpressionStatement()) {
-//				if (stmt.getClass().equals(CallStmt.class)) {
-//					// Invalidate arg registers
-//					for (int i = 0; i < ExpressionFlattenerVisitor.argumentRegs.length; i++) {
-//						updateKillSet(new RegisterName(ExpressionFlattenerVisitor.argumentRegs[i]), bFlow);
-//					}
-//					
-//					// Reset symbolic value for %RAX
-//					updateKillSet(new RegisterName(Register.RAX), bFlow);
-//					
-//					// Invalidate global vars;
-//					for (Name name: this.nameToStmtIds.keySet()) {
-//						if (name.getClass().equals(VarName.class)) {
-//							VarName var = (VarName) name;
-//							if (var.getBlockId() == -1) { // Global
-//								updateKillSet(name, bFlow);
-//							}
-//						}
-//					}
-//				}
-//				continue;
-//			}
+		int exprIndex = 0;
+		for (LIRStatement stmt : blockStmts) {
+			if (!stmt.isAvailableExpression()) {
+				if (stmt.getClass().equals(CallStmt.class)) {
+					// Invalidate arg registers
+					for (int i = 0; i < ExpressionFlattenerVisitor.argumentRegs.length; i++) {
+						updateKillSet(new RegisterName(ExpressionFlattenerVisitor.argumentRegs[i]), bFlow);
+					}
+					
+					// Reset symbolic value for %RAX
+					updateKillSet(new RegisterName(Register.RAX), bFlow);
+					
+					// Invalidate global vars;
+					for (Name name: this.nameToStmtIds.keySet()) {
+						if (name.getClass().equals(VarName.class)) {
+							VarName var = (VarName) name;
+							if (var.getBlockId() == -1) { // Global
+								updateKillSet(name, bFlow);
+							}
+						}
+					}
+				}
+				continue;
+			}
 			
-			updateKillSet(expr, bFlow);
+			QuadrupletStmt qStmt = (QuadrupletStmt)stmt;
+			updateKillSet(qStmt.getDestination(), bFlow);
+			// Get corresponding AvailableExpression
+			AvailableExpression expr = blockExprs.get(exprIndex);
 			// Gen - add current expression id
 			gen.set(expr.getMyId(), true);
+			exprIndex++;
 		}
 	}
 	
-	private void updateKillSet(AvailableExpression expr, BlockFlow bFlow) {
-//		BitSet kill = bFlow.getKill();
-//		BitSet in = bFlow.getIn();
-//		HashSet<Integer> stmtIdsForDest = nameToStmtIds.get(newDest);
-//		// Kill if it is part of In
-//		Iterator<Integer> it = stmtIdsForDest.iterator();
-//		while (it.hasNext()) {
-//			int index = it.next();
-//			if (in.get(index)) {
-//				kill.set(index, true); // Ensures Kill is always a subset of In
-//			}
-//		}
+	private void updateKillSet(Name dest, BlockFlow bFlow) {
+		BitSet kill = bFlow.getKill();
+		BitSet in = bFlow.getIn();
+		HashSet<Integer> stmtIdsForDest = nameToStmtIds.get(dest);
+		// Kill if it is part of In
+		Iterator<Integer> it = stmtIdsForDest.iterator();
+		while (it.hasNext()) {
+			int index = it.next();
+			if (in.get(index)) {
+				kill.set(index, true); // Ensures Kill is always a subset of In
+			}
+		}
 	}
-	
-	// for a statement, add ID of RHS expr to gen, kill all the IDs which are currently available and contain the dest Name
-	// when there is a call stmt, kill all the IDs which are currently available and contain global vars, arg registers, and rax
 	
 	public HashMap<Name, HashSet<Integer>> getNameToStmtIds() {
 		return nameToStmtIds;
