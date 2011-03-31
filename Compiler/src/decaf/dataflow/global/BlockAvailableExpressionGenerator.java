@@ -44,6 +44,8 @@ public class BlockAvailableExpressionGenerator {
 	
 	public void generate() {
 		initialize();
+		if (totalExpressionStmts == 0)
+			return;
 		// Get the first block in the main function - TODO: is there a better way?
 		CFGBlock entry = cfgMap.get("main").get(0);
 		BlockFlow entryBlockFlow = new BlockFlow(totalExpressionStmts);
