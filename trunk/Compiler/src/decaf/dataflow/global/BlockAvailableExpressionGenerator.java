@@ -11,6 +11,7 @@ import java.util.List;
 import decaf.codegen.flatir.CallStmt;
 import decaf.codegen.flatir.LIRStatement;
 import decaf.codegen.flatir.Name;
+import decaf.codegen.flatir.QuadrupletOp;
 import decaf.codegen.flatir.QuadrupletStmt;
 import decaf.codegen.flatir.Register;
 import decaf.codegen.flatir.RegisterName;
@@ -22,6 +23,7 @@ import decaf.dataflow.cfg.CFGBlock;
 public class BlockAvailableExpressionGenerator {
 	private HashMap<String, List<CFGBlock>> cfgMap;
 	private HashMap<CFGBlock, BlockFlow> blockAvailableDefs;
+	private List<AvailableExpression> availableExpressions;
 	private HashMap<CFGBlock, List<AvailableExpression>> blockExpressions;
 	private List<CFGBlock> orderProcessed;
 	private HashSet<CFGBlock> cfgBlocksToProcess;
@@ -33,6 +35,7 @@ public class BlockAvailableExpressionGenerator {
 		cfgMap = cMap;
 		nameToExprIds = new HashMap<Name, HashSet<Integer>>();
 		blockAvailableDefs = new HashMap<CFGBlock, BlockFlow>();
+		availableExpressions = new ArrayList<AvailableExpression>();
 		blockExpressions = new HashMap<CFGBlock, List<AvailableExpression>>();
 		cfgBlocksToProcess = new HashSet<CFGBlock>();
 		orderProcessed = new ArrayList<CFGBlock>();
@@ -48,6 +51,7 @@ public class BlockAvailableExpressionGenerator {
 		entryBlockFlow.setOut(entryBlockFlow.getGen());
 		cfgBlocksToProcess.remove(entry);
 		orderProcessed.add(entry);
+		blockAvailableDefs.put(entry, entryBlockFlow);
 		
 		while (cfgBlocksToProcess.size() != 0) {
 			CFGBlock block = (CFGBlock)(cfgBlocksToProcess.toArray())[0];
@@ -73,6 +77,13 @@ public class BlockAvailableExpressionGenerator {
 						Name arg2 = qStmt.getArg2();
 						AvailableExpression expr = new AvailableExpression(arg1, 
 								arg2, qStmt.getOperator());
+						if (availableExpressions.contains(expr)) {
+							expr = availableExpressions.get(availableExpressions.indexOf(expr));
+							// Decrement global AvailableExpression ID
+							AvailableExpression.setID(AvailableExpression.getID()-1);
+						} else {
+							availableExpressions.add(expr);
+						}
 						// Update mapping from CFGBlock to AvailableExpression list
 						if (!blockExpressions.containsKey(block)) {
 							blockExpressions.put(block, new ArrayList<AvailableExpression>());
@@ -100,6 +111,10 @@ public class BlockAvailableExpressionGenerator {
 	
 	public BlockFlow generateForBlock(CFGBlock block) {
 		BlockFlow bFlow = new BlockFlow(totalExpressionStmts);
+		// If there exists at least one predecessor, set In to null
+		if (block.getPredecessors().size() > 0) {
+			bFlow.getIn().set(0, totalExpressionStmts-1);
+		}
 		BitSet in = bFlow.getIn();
 		for (CFGBlock pred : block.getPredecessors()) {
 			if (blockAvailableDefs.containsKey(pred)) {
@@ -139,6 +154,7 @@ public class BlockAvailableExpressionGenerator {
 		BitSet gen = bFlow.getGen();
 		List<AvailableExpression> blockExprs = blockExpressions.get(block);
 		List<LIRStatement> blockStmts = block.getStatements();
+		QuadrupletStmt qStmt;
 		
 		int exprIndex = 0;
 		for (LIRStatement stmt : blockStmts) {
@@ -162,10 +178,18 @@ public class BlockAvailableExpressionGenerator {
 						}
 					}
 				}
+				
+				if (stmt.isExpressionStatement()) {
+					qStmt = (QuadrupletStmt)stmt;
+					// MOVE is not considered an AvailableExpression but it still effects the Kill set
+					if (qStmt.getOperator() == QuadrupletOp.MOVE) {
+						updateKillSet(qStmt.getDestination(), bFlow);
+					}
+				}
 				continue;
 			}
 			
-			QuadrupletStmt qStmt = (QuadrupletStmt)stmt;
+			qStmt = (QuadrupletStmt)stmt;
 			updateKillSet(qStmt.getDestination(), bFlow);
 			// Get corresponding AvailableExpression
 			AvailableExpression expr = blockExprs.get(exprIndex);
@@ -179,12 +203,14 @@ public class BlockAvailableExpressionGenerator {
 		BitSet kill = bFlow.getKill();
 		BitSet in = bFlow.getIn();
 		HashSet<Integer> stmtIdsForDest = nameToExprIds.get(dest);
-		// Kill if it is part of In
-		Iterator<Integer> it = stmtIdsForDest.iterator();
-		while (it.hasNext()) {
-			int index = it.next();
-			if (in.get(index)) {
-				kill.set(index, true); // Ensures Kill is always a subset of In
+		if (stmtIdsForDest != null) {
+			// Kill if it is part of In
+			Iterator<Integer> it = stmtIdsForDest.iterator();
+			while (it.hasNext()) {
+				int index = it.next();
+				if (in.get(index)) {
+					kill.set(index, true); // Ensures Kill is always a subset of In
+				}
 			}
 		}
 	}
@@ -199,8 +225,10 @@ public class BlockAvailableExpressionGenerator {
 		out.println("----- NEW BLOCK -----");
 		out.println(block);
 		out.println("Block available expressions: ");
-		for (AvailableExpression expr : blockExpressions.get(block))  {
-			out.println("\t"+expr);
+		if (blockExpressions.containsKey(block)) {
+			for (AvailableExpression expr : blockExpressions.get(block))  {
+				out.println("\t"+expr);
+			}
 		}
 		out.println(blockAvailableDefs.get(block));
 	}
@@ -230,12 +258,20 @@ public class BlockAvailableExpressionGenerator {
 		this.blockExpressions = blockExpressions;
 	}
 	
-	
 	public int getTotalExpressionStmts() {
 		return totalExpressionStmts;
 	}
 
 	public void setTotalExpressionStmts(int totalExpressionStmts) {
 		this.totalExpressionStmts = totalExpressionStmts;
+	}
+
+	public List<AvailableExpression> getAvailableExpressions() {
+		return availableExpressions;
+	}
+
+	public void setAvailableExpressions(
+			List<AvailableExpression> availableExpressions) {
+		this.availableExpressions = availableExpressions;
 	}
 }

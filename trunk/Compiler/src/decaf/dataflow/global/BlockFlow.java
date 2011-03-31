@@ -49,11 +49,11 @@ public class BlockFlow {
 	
 	@Override
 	public String toString() {
-		String out = "IN : " + in.toString() + "\n";
-		out += "KILL : " + kill.toString() + "\n";
-		out += "GEN : " + gen.toString() + "\n";
-		out += "OUT : " + out.toString();
+		String o = "IN : " + in.toString() + "\n";
+		o += "KILL : " + kill.toString() + "\n";
+		o += "GEN : " + gen.toString() + "\n";
+		o += "OUT : " + out.toString();
 		
-		return out;
+		return o;
 	}
 }
