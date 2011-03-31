@@ -17,6 +17,7 @@ import decaf.dataflow.block.BlockDeadCodeOptimizer;
 import decaf.dataflow.block.BlockOptimizer;
 import decaf.dataflow.cfg.CFGBuilder;
 import decaf.dataflow.cfg.LeaderElector;
+import decaf.dataflow.global.GlobalCSEOptimizer;
 import decaf.ir.ast.ClassDecl;
 import decaf.ir.semcheck.*;
 import decaf.test.Error;
@@ -141,9 +142,21 @@ class Main {
 				CFGBuilder cb = new CFGBuilder(pf.getLirMap());
 				cb.generateCFGs();
 				
+				// Block optimizations
+				
 				BlockOptimizer bo = new BlockOptimizer(cb, pf);
 				bo.optimizeBlocks();
 				
+				pf.print(System.out);
+				
+				// Global optimizations
+				
+				GlobalCSEOptimizer globalCSE = new GlobalCSEOptimizer(cb.getCfgMap(), pf);
+				System.out.println("\nGLOBAL OPTIMIZATIONS: ");
+				globalCSE.getAvailableGenerator().printBlocksAvailableExpressions(System.out);
+				globalCSE.performGlobalCSE();
+				globalCSE.printExprToTemp(System.out);
+				System.out.println("\nAFTER GLOBAL CSE: ");
 				pf.print(System.out);
 				
 				// Resolve names to locations

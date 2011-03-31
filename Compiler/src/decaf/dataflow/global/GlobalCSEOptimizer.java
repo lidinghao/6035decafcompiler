@@ -1,10 +1,12 @@
 package decaf.dataflow.global;
 
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map.Entry;
 
 import decaf.codegen.flatir.DynamicVarName;
 import decaf.codegen.flatir.EnterStmt;
@@ -128,7 +130,8 @@ public class GlobalCSEOptimizer {
 			QuadrupletStmt qStmt = (QuadrupletStmt)stmt;
 			Name dest = qStmt.getDestination();
 			// Update the set of Names that have been assigned
-			exprsClobbered.addAll(nameToExprs.get(dest));
+			if (nameToExprs.containsKey(dest))
+				exprsClobbered.addAll(nameToExprs.get(dest));
 			
 			if (!stmt.isAvailableExpression()) {
 				newStmts.add(stmt);
@@ -163,6 +166,13 @@ public class GlobalCSEOptimizer {
 				}
 			}
 			exprIndex++;
+		}
+	}
+	
+	public void printExprToTemp(PrintStream out) {
+		out.println("EXPR TO GLOBAL TEMP MAPS: ");
+		for (Entry<AvailableExpression, DynamicVarName> e : exprToTemp.entrySet()) {
+			out.println(e.getKey() + " --> " + e.getValue());
 		}
 	}
 	
