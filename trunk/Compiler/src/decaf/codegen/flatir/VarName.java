@@ -63,7 +63,7 @@ public class VarName extends Name {
 	}
 	
 	public String hashString() {
-		return ("Variable#" + id + blockId + "");
+		return ("Variable#" + id + "%" + blockId);
 	}
 	
 	@Override 
