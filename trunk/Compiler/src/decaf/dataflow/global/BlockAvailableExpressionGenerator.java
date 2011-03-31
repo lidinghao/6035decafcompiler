@@ -24,12 +24,12 @@ public class BlockAvailableExpressionGenerator {
 	private HashMap<CFGBlock, List<AvailableExpression>> blockExpressions;
 	private HashSet<CFGBlock> cfgBlocksToProcess;
 	// Map from Name to IDs of QuadrupletStmt which assign to that Name
-	private HashMap<Name, HashSet<Integer>> nameToStmtIds;
+	private HashMap<Name, HashSet<Integer>> nameToExprIds;
 	private int totalExpressionStmts;
 	
 	public BlockAvailableExpressionGenerator(HashMap<String, List<CFGBlock>> cMap) {
 		cfgMap = cMap;
-		nameToStmtIds = new HashMap<Name, HashSet<Integer>>();
+		nameToExprIds = new HashMap<Name, HashSet<Integer>>();
 		blockAvailableDefs = new HashMap<CFGBlock, BlockFlow>();
 		blockExpressions = new HashMap<CFGBlock, List<AvailableExpression>>();
 		cfgBlocksToProcess = new HashSet<CFGBlock>();
@@ -76,15 +76,15 @@ public class BlockAvailableExpressionGenerator {
 						blockExpressions.get(block).add(expr);
 						// Update mapping between Name and the AvailableExpressions that 
 						// contain that Name
-						if (!nameToStmtIds.containsKey(arg1)) {
-							nameToStmtIds.put(arg1, new HashSet<Integer>());
+						if (!nameToExprIds.containsKey(arg1)) {
+							nameToExprIds.put(arg1, new HashSet<Integer>());
 						}
-						nameToStmtIds.get(arg1).add(expr.getMyId());
+						nameToExprIds.get(arg1).add(expr.getMyId());
 						if (arg2 != null) {
-							if (!nameToStmtIds.containsKey(arg2)) {
-								nameToStmtIds.put(arg2, new HashSet<Integer>());
+							if (!nameToExprIds.containsKey(arg2)) {
+								nameToExprIds.put(arg2, new HashSet<Integer>());
 							}
-							nameToStmtIds.get(arg2).add(expr.getMyId());
+							nameToExprIds.get(arg2).add(expr.getMyId());
 							totalExpressionStmts++;
 						}
 					}
@@ -145,7 +145,7 @@ public class BlockAvailableExpressionGenerator {
 					updateKillSet(new RegisterName(Register.RAX), bFlow);
 					
 					// Invalidate global vars;
-					for (Name name: this.nameToStmtIds.keySet()) {
+					for (Name name: this.nameToExprIds.keySet()) {
 						if (name.getClass().equals(VarName.class)) {
 							VarName var = (VarName) name;
 							if (var.getBlockId() == -1) { // Global
@@ -170,7 +170,7 @@ public class BlockAvailableExpressionGenerator {
 	private void updateKillSet(Name dest, BlockFlow bFlow) {
 		BitSet kill = bFlow.getKill();
 		BitSet in = bFlow.getIn();
-		HashSet<Integer> stmtIdsForDest = nameToStmtIds.get(dest);
+		HashSet<Integer> stmtIdsForDest = nameToExprIds.get(dest);
 		// Kill if it is part of In
 		Iterator<Integer> it = stmtIdsForDest.iterator();
 		while (it.hasNext()) {
@@ -181,12 +181,12 @@ public class BlockAvailableExpressionGenerator {
 		}
 	}
 	
-	public HashMap<Name, HashSet<Integer>> getNameToStmtIds() {
-		return nameToStmtIds;
+	public HashMap<Name, HashSet<Integer>> getNameToExprIds() {
+		return nameToExprIds;
 	}
 
-	public void setNameToStmtIds(HashMap<Name, HashSet<Integer>> nameToStmtIds) {
-		this.nameToStmtIds = nameToStmtIds;
+	public void setNameToExprIds(HashMap<Name, HashSet<Integer>> nameToStmtIds) {
+		this.nameToExprIds = nameToStmtIds;
 	}
 	
 	public HashMap<CFGBlock, BlockFlow> getBlockReachingDefs() {
