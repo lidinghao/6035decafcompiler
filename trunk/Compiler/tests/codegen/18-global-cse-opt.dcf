@@ -1,0 +1,23 @@
+class Program {
+	void foo(int x, int y) {
+		int a, b, c, d, z, i, n;
+		z = 4;
+		n = 5;
+		a = x + y;
+		if (x == 0) {
+			x = z;
+			b = x + y; 
+		}
+		i = x + y;
+		if (i < n) {
+			c = x + y;
+			i = i + c;
+		} else {
+			d = x + y;
+		}
+	}
+	
+	void main() {
+		foo(3, 4);
+	}
+}
