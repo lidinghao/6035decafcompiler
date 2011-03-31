@@ -41,6 +41,7 @@ public class BlockReachingDefinitionGenerator {
 		calculateGenKillSets(entry, entryBlockFlow);
 		entryBlockFlow.setOut(entryBlockFlow.getGen());
 		cfgBlocksToProcess.remove(entry);
+		blockReachingDefs.put(entry, entryBlockFlow);
 		
 		while (cfgBlocksToProcess.size() != 0) {
 			CFGBlock block = (CFGBlock)(cfgBlocksToProcess.toArray())[0];
@@ -145,12 +146,14 @@ public class BlockReachingDefinitionGenerator {
 		BitSet kill = bFlow.getKill();
 		BitSet in = bFlow.getIn();
 		HashSet<Integer> stmtIdsForDest = nameToStmtIds.get(newDest);
-		// Kill if it is part of In
-		Iterator<Integer> it = stmtIdsForDest.iterator();
-		while (it.hasNext()) {
-			int index = it.next();
-			if (in.get(index)) {
-				kill.set(index, true); // Ensures Kill is always a subset of In
+		if (stmtIdsForDest != null) {
+			// Kill if it is part of In
+			Iterator<Integer> it = stmtIdsForDest.iterator();
+			while (it.hasNext()) {
+				int index = it.next();
+				if (in.get(index)) {
+					kill.set(index, true); // Ensures Kill is always a subset of In
+				}
 			}
 		}
 	}

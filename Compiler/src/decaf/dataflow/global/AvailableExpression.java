@@ -64,33 +64,33 @@ public class AvailableExpression {
 		String out = "ID : " + Integer.toString(myId) + " -- ";
 		switch (this.operator) {
 			case CMP:
-				out += "compare " + arg1 + ", " + arg2;
-			case ADD:
-				out += arg1 + " + " + arg2;
+				out += "compare " + arg1 + ", " + arg2; break;
+			case ADD: 
+				out += arg1 + " + " + arg2; break;
 			case SUB:
-				out += arg1 + " - " + arg2;
+				out += arg1 + " - " + arg2; break;
 			case MUL:
-				out += arg1 + " * " + arg2;
+				out += arg1 + " * " + arg2; break;
 			case DIV:
-				out += arg1 + " / " + arg2;
+				out += arg1 + " / " + arg2; break;
 			case MOD:
-				out += arg1 + " % " + arg2;
+				out += arg1 + " % " + arg2; break;
 			case NOT:
-				out += "!" + arg1;
+				out += "!" + arg1; break;
 			case MINUS:
-				out += "-" + arg1;
+				out += "-" + arg1; break;
 			case EQ:
-				out += arg1 + " == " + arg2;
+				out += arg1 + " == " + arg2; break;
 			case NEQ:
-				out += arg1 + " != " + arg2;
+				out += arg1 + " != " + arg2; break;
 			case LT:
-				out += arg1 + " < " + arg2;
+				out += arg1 + " < " + arg2; break;
 			case LTE:
-				out += arg1 + " <= " + arg2;
+				out += arg1 + " <= " + arg2; break;
 			case GT:
-				out += arg1 + " > " + arg2;
+				out += arg1 + " > " + arg2; break;
 			case GTE:
-				out += arg1 + " <= " + arg2;
+				out += arg1 + " <= " + arg2; break;
 		}
 		
 		return out;
