@@ -46,4 +46,14 @@ public class BlockFlow {
 	public void setGen(BitSet gen) {
 		this.gen = gen;
 	}
+	
+	@Override
+	public String toString() {
+		String out = "IN : " + in.toString() + "\n";
+		out += "KILL : " + kill.toString() + "\n";
+		out += "GEN : " + gen.toString() + "\n";
+		out += "OUT : " + out.toString();
+		
+		return out;
+	}
 }

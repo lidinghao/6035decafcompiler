@@ -18,4 +18,8 @@ public abstract class LIRStatement {
 	public boolean isExpressionStatement() {
 		return false;
 	}
+	
+	public boolean isAvailableExpression() {
+		return false;
+	}
 }
