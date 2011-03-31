@@ -2,7 +2,6 @@ package decaf.dataflow.global;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.BitSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -37,14 +36,17 @@ public class GlobalCSEOptimizer {
 	public void performGlobalCSE() {
 		if (availableGenerator.getTotalExpressionStmts() == 0)
 			return;
-		initialize();
+		// Update the stack sizes of each method based on how many 
+		// additionally temporary variables it uses
+		updateStackSizes();
 		for (String s: this.cfgMap.keySet()) {
 			if (s.equals(ProgramFlattener.exceptionHandlerLabel)) continue;
-			
+			// Create temporary variables for each unique AvailableExpression
+			initializeTemporaryMap(s);
 			// Optimize blocks
 			for (CFGBlock block: this.cfgMap.get(s)) {
 				optimize(block);
-				reset();
+				resetBlock();
 			}
 		
 			// Change statements
@@ -56,19 +58,16 @@ public class GlobalCSEOptimizer {
 			}
 			
 			pf.getLirMap().put(s, stmts);
+			resetMethod();
 		}
 	}
 	
-	private void initialize() {
-		// Create temporary variables for each unique AvailableExpression
-		initializeTemporaryMap();
-		// Update the stack sizes of each method based on how many 
-		// additionally temporary variables it uses
-		updateStackSizes();
+	private void resetBlock() {
+		exprsClobbered = new HashSet<Integer>();
 	}
 	
-	private void reset() {
-		exprsClobbered = new HashSet<Integer>();
+	private void resetMethod() {
+		exprToTemp = new HashMap<AvailableExpression, DynamicVarName>();
 	}
 	
 	private CFGBlock getBlockWithIndex(int i, List<CFGBlock> list) {
@@ -81,41 +80,34 @@ public class GlobalCSEOptimizer {
 		return null;
 	}
 	
-	private void initializeTemporaryMap() {
+	private void initializeTemporaryMap(String method) {
 		DynamicVarName.reset();
 		List<AvailableExpression> availExprs = 
-			availableGenerator.getAvailableExpressions();
-		for (AvailableExpression expr : availExprs) {
-			exprToTemp.put(expr, new DynamicVarName(true));
+			availableGenerator.getMethodExpressions().get(method);
+		if (availExprs != null) {
+			for (AvailableExpression expr : availExprs) {
+				exprToTemp.put(expr, new DynamicVarName(true));
+			}
 		}
 	}
 	
 	private void updateStackSizes() {
-		HashMap<CFGBlock, BlockFlow> blockFlowMap =  availableGenerator.getBlockAvailableDefs();
 		for (String s: this.cfgMap.keySet()) {
-			if (s.equals(ProgramFlattener.exceptionHandlerLabel)) continue;
-			
-			BitSet availableExprsInMethod = new BitSet(availableGenerator.getTotalExpressionStmts());
-			for (CFGBlock block: this.cfgMap.get(s)) {
-				BlockFlow b = blockFlowMap.get(block);
-				if (b != null) {
-					availableExprsInMethod.or(b.getIn());
-					availableExprsInMethod.or(b.getOut());
-				}
-			}
-			
-			int tempsNeeded = availableExprsInMethod.cardinality();
-			// Fix stack size
-			for (CFGBlock block: this.cfgMap.get(s)) {
-				if (block.getIndex() == 0) {
-					for (LIRStatement stmt: block.getStatements()) {
-						if (stmt.getClass().equals(EnterStmt.class)) {
-							EnterStmt enter = (EnterStmt) stmt;
-							enter.setStackSize(enter.getStackSize() + tempsNeeded);
+			List<AvailableExpression> methodExpr = availableGenerator.getMethodExpressions().get(s);
+			if (methodExpr != null) {
+				int tempsNeeded = methodExpr.size();
+				// Fix stack size
+				for (CFGBlock block: this.cfgMap.get(s)) {
+					if (block.getIndex() == 0) {
+						for (LIRStatement stmt: block.getStatements()) {
+							if (stmt.getClass().equals(EnterStmt.class)) {
+								EnterStmt enter = (EnterStmt) stmt;
+								enter.setStackSize(enter.getStackSize() + tempsNeeded);
+							}
 						}
 					}
 				}
-			}
+			} 
 		}
 	}
 	
@@ -178,8 +170,13 @@ public class GlobalCSEOptimizer {
 	
 	public void printExprToTemp(PrintStream out) {
 		out.println("EXPR TO GLOBAL TEMP MAPS: ");
-		for (Entry<AvailableExpression, DynamicVarName> e : exprToTemp.entrySet()) {
-			out.println(e.getKey() + " --> " + e.getValue());
+		for (String s: this.cfgMap.keySet()) {
+			exprToTemp = new HashMap<AvailableExpression, DynamicVarName>();
+			initializeTemporaryMap(s);
+			System.out.println("METHOD: " + s);
+			for (Entry<AvailableExpression, DynamicVarName> e : exprToTemp.entrySet()) {
+				out.println(e.getKey() + " --> " + e.getValue());
+			}
 		}
 	}
 	

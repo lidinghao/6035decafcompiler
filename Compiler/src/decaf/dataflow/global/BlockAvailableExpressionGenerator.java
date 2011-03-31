@@ -25,6 +25,7 @@ public class BlockAvailableExpressionGenerator {
 	private HashMap<CFGBlock, BlockFlow> blockAvailableDefs;
 	private List<AvailableExpression> availableExpressions;
 	private HashMap<CFGBlock, List<AvailableExpression>> blockExpressions;
+	private HashMap<String, List<AvailableExpression>> methodExpressions;
 	private List<CFGBlock> orderProcessed;
 	private HashSet<CFGBlock> cfgBlocksToProcess;
 	// Map from Name to IDs of QuadrupletStmt which assign to that Name
@@ -37,6 +38,7 @@ public class BlockAvailableExpressionGenerator {
 		blockAvailableDefs = new HashMap<CFGBlock, BlockFlow>();
 		availableExpressions = new ArrayList<AvailableExpression>();
 		blockExpressions = new HashMap<CFGBlock, List<AvailableExpression>>();
+		methodExpressions = new HashMap<String, List<AvailableExpression>>();
 		cfgBlocksToProcess = new HashSet<CFGBlock>();
 		orderProcessed = new ArrayList<CFGBlock>();
 		totalExpressionStmts = 0;
@@ -91,6 +93,11 @@ public class BlockAvailableExpressionGenerator {
 							blockExpressions.put(block, new ArrayList<AvailableExpression>());
 						}
 						blockExpressions.get(block).add(expr);
+						// Update mapping from method to AvailableExpression list
+						if (!methodExpressions.containsKey(s)) {
+							methodExpressions.put(s, new ArrayList<AvailableExpression>());
+						}
+						methodExpressions.get(s).add(expr);
 						// Update mapping between Name and the AvailableExpressions that 
 						// contain that Name
 						if (!nameToExprIds.containsKey(arg1)) {
@@ -280,5 +287,14 @@ public class BlockAvailableExpressionGenerator {
 	public void setAvailableExpressions(
 			List<AvailableExpression> availableExpressions) {
 		this.availableExpressions = availableExpressions;
+	}
+
+	public HashMap<String, List<AvailableExpression>> getMethodExpressions() {
+		return methodExpressions;
+	}
+
+	public void setMethodExpressions(
+			HashMap<String, List<AvailableExpression>> methodExpressions) {
+		this.methodExpressions = methodExpressions;
 	}
 }
