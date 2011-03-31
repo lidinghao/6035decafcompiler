@@ -61,38 +61,39 @@ public class AvailableExpression {
 	
 	@Override
 	public String toString() {
+		String out = "ID : " + Integer.toString(myId) + " -- ";
 		switch (this.operator) {
 			case CMP:
-				return "compare " + arg1 + ", " + arg2;
+				out += "compare " + arg1 + ", " + arg2;
 			case ADD:
-				return arg1 + " + " + arg2;
+				out += arg1 + " + " + arg2;
 			case SUB:
-				return arg1 + " - " + arg2;
+				out += arg1 + " - " + arg2;
 			case MUL:
-				return arg1 + " * " + arg2;
+				out += arg1 + " * " + arg2;
 			case DIV:
-				return arg1 + " / " + arg2;
+				out += arg1 + " / " + arg2;
 			case MOD:
-				return arg1 + " % " + arg2;
+				out += arg1 + " % " + arg2;
 			case NOT:
-				return "!" + arg1;
+				out += "!" + arg1;
 			case MINUS:
-				return "-" + arg1;
+				out += "-" + arg1;
 			case EQ:
-				return arg1 + " == " + arg2;
+				out += arg1 + " == " + arg2;
 			case NEQ:
-				return arg1 + " != " + arg2;
+				out += arg1 + " != " + arg2;
 			case LT:
-				return arg1 + " < " + arg2;
+				out += arg1 + " < " + arg2;
 			case LTE:
-				return arg1 + " <= " + arg2;
+				out += arg1 + " <= " + arg2;
 			case GT:
-				return arg1 + " > " + arg2;
+				out += arg1 + " > " + arg2;
 			case GTE:
-				return arg1 + " <= " + arg2;
+				out += arg1 + " <= " + arg2;
 		}
 		
-		return null;
+		return out;
 	}
 	
 	@Override

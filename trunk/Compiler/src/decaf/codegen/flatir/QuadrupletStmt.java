@@ -314,6 +314,18 @@ public class QuadrupletStmt extends LIRStatement {
 		return true;
 	}
 	
+	@Override
+	public boolean isAvailableExpression() {
+		if (!isExpressionStatement()) {
+			return false;
+		} else {
+			if (this.operator == QuadrupletOp.MOVE) {
+				return false;
+			}
+		}
+		return true;
+	}
+	
 	public int getMyId() {
 		return myId;
 	}
@@ -321,5 +333,14 @@ public class QuadrupletStmt extends LIRStatement {
 	public void setMyId() {
 		this.myId = ID;
 		QuadrupletStmt.ID++;
+	}
+	
+
+	public static int getID() {
+		return ID;
+	}
+
+	public static void setID(int iD) {
+		ID = iD;
 	}
 }

@@ -1,5 +1,6 @@
 package decaf.dataflow.global;
 
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.HashMap;
@@ -22,6 +23,7 @@ public class BlockAvailableExpressionGenerator {
 	private HashMap<String, List<CFGBlock>> cfgMap;
 	private HashMap<CFGBlock, BlockFlow> blockAvailableDefs;
 	private HashMap<CFGBlock, List<AvailableExpression>> blockExpressions;
+	private List<CFGBlock> orderProcessed;
 	private HashSet<CFGBlock> cfgBlocksToProcess;
 	// Map from Name to IDs of QuadrupletStmt which assign to that Name
 	private HashMap<Name, HashSet<Integer>> nameToExprIds;
@@ -33,13 +35,8 @@ public class BlockAvailableExpressionGenerator {
 		blockAvailableDefs = new HashMap<CFGBlock, BlockFlow>();
 		blockExpressions = new HashMap<CFGBlock, List<AvailableExpression>>();
 		cfgBlocksToProcess = new HashSet<CFGBlock>();
+		orderProcessed = new ArrayList<CFGBlock>();
 		totalExpressionStmts = 0;
-		
-		while (cfgBlocksToProcess.size() != 0) {
-			CFGBlock block = (CFGBlock)(cfgBlocksToProcess.toArray())[0];
-			BlockFlow bFlow = generateForBlock(block);
-			blockAvailableDefs.put(block, bFlow);
-		}
 	}
 	
 	public void generate() {
@@ -50,6 +47,13 @@ public class BlockAvailableExpressionGenerator {
 		calculateGenKillSets(entry, entryBlockFlow);
 		entryBlockFlow.setOut(entryBlockFlow.getGen());
 		cfgBlocksToProcess.remove(entry);
+		orderProcessed.add(entry);
+		
+		while (cfgBlocksToProcess.size() != 0) {
+			CFGBlock block = (CFGBlock)(cfgBlocksToProcess.toArray())[0];
+			BlockFlow bFlow = generateForBlock(block);
+			blockAvailableDefs.put(block, bFlow);
+		}
 	}
 	
 	public void initialize() {
@@ -123,6 +127,10 @@ public class BlockAvailableExpressionGenerator {
 		}
 		// Remove this block, since it has been processed
 		cfgBlocksToProcess.remove(block);
+		if (orderProcessed.contains(block)) {
+			orderProcessed.remove(block);
+		}
+		orderProcessed.add(block);
 		blockAvailableDefs.put(block, bFlow);
 		return bFlow;
 	}
@@ -179,6 +187,22 @@ public class BlockAvailableExpressionGenerator {
 				kill.set(index, true); // Ensures Kill is always a subset of In
 			}
 		}
+	}
+	
+	public void printBlocksAvailableExpressions(PrintStream out) {
+		for (CFGBlock block : orderProcessed) {
+			printBlockAvailableExpressions(out, block);
+		}
+	}
+	
+	public void printBlockAvailableExpressions(PrintStream out, CFGBlock block) {
+		out.println("----- NEW BLOCK -----");
+		out.println(block);
+		out.println("Block available expressions: ");
+		for (AvailableExpression expr : blockExpressions.get(block))  {
+			out.println("\t"+expr);
+		}
+		out.println(blockAvailableDefs.get(block));
 	}
 	
 	public HashMap<Name, HashSet<Integer>> getNameToExprIds() {
