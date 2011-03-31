@@ -241,11 +241,11 @@ public class BlockAvailableExpressionGenerator {
 		this.nameToExprIds = nameToStmtIds;
 	}
 	
-	public HashMap<CFGBlock, BlockFlow> getBlockReachingDefs() {
+	public HashMap<CFGBlock, BlockFlow> getBlockAvailableDefs() {
 		return blockAvailableDefs;
 	}
 
-	public void setBlockReachingDefs(HashMap<CFGBlock, BlockFlow> blockReachingDefs) {
+	public void setBlockAvailableDefs(HashMap<CFGBlock, BlockFlow> blockReachingDefs) {
 		this.blockAvailableDefs = blockReachingDefs;
 	}
 

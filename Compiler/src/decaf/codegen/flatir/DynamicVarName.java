@@ -9,10 +9,19 @@ package decaf.codegen.flatir;
 public class DynamicVarName extends Name {
 	public static int ID = 0;
 	public static String NAME = "$tmp";
+	private boolean forGlobal;
+
 	private int myId;
 	
 	public DynamicVarName() {
 		this.myId = ID;
+		this.forGlobal = false;
+		ID++;
+	}
+	
+	public DynamicVarName(boolean forGlobal) {
+		this.myId = ID;
+		this.forGlobal = forGlobal;
 		ID++;
 	}
 	
@@ -20,6 +29,14 @@ public class DynamicVarName extends Name {
 		ID = 0;
 	}
 
+	public boolean isForGlobal() {
+		return forGlobal;
+	}
+
+	public void setForGlobal(boolean forGlobal) {
+		this.forGlobal = forGlobal;
+	}
+	
 	public int getMyId() {
 		return myId;
 	}
@@ -35,7 +52,7 @@ public class DynamicVarName extends Name {
 	
 	@Override 
 	public String toString() {
-		return NAME + myId;
+		return NAME + ((forGlobal) ? "_global" : "") + myId;
 	}
 	
 	@Override
@@ -44,7 +61,7 @@ public class DynamicVarName extends Name {
 	}
 	
 	public String hashString() {
-		return ("DynamicTemporary#" + myId);
+		return ((forGlobal) ? "Global" : "" + "DynamicTemporary#" + myId);
 	}
 	
 	@Override 
