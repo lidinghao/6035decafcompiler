@@ -8,7 +8,7 @@ package decaf.codegen.flatir;
 
 public class DynamicVarName extends Name {
 	public static int ID = 0;
-	public static String NAME = "$tmp";
+	public static String NAME = "tmp";
 	private boolean forGlobal;
 
 	private int myId;
@@ -52,7 +52,7 @@ public class DynamicVarName extends Name {
 	
 	@Override 
 	public String toString() {
-		return NAME + ((forGlobal) ? "_global" : "") + myId;
+		return "$" + ((forGlobal) ? "g" : "") + NAME + myId;
 	}
 	
 	@Override
@@ -61,7 +61,7 @@ public class DynamicVarName extends Name {
 	}
 	
 	public String hashString() {
-		return ((forGlobal) ? "Global" : "" + "DynamicTemporary#" + myId);
+		return ((forGlobal) ? "Global" : "") + "DynamicTemporary#" + myId;
 	}
 	
 	@Override 
