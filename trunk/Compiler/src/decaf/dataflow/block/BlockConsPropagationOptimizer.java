@@ -60,28 +60,7 @@ public class BlockConsPropagationOptimizer {
 			if (!stmt.isExpressionStatement()) {
 				// TODO: May have to change this after RegisterAllocator is implemented
 				if (stmt.getClass().equals(CallStmt.class)) {			
-					// Invalidate arg registers
-					for (int i = 0; i < ExpressionFlattenerVisitor.argumentRegs.length; i++) {
-						this.constantMap.remove(new RegisterName(ExpressionFlattenerVisitor.argumentRegs[i]));
-					}
-					
-					// Reset symbolic value for %RAX
-					this.constantMap.remove(new RegisterName(Register.RAX)); 
-					
-					// Invalidate global vars;
-					List<Name> namesToRemove = new ArrayList<Name>();
-					for (Name name: this.constantMap.keySet()) {
-						if (name.getClass().equals(VarName.class)) {
-							VarName var = (VarName) name;
-							if (var.getBlockId() == -1) { // Global
-								namesToRemove.add(name);
-							}
-						}
-					}
-					
-					for (Name name: namesToRemove) {
-						this.constantMap.remove(name);
-					}
+					invalidateFunctionCall();
 				}
 				continue;
 			}
@@ -89,6 +68,31 @@ public class BlockConsPropagationOptimizer {
 			QuadrupletStmt qStmt = (QuadrupletStmt) stmt;
 			processStatement(qStmt);
 		}		
+	}
+
+	private void invalidateFunctionCall() {
+		// Invalidate arg registers
+		for (int i = 0; i < ExpressionFlattenerVisitor.argumentRegs.length; i++) {
+			this.constantMap.remove(new RegisterName(ExpressionFlattenerVisitor.argumentRegs[i]));
+		}
+		
+		// Reset symbolic value for %RAX
+		this.constantMap.remove(new RegisterName(Register.RAX)); 
+		
+		// Invalidate global vars;
+		List<Name> namesToRemove = new ArrayList<Name>();
+		for (Name name: this.constantMap.keySet()) {
+			if (name.getClass().equals(VarName.class)) {
+				VarName var = (VarName) name;
+				if (var.getBlockId() == -1) { // Global
+					namesToRemove.add(name);
+				}
+			}
+		}
+		
+		for (Name name: namesToRemove) {
+			this.constantMap.remove(name);
+		}
 	}
 
 	private void processStatement(QuadrupletStmt qStmt) {
@@ -116,7 +120,7 @@ public class BlockConsPropagationOptimizer {
 			Integer arg1 = null;
 			Integer arg2 = null;
 			
-			// Check arg1
+			// Check arg1 is in constant map
 			if (this.constantMap.containsKey(qStmt.getArg1())) {
 				int val = this.constantMap.get(qStmt.getArg1());
 				qStmt.setArg1(new ConstantName(val));
@@ -125,13 +129,23 @@ public class BlockConsPropagationOptimizer {
 				arg1 = val;
 			}
 			
-			// Check arg2
+			// Check arg1 is constant
+			if (qStmt.getArg1() != null && qStmt.getArg1().getClass().equals(ConstantName.class)) {
+				arg1 = Integer.parseInt(((ConstantName)qStmt.getArg1()).getValue());
+			}
+			
+			// Check arg2 is in constant map
 			if (this.constantMap.containsKey(qStmt.getArg2())) {
 				int val = this.constantMap.get(qStmt.getArg2());
 				qStmt.setArg2(new ConstantName(val));
 				this.constantMap.put(qStmt.getDestination(), val);
 				
 				arg2 = val;
+			}
+			
+			// Check arg2 is constant
+			if (qStmt.getArg2() != null && qStmt.getArg2().getClass().equals(ConstantName.class)) {
+				arg2 = Integer.parseInt(((ConstantName)qStmt.getArg2()).getValue());
 			}
 			
 			// Remove dest
