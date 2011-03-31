@@ -35,6 +35,8 @@ public class GlobalCSEOptimizer {
 	}
 	
 	public void performGlobalCSE() {
+		if (availableGenerator.getTotalExpressionStmts() == 0)
+			return;
 		initialize();
 		for (String s: this.cfgMap.keySet()) {
 			if (s.equals(ProgramFlattener.exceptionHandlerLabel)) continue;
@@ -95,8 +97,11 @@ public class GlobalCSEOptimizer {
 			
 			BitSet availableExprsInMethod = new BitSet(availableGenerator.getTotalExpressionStmts());
 			for (CFGBlock block: this.cfgMap.get(s)) {
-				availableExprsInMethod.or(blockFlowMap.get(block).getIn());
-				availableExprsInMethod.or(blockFlowMap.get(block).getOut());
+				BlockFlow b = blockFlowMap.get(block);
+				if (b != null) {
+					availableExprsInMethod.or(b.getIn());
+					availableExprsInMethod.or(b.getOut());
+				}
 			}
 			
 			int tempsNeeded = availableExprsInMethod.cardinality();
