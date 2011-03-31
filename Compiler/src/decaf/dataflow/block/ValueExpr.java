@@ -49,6 +49,9 @@ public class ValueExpr {
 	
 	@Override
 	public int hashCode() {
+		if (op == ValueExprOp.ADD || op == ValueExprOp.MUL) {
+			return 13 * (val1.hashCode() + val2.hashCode()) + 23 * op.toString().hashCode();
+		}
 		if (val2 == null) {
 			return 17 * val1.hashCode() + 23 * op.toString().hashCode();
 		}
