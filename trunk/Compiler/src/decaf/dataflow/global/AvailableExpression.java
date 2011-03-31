@@ -2,7 +2,6 @@ package decaf.dataflow.global;
 
 import decaf.codegen.flatir.Name;
 import decaf.codegen.flatir.QuadrupletOp;
-import decaf.codegen.flatir.QuadrupletStmt;
 
 public class AvailableExpression {
 	private Name arg1;
