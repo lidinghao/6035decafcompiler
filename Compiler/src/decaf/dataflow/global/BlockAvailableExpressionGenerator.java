@@ -52,6 +52,7 @@ public class BlockAvailableExpressionGenerator {
 		cfgBlocksToProcess.remove(entry);
 		orderProcessed.add(entry);
 		blockAvailableDefs.put(entry, entryBlockFlow);
+		printBlockAvailableExpressions(System.out, entry);
 		
 		while (cfgBlocksToProcess.size() != 0) {
 			CFGBlock block = (CFGBlock)(cfgBlocksToProcess.toArray())[0];
@@ -110,6 +111,12 @@ public class BlockAvailableExpressionGenerator {
 	}
 	
 	public BlockFlow generateForBlock(CFGBlock block) {
+		BitSet origOut;
+		if (blockAvailableDefs.containsKey(block)) {
+			origOut = blockAvailableDefs.get(block).getOut();
+		} else {
+			origOut = new BitSet(totalExpressionStmts);
+		}
 		BlockFlow bFlow = new BlockFlow(totalExpressionStmts);
 		// If there exists at least one predecessor, set In to null
 		if (block.getPredecessors().size() > 0) {
@@ -124,11 +131,10 @@ public class BlockAvailableExpressionGenerator {
 				in.clear();
 				break;
 			}
-		} 
+		}
 		calculateGenKillSets(block, bFlow);
 		// Calculate Out
 		BitSet out = bFlow.getOut();
-		BitSet origOut = (BitSet)out.clone();
 		out.or(in);
 		out.xor(bFlow.getKill()); // Invariant: kill is a subset of in
 		out.or(bFlow.getGen());
