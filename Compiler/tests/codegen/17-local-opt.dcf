@@ -1,0 +1,13 @@
+class Program {
+	void main() {
+		int a, b, c, x, y, z;
+		x = 1;
+		y = 2;
+		z = 3;
+		a = x+y;
+		b = a+z;
+		b = b+y;
+		c = a+z;
+		callout("printf","done");
+	}
+}	
