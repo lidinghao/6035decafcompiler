@@ -151,12 +151,12 @@ class Main {
 				
 				// Global optimizations
 				
-				GlobalCSEOptimizer globalCSE = new GlobalCSEOptimizer(cb.getCfgMap(), pf);
 				System.out.println("\nGLOBAL OPTIMIZATIONS: ");
+				GlobalCSEOptimizer globalCSE = new GlobalCSEOptimizer(cb.getCfgMap(), pf);
 				globalCSE.getAvailableGenerator().printBlocksAvailableExpressions(System.out);
+				System.out.println("\nAFTER GLOBAL CSE: ");
 				globalCSE.performGlobalCSE();
 				globalCSE.printExprToTemp(System.out);
-				System.out.println("\nAFTER GLOBAL CSE: ");
 				pf.print(System.out);
 				
 				// Resolve names to locations
