@@ -98,7 +98,13 @@ public class AvailableExpression {
 	
 	@Override
 	public int hashCode() {
-		return toString().hashCode();
+		if (operator == QuadrupletOp.ADD || operator == QuadrupletOp.MUL) {
+			return 13 * (arg1.hashCode() + arg2.hashCode()) + 23 * operator.toString().hashCode();
+		}
+		if (arg2 == null) {
+			return 17 * arg1.hashCode() + 23 * operator.toString().hashCode();
+		}
+		return 17 * arg1.hashCode() + 19 * arg2.hashCode() + 23 * operator.toString().hashCode();
 	}
 	
 	@Override
@@ -107,6 +113,11 @@ public class AvailableExpression {
 		if (!o.getClass().equals(AvailableExpression.class)) return false;
 		
 		AvailableExpression expr = (AvailableExpression) o;
+		
+		if (operator == QuadrupletOp.ADD || operator == QuadrupletOp.MUL) {
+			return checkCommutative(expr);
+		}
+		
 		if (this.operator != expr.getOperator()) {
 			return false;
 		}
@@ -134,5 +145,17 @@ public class AvailableExpression {
 		}
 		
 		return true;
+	}
+
+	private boolean checkCommutative(AvailableExpression expr) {
+		if (expr.getArg1().equals(this.arg1) && expr.getArg2().equals(this.arg2)) {
+			return true;
+		}
+		
+		if (expr.getArg1().equals(this.arg2) && expr.getArg2().equals(this.arg1)) {
+			return true;
+		}
+		
+		return false;
 	}
 }
