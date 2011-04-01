@@ -1,0 +1,15 @@
+class Program {
+	int A;
+	
+	void main() {
+		int a, b;
+		
+		a = 10 + 5; // a = 15
+		a = a - 5; // a = 10
+		a = a % 8; // a = 2
+		a = a / 2; // a = 1
+		a = 10 * a; // a = 10
+		b = b + 16; // b = 16
+		a = a + b; // a = 26
+	}
+}
