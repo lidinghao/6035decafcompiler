@@ -8,23 +8,20 @@ class Program {
   }
 
   void main() {
-    int a, b, c, d, e;
+    int a, b, c, d;
     boolean x;
 
     a = get_int(2);
     b = get_int(3);
     x = get_bool(true);
-    c = 0; d = 0; e = 0;
+    c = 0; d = 0;
 
-    c = a + b;
     if (x) {
-      d = a + b;
-      a = 1;
+      c = a + b;
     }
-    e = a + b;
+    d = a + b;
 
     callout("printf", "%d\n", c);
     callout("printf", "%d\n", d);
-    callout("printf", "%d\n", e);
   }
 }

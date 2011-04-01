@@ -1,19 +1,10 @@
 package decaf;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
 
-import decaf.codegen.flatir.LIRStatement;
-import decaf.codegen.flatir.LabelStmt;
 import decaf.codegen.flattener.CodeGenerator;
 import decaf.codegen.flattener.LocationResolver;
-import decaf.codegen.flattener.MethodFlatennerVisitor;
 import decaf.codegen.flattener.ProgramFlattener;
-import decaf.codegen.flattener.TempNameIndexer;
-import decaf.dataflow.block.BlockCSEOptimizer;
-import decaf.dataflow.block.BlockCopyPropagationOptimizer;
-import decaf.dataflow.block.BlockDeadCodeOptimizer;
 import decaf.dataflow.block.BlockOptimizer;
 import decaf.dataflow.cfg.CFGBuilder;
 import decaf.dataflow.cfg.LeaderElector;
@@ -30,7 +21,7 @@ import java6035.tools.CLI.*;
 class Main {
 	public static void main(String[] args) {
 		try {
-			String[] optnames = {"all", "cse", "copy", "const", "dc" };
+			String[] optnames = {"all", "cse", "cp", "const", "dc" };
 			CLI.parse(args, optnames);
 
 			InputStream inputStream = args.length == 0 ? System.in
@@ -130,22 +121,26 @@ class Main {
 				ProgramFlattener pf = new ProgramFlattener(cd);
 				pf.flatten();
 				
-				if (CLI.debug && !(CLI.opts[0] || CLI.opts[1] || CLI.opts[2] || CLI.opts[3] || CLI.opts[4])) {
+				if (CLI.debug) {
 					System.out.println("Low-level IR:");
 					pf.print(System.out);
 					System.out.println();
 				}
+				
+				// Select leaders
+				LeaderElector le = new LeaderElector(pf.getLirMap());
+				le.electLeaders();
+				
+				// Generate CFGs for methods
+				CFGBuilder cb = new CFGBuilder(pf.getLirMap());
+				cb.generateCFGs();
+				
 				if (CLI.opts[0] || CLI.opts[1] || CLI.opts[2] || CLI.opts[3] || CLI.opts[4]) {
-					// Select leaders
-					LeaderElector le = new LeaderElector(pf.getLirMap());
-					le.electLeaders();
-					
-					// Generate CFGs for methods
-					CFGBuilder cb = new CFGBuilder(pf.getLirMap());
-					cb.generateCFGs();
+					if (CLI.debug) {
+						cb.printCFG(System.out);
+					}
 					
 					// Block optimizations
-					
 					BlockOptimizer bo = new BlockOptimizer(cb, pf);
 					bo.optimizeBlocks(CLI.opts);
 					
@@ -156,7 +151,6 @@ class Main {
 					}
 					
 					// Global optimizations
-					
 					GlobalOptimizer go = new GlobalOptimizer(cb, pf);
 					go.optimizeBlocks(CLI.opts);
 					
@@ -173,17 +167,17 @@ class Main {
 						System.out.println();
 					}
 				} 
+								
+				cb.printCFG(System.out);
 
 				// Resolve names to locations
 				LocationResolver lr = new LocationResolver(pf, cd);
 				lr.resolveLocations();
 				
-				if (CLI.debug && !(CLI.opts[0] || CLI.opts[1] || CLI.opts[2] || CLI.opts[3] || CLI.opts[4])) {
+				if (CLI.debug) {
 					System.out.println("Name -> Locations Mapping:");
 					lr.printLocations(System.out);
 				}
-				
-				
 				
 				// Generate code to file
 				CodeGenerator cg = new CodeGenerator(pf, cd, CLI.outfile);

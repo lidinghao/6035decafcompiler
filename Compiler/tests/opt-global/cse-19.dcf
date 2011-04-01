@@ -7,7 +7,7 @@ class Program {
 			b = A + B;
 		}
 		else {
-			c = A + B;
+			c = B + A;
 		}
 	}
 }

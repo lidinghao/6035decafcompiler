@@ -3,11 +3,13 @@
 	.string	"RUNTIME ERROR: Array index out of bounds (%d, %d)\n"
 .methodcfend:
 	.string	"RUNTIME ERROR: Method at (%d, %d) reached end of control flow without returning\n"
+	.comm	a, 1, 8
+	.comm	b, 1, 8
+	.comm	c, 1, 8
+	.comm	d, 1, 8
 .main_str0:
 	.string	"%d\n"
 .main_str1:
-	.string	"%d\n"
-.main_str2:
 	.string	"%d\n"
 
 .text
@@ -23,105 +25,65 @@ get_int:
 .get_int_cfendhandler:
 	mov	$.methodcfend, %r10
 	mov	%r10, %rdi
-	mov	$2, %r10
+	mov	$4, %r10
 	mov	%r10, %rsi
 	mov	$14, %r10
 	mov	%r10, %rdx
 	call	exception_handler
 .get_int_end:
 
-get_bool:
-	enter	$8, $0
-	mov	%rdi, %r10
-	mov	%r10, -8(%rbp)
-	mov	-8(%rbp), %r10
-	mov	%r10, %rax
+foo:
+	enter	$0, $0
+	mov	$1, %r10
+	mov	%r10, a
 	leave
 	ret
-.get_bool_cfendhandler:
+.foo_cfendhandler:
 	mov	$.methodcfend, %r10
 	mov	%r10, %rdi
-	mov	$6, %r10
+	mov	$8, %r10
 	mov	%r10, %rsi
-	mov	$19, %r10
+	mov	$11, %r10
 	mov	%r10, %rdx
 	call	exception_handler
-.get_bool_end:
+.foo_end:
 
 	.globl main
 main:
-	enter	$72, $0
-	mov	$0, %r10
-	mov	%r10, -8(%rbp)
-	mov	$0, %r10
-	mov	%r10, -16(%rbp)
-	mov	$0, %r10
-	mov	%r10, -24(%rbp)
-	mov	$0, %r10
-	mov	%r10, -32(%rbp)
-	mov	$0, %r10
-	mov	%r10, -40(%rbp)
-	mov	$0, %r10
-	mov	%r10, -48(%rbp)
+	enter	$16, $0
 	mov	$2, %r10
 	mov	%r10, %rdi
 	call	get_int
 	mov	%rax, %r10
-	mov	%r10, -8(%rbp)
+	mov	%r10, a
 	mov	$3, %r10
 	mov	%r10, %rdi
 	call	get_int
 	mov	%rax, %r10
-	mov	%r10, -16(%rbp)
-	mov	$1, %r10
-	mov	%r10, %rdi
-	call	get_bool
-	mov	%rax, %r10
-	mov	%r10, -48(%rbp)
+	mov	%r10, b
 	mov	$0, %r10
-	mov	%r10, -24(%rbp)
+	mov	%r10, c
 	mov	$0, %r10
-	mov	%r10, -32(%rbp)
-	mov	$0, %r10
-	mov	%r10, -40(%rbp)
-	mov	-8(%rbp), %r10
-	mov	-16(%rbp), %r11
+	mov	%r10, d
+	mov	a, %r10
+	mov	b, %r11
 	add	%r11, %r10
-	mov	%r10, -24(%rbp)
-	mov	-24(%rbp), %r10
-	mov	%r10, -56(%rbp)
-.main_if1_test:
-	mov	-48(%rbp), %r10
-	mov	$0, %r11
-	cmp	%r11, %r10
-	jne	.main_if1_true
-.main_if1_else:
-	jmp	.main_if1_end
-.main_if1_true:
-	mov	-56(%rbp), %r10
-	mov	%r10, -32(%rbp)
-	mov	$1, %r10
-	mov	%r10, -8(%rbp)
-.main_if1_end:
-	mov	-56(%rbp), %r10
-	mov	%r10, -40(%rbp)
+	mov	%r10, c
+	call	foo
+	mov	a, %r10
+	mov	b, %r11
+	add	%r11, %r10
+	mov	%r10, d
 	mov	$.main_str0, %r10
 	mov	%r10, %rdi
-	mov	-24(%rbp), %r10
+	mov	c, %r10
 	mov	%r10, %rsi
 	mov	$0, %r10
 	mov	%r10, %rax
 	call	printf
 	mov	$.main_str1, %r10
 	mov	%r10, %rdi
-	mov	-32(%rbp), %r10
-	mov	%r10, %rsi
-	mov	$0, %r10
-	mov	%r10, %rax
-	call	printf
-	mov	$.main_str2, %r10
-	mov	%r10, %rdi
-	mov	-40(%rbp), %r10
+	mov	d, %r10
 	mov	%r10, %rsi
 	mov	$0, %r10
 	mov	%r10, %rax
@@ -133,7 +95,7 @@ main:
 .main_cfendhandler:
 	mov	$.methodcfend, %r10
 	mov	%r10, %rdi
-	mov	$10, %r10
+	mov	$12, %r10
 	mov	%r10, %rsi
 	mov	$12, %r10
 	mov	%r10, %rdx
