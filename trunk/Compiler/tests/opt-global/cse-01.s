@@ -7,8 +7,6 @@
 	.string	"%d\n"
 .main_str1:
 	.string	"%d\n"
-.main_str2:
-	.string	"%d\n"
 
 .text
 
@@ -30,27 +28,9 @@ get_int:
 	call	exception_handler
 .get_int_end:
 
-get_bool:
-	enter	$8, $0
-	mov	%rdi, %r10
-	mov	%r10, -8(%rbp)
-	mov	-8(%rbp), %r10
-	mov	%r10, %rax
-	leave
-	ret
-.get_bool_cfendhandler:
-	mov	$.methodcfend, %r10
-	mov	%r10, %rdi
-	mov	$6, %r10
-	mov	%r10, %rsi
-	mov	$19, %r10
-	mov	%r10, %rdx
-	call	exception_handler
-.get_bool_end:
-
 	.globl main
 main:
-	enter	$72, $0
+	enter	$48, $0
 	mov	$0, %r10
 	mov	%r10, -8(%rbp)
 	mov	$0, %r10
@@ -59,10 +39,6 @@ main:
 	mov	%r10, -24(%rbp)
 	mov	$0, %r10
 	mov	%r10, -32(%rbp)
-	mov	$0, %r10
-	mov	%r10, -40(%rbp)
-	mov	$0, %r10
-	mov	%r10, -48(%rbp)
 	mov	$2, %r10
 	mov	%r10, %rdi
 	call	get_int
@@ -73,55 +49,30 @@ main:
 	call	get_int
 	mov	%rax, %r10
 	mov	%r10, -16(%rbp)
-	mov	$1, %r10
-	mov	%r10, %rdi
-	call	get_bool
-	mov	%rax, %r10
-	mov	%r10, -48(%rbp)
 	mov	$0, %r10
 	mov	%r10, -24(%rbp)
 	mov	$0, %r10
 	mov	%r10, -32(%rbp)
-	mov	$0, %r10
-	mov	%r10, -40(%rbp)
 	mov	-8(%rbp), %r10
 	mov	-16(%rbp), %r11
 	add	%r11, %r10
 	mov	%r10, -24(%rbp)
 	mov	-24(%rbp), %r10
-	mov	%r10, -56(%rbp)
-.main_if1_test:
-	mov	-48(%rbp), %r10
-	mov	$0, %r11
-	cmp	%r11, %r10
-	jne	.main_if1_true
-.main_if1_else:
-	jmp	.main_if1_end
-.main_if1_true:
-	mov	-56(%rbp), %r10
-	mov	%r10, -32(%rbp)
-	mov	$1, %r10
-	mov	%r10, -8(%rbp)
-.main_if1_end:
-	mov	-56(%rbp), %r10
 	mov	%r10, -40(%rbp)
+	mov	-24(%rbp), %r10
+	mov	%r10, -32(%rbp)
 	mov	$.main_str0, %r10
 	mov	%r10, %rdi
 	mov	-24(%rbp), %r10
 	mov	%r10, %rsi
+	mov	%rsi, %r10
+	mov	%r10, -48(%rbp)
 	mov	$0, %r10
 	mov	%r10, %rax
 	call	printf
 	mov	$.main_str1, %r10
 	mov	%r10, %rdi
-	mov	-32(%rbp), %r10
-	mov	%r10, %rsi
-	mov	$0, %r10
-	mov	%r10, %rax
-	call	printf
-	mov	$.main_str2, %r10
-	mov	%r10, %rdi
-	mov	-40(%rbp), %r10
+	mov	-48(%rbp), %r10
 	mov	%r10, %rsi
 	mov	$0, %r10
 	mov	%r10, %rax
@@ -133,7 +84,7 @@ main:
 .main_cfendhandler:
 	mov	$.methodcfend, %r10
 	mov	%r10, %rdi
-	mov	$10, %r10
+	mov	$6, %r10
 	mov	%r10, %rsi
 	mov	$12, %r10
 	mov	%r10, %rdx

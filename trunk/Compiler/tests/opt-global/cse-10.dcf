@@ -16,10 +16,10 @@ class Program {
     x = get_bool(true);
     c = 0; d = 0; e = 0;
 
-    c = a + b;
     if (x) {
+      c = a + b;
+    } else {
       d = a + b;
-      a = 1;
     }
     e = a + b;
 

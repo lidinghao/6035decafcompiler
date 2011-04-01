@@ -12,7 +12,7 @@ class config:
   scanner_tests      = False
 
   parser_public_dir  = join(dirname(abspath(sys.argv[0])), "tests/parser/")
-  parser_hidden_dir  = join(dirname(abspath(sys.argv[0])), "parser/hidden")
+  parser_hidden_dir  = join(dirname(abspath(sys.argv[0])), "tests/parser/hidden")
   parser_tests       = False
 
   semantics_public_dir  = join(dirname(abspath(sys.argv[0])), "tests/semantics/")
@@ -22,9 +22,9 @@ class config:
   codegen_public_dir  = join(dirname(abspath(sys.argv[0])), "tests/codegen")
   codegen_hidden_dir  = join(dirname(abspath(sys.argv[0])), "tests/codegen/hidden")
   codegen_tests       = False
-  
+
   dataflow_public_dir  = join(dirname(abspath(sys.argv[0])), "tests/dataflow")
-  dataflow_hidden_dir  = join(dirname(abspath(sys.argv[0])), "tests/dataflow/hidden")
+  dataflow_hidden_dir  = None #join(dirname(abspath(sys.argv[0])), "tests/dataflow/hidden")
   dataflow_tests       = True
 
   need_64bit = True
