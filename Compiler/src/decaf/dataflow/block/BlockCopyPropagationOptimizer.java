@@ -7,10 +7,9 @@ import java.util.Iterator;
 import java.util.List;
 
 import decaf.codegen.flatir.CallStmt;
-import decaf.codegen.flatir.DataStmt;
-import decaf.codegen.flatir.DynamicVarName;
 import decaf.codegen.flatir.LIRStatement;
 import decaf.codegen.flatir.Name;
+import decaf.codegen.flatir.QuadrupletOp;
 import decaf.codegen.flatir.QuadrupletStmt;
 import decaf.codegen.flatir.Register;
 import decaf.codegen.flatir.RegisterName;
@@ -20,19 +19,22 @@ import decaf.codegen.flattener.ProgramFlattener;
 import decaf.dataflow.cfg.CFGBlock;
 
 public class BlockCopyPropagationOptimizer {
-	private HashMap<DynamicVarName, Name> tempToName;
-	private HashMap<Name, HashSet<DynamicVarName>> varToTemps;
+	public Class<?> cpType;
+	private HashMap<Name, Name> tempToName;
+	private HashMap<Name, HashSet<Name>> varToTemps;
 	private HashMap<String, List<CFGBlock>> cfgMap;
 	private ProgramFlattener pf;
 	
 	public BlockCopyPropagationOptimizer(HashMap<String, List<CFGBlock>> cfgMap, ProgramFlattener pf) {
-		this.tempToName = new HashMap<DynamicVarName, Name>();
-		this.varToTemps = new HashMap<Name, HashSet<DynamicVarName>>();
+		this.tempToName = new HashMap<Name, Name>();
+		this.varToTemps = new HashMap<Name, HashSet<Name>>();
 		this.cfgMap = cfgMap;
 		this.pf = pf;
 	}
 	
 	public void performCopyPropagation() {
+		reset();
+		
 		for (String s: this.cfgMap.keySet()) {
 			if (s.equals(ProgramFlattener.exceptionHandlerLabel)) continue;
 			
@@ -97,11 +99,11 @@ public class BlockCopyPropagationOptimizer {
 	}
 
 	private void resetVariable(Name dest) {
-		HashSet<DynamicVarName> tempsToAssignedName = this.varToTemps.get(dest);
+		HashSet<Name> tempsToAssignedName = this.varToTemps.get(dest);
 		if (tempsToAssignedName != null) {
-			Iterator<DynamicVarName> it = tempsToAssignedName.iterator();
+			Iterator<Name> it = tempsToAssignedName.iterator();
 			while (it.hasNext()) {
-				DynamicVarName temp = it.next();
+				Name temp = it.next();
 				this.tempToName.put(temp, temp);
 			}
 			
@@ -113,15 +115,14 @@ public class BlockCopyPropagationOptimizer {
 		Name dest = qStmt.getDestination();
 		
 		// If the Name being assigned is a DynamicVarName
-		if (dest.getClass().equals(DynamicVarName.class)) {
-			
+		if (dest.getClass().equals(cpType) && qStmt.getOperator().equals(QuadrupletOp.MOVE)) {
 			// Invariant: This statement has to be of the form [DynamicVarName = Name]
 			Name arg1 = qStmt.getArg1();
-			this.tempToName.put((DynamicVarName)dest, arg1);
+			this.tempToName.put(dest, arg1);
 			if (!this.varToTemps.containsKey(arg1)) {
-				this.varToTemps.put(arg1, new HashSet<DynamicVarName>());
+				this.varToTemps.put(arg1, new HashSet<Name>());
 			}
-			this.varToTemps.get(arg1).add((DynamicVarName)dest);
+			this.varToTemps.get(arg1).add(dest);
 			
 		} else {
 			// Check the operands, if any of them are DynamicVarName, replace with Name from the tempToName map
@@ -137,9 +138,9 @@ public class BlockCopyPropagationOptimizer {
 
 	public Name processArgument(Name arg1) {
 		if (arg1 != null) {
-			if (arg1.getClass().equals(DynamicVarName.class)) {
-				if (this.tempToName.containsKey((DynamicVarName)arg1)) {
-					return this.tempToName.get((DynamicVarName)arg1);
+			if (arg1.getClass().equals(cpType)) {
+				if (this.tempToName.containsKey(arg1)) {
+					return this.tempToName.get(arg1);
 				}
 			}
 		}
