@@ -1,5 +1,8 @@
 package decaf.dataflow.block;
 
+import decaf.codegen.flatir.DynamicVarName;
+import decaf.codegen.flatir.Name;
+import decaf.codegen.flatir.TempName;
 import decaf.codegen.flattener.ProgramFlattener;
 import decaf.dataflow.cfg.CFGBuilder;
 
@@ -19,11 +22,20 @@ public class BlockOptimizer {
 	public void optimizeBlocks(boolean[] opts) {
 		if(opts[1]) { // CSE
 			cse.performCSE();
-		} else if(opts[2]) { // COPY
+		}
+		if(opts[2]) { // COPY
+			copy.cpType = DynamicVarName.class;
 			copy.performCopyPropagation();
-		} else if(opts[3]) { // CONST
+			copy.cpType = TempName.class;
+			copy.performCopyPropagation();
+		} 
+		if(opts[3]) { // CONST
 			cons.performConsPropagation();
-		} else if(opts[4]) { // DC
+		} 
+		if(opts[4]) { // DC
+			dc.cpType = TempName.class;
+			dc.performDeadCodeElimination();
+			dc.cpType = DynamicVarName.class;
 			dc.performDeadCodeElimination();
 		}
 	}
