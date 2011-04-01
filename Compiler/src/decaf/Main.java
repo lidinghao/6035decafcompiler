@@ -30,7 +30,8 @@ import java6035.tools.CLI.*;
 class Main {
 	public static void main(String[] args) {
 		try {
-			CLI.parse(args, new String[0]);
+			String[] optnames = {"all", "cse", "copy", "const", "dc" };
+			CLI.parse(args, optnames);
 
 			InputStream inputStream = args.length == 0 ? System.in
 					: new java.io.FileInputStream(CLI.infile);
@@ -129,57 +130,60 @@ class Main {
 				ProgramFlattener pf = new ProgramFlattener(cd);
 				pf.flatten();
 				
-				if (CLI.debug) {
+				if (CLI.debug && !(CLI.opts[0] || CLI.opts[1] || CLI.opts[2] || CLI.opts[3] || CLI.opts[4])) {
 					System.out.println("Low-level IR:");
 					pf.print(System.out);
 					System.out.println();
 				}
-				
-				// Select leaders
-				LeaderElector le = new LeaderElector(pf.getLirMap());
-				le.electLeaders();
-				
-				// Generate CFGs for methods
-				CFGBuilder cb = new CFGBuilder(pf.getLirMap());
-				cb.generateCFGs();
-				
-				// Block optimizations
-				
-				BlockOptimizer bo = new BlockOptimizer(cb, pf);
-				bo.optimizeBlocks();
-				
-				if (CLI.debug) {
-					System.out.println("\nAFTER LOCAL OPTIMIZATIONS: \n");
-					pf.print(System.out);
-					System.out.println();
-				}
-				
-				// Global optimizations
-				
-				GlobalOptimizer go = new GlobalOptimizer(cb, pf);
-				go.optimizeBlocks();
-				
-				if (CLI.debug) {
-					System.out.println("\nAFTER GLOBAL OPTIMIZATIONS: \n");
-					GlobalCSEOptimizer globalCSE = go.getCse();
-					globalCSE.getAvailableGenerator().printBlocksAvailableExpressions(System.out);
-					System.out.println();
-					globalCSE.printExprToTemp(System.out);
-					System.out.println();
-					pf.print(System.out);
-					System.out.println();
-				}
-				
+				if (CLI.opts[0] || CLI.opts[1] || CLI.opts[2] || CLI.opts[3] || CLI.opts[4]) {
+					// Select leaders
+					LeaderElector le = new LeaderElector(pf.getLirMap());
+					le.electLeaders();
+					
+					// Generate CFGs for methods
+					CFGBuilder cb = new CFGBuilder(pf.getLirMap());
+					cb.generateCFGs();
+					
+					// Block optimizations
+					
+					BlockOptimizer bo = new BlockOptimizer(cb, pf);
+					bo.optimizeBlocks(CLI.opts);
+					
+					if (CLI.debug) {
+						System.out.println("\nAFTER LOCAL OPTIMIZATIONS: \n");
+						pf.print(System.out);
+						System.out.println();
+					}
+					
+					// Global optimizations
+					
+					GlobalOptimizer go = new GlobalOptimizer(cb, pf);
+					go.optimizeBlocks(CLI.opts);
+					
+					if (CLI.debug) {
+						System.out.println("\nAFTER GLOBAL OPTIMIZATIONS: \n");
+						GlobalCSEOptimizer globalCSE = go.getCse();
+						globalCSE.getAvailableGenerator().printBlocksAvailableExpressions(System.out);
+						System.out.println();
+						globalCSE.printExprToTemp(System.out);
+						System.out.println();
+						pf.print(System.out);
+						System.out.println();
+						cb.printCFG(System.out);
+						System.out.println();
+					}
+				} 
+
 				// Resolve names to locations
 				LocationResolver lr = new LocationResolver(pf, cd);
 				lr.resolveLocations();
 				
-				if (CLI.debug) {
+				if (CLI.debug && !(CLI.opts[0] || CLI.opts[1] || CLI.opts[2] || CLI.opts[3] || CLI.opts[4])) {
 					System.out.println("Name -> Locations Mapping:");
 					lr.printLocations(System.out);
 				}
 				
-				cb.printCFG(System.out);
+				
 				
 				// Generate code to file
 				CodeGenerator cg = new CodeGenerator(pf, cd, CLI.outfile);
