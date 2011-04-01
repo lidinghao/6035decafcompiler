@@ -13,8 +13,12 @@ public class GlobalOptimizer {
 	public void optimizeBlocks(boolean[] opts) {
 		if(opts[1]) { // CSE
 			cse.performGlobalCSE();
-		} else if(opts[2]) { // CP
-			//perform CP here
+		} else if(opts[2]) { // COPY
+			//perform copy propagation here
+		} else if(opts[3]) { // CONST
+			//perform constant propagation here
+		} else if(opts[4]) { // DC
+			//perform dead code elimination here
 		}
 	}
 	
