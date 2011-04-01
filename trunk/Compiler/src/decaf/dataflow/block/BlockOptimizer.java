@@ -16,10 +16,15 @@ public class BlockOptimizer {
 		dc = new BlockDeadCodeOptimizer(cb.getCfgMap(), pf);
 	}
 	
-	public void optimizeBlocks() {
-		cse.performCSE();
-		copy.performCopyPropagation();
-		cons.performConsPropagation();
-		dc.performDeadCodeElimination();
+	public void optimizeBlocks(boolean[] opts) {
+		if(opts[1]) { // CSE
+			cse.performCSE();
+		} else if(opts[2]) { // COPY
+			copy.performCopyPropagation();
+		} else if(opts[3]) { // CONST
+			cons.performConsPropagation();
+		} else if(opts[4]) { // DC
+			dc.performDeadCodeElimination();
+		}
 	}
 }
