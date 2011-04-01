@@ -1,0 +1,13 @@
+class Program {
+	int A, B;
+	void main() {
+		int a, b, c;
+		a = A + B;
+		if (true) {
+			b = A + B;
+		}
+		else {
+			c = A + B;
+		}
+	}
+}
