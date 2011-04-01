@@ -10,8 +10,12 @@ public class GlobalOptimizer {
 		cse = new GlobalCSEOptimizer(cb.getCfgMap(), pf);
 	}
 	
-	public void optimizeBlocks() {
-		cse.performGlobalCSE();
+	public void optimizeBlocks(boolean[] opts) {
+		if(opts[1]) { // CSE
+			cse.performGlobalCSE();
+		} else if(opts[2]) { // CP
+			//perform CP here
+		}
 	}
 	
 	public GlobalCSEOptimizer getCse() {
