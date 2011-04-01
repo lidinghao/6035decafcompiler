@@ -1,0 +1,15 @@
+class Program {
+	int A;
+	
+	void foo() {
+	}
+	
+	void main() {
+		int a, b, c;
+		
+		a = A + 5;
+		b = A + 5; // b = a
+		foo();
+		c = A + 5;
+	}
+}
