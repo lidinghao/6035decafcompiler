@@ -225,6 +225,8 @@ public class BlockAvailableExpressionGenerator {
 				if (in.get(index)) {
 					kill.set(index, true); // Ensures Kill is always a subset of In
 				}
+				// Remove from Gen if it exists
+				bFlow.getGen().set(index, false);
 			}
 		}
 	}
