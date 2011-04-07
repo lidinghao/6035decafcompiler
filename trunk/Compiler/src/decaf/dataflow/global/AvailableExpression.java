@@ -114,12 +114,12 @@ public class AvailableExpression {
 		
 		AvailableExpression expr = (AvailableExpression) o;
 		
-		if (operator == QuadrupletOp.ADD || operator == QuadrupletOp.MUL) {
-			return checkCommutative(expr);
-		}
-		
 		if (this.operator != expr.getOperator()) {
 			return false;
+		}
+		
+		if (operator == QuadrupletOp.ADD || operator == QuadrupletOp.MUL) {
+			return checkCommutative(expr);
 		}
 		
 		if (this.arg1 != null) {

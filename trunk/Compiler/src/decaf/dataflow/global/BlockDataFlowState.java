@@ -2,13 +2,13 @@ package decaf.dataflow.global;
 
 import java.util.BitSet;
 
-public class BlockFlow {
+public class BlockDataFlowState {
 	private BitSet in;
 	private BitSet out;
 	private BitSet kill;
 	private BitSet gen;
 
-	public BlockFlow(int bitSetSize) {
+	public BlockDataFlowState(int bitSetSize) {
 		in = new BitSet(bitSetSize);
 		out = new BitSet(bitSetSize);
 		kill = new BitSet(bitSetSize);

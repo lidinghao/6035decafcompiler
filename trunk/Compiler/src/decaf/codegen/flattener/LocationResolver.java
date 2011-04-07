@@ -50,6 +50,17 @@ public class LocationResolver {
 					resolveName(pushStmt.getAddress());
 				}
 			}
+			
+			int offset = (this.stackOffset * -1) - 1;
+			setStackOffset(entry.getValue(), offset);
+		}
+	}
+
+	private void setStackOffset(List<LIRStatement> value, int offset) {
+		for (LIRStatement stmt: value) {
+			if (stmt.getClass().equals(EnterStmt.class)) {
+				((EnterStmt)stmt).setStackSize(offset);
+			}
 		}
 	}
 

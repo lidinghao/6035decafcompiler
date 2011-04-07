@@ -2,8 +2,6 @@ package decaf.dataflow.block;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 
 import decaf.codegen.flatir.CallStmt;
@@ -18,16 +16,13 @@ import decaf.codegen.flattener.ExpressionFlattenerVisitor;
 import decaf.codegen.flattener.ProgramFlattener;
 import decaf.dataflow.cfg.CFGBlock;
 
-public class BlockCopyPropagationOptimizer {
-	public Class<?> cpType;
-	private HashMap<Name, Name> tempToName;
-	private HashMap<Name, HashSet<Name>> varToTemps;
+public class BlockVarCPOptimizer {
+	private HashMap<Name, Name> varToVar;
 	private HashMap<String, List<CFGBlock>> cfgMap;
 	private ProgramFlattener pf;
 	
-	public BlockCopyPropagationOptimizer(HashMap<String, List<CFGBlock>> cfgMap, ProgramFlattener pf) {
-		this.tempToName = new HashMap<Name, Name>();
-		this.varToTemps = new HashMap<Name, HashSet<Name>>();
+	public BlockVarCPOptimizer(HashMap<String, List<CFGBlock>> cfgMap, ProgramFlattener pf) {
+		this.varToVar = new HashMap<Name, Name>();
 		this.cfgMap = cfgMap;
 		this.pf = pf;
 	}
@@ -53,7 +48,7 @@ public class BlockCopyPropagationOptimizer {
 			pf.getLirMap().put(s, stmts);
 		}
 	}
-	
+
 	public CFGBlock getBlockWithIndex(int i, List<CFGBlock> list) {
 		for (CFGBlock block: list) {
 			if (block.getIndex() == i) {
@@ -63,14 +58,14 @@ public class BlockCopyPropagationOptimizer {
 		
 		return null;
 	}
-	
+
 	public void optimize(CFGBlock block) {
 		for (LIRStatement stmt: block.getStatements()) {
 			if (!stmt.isExpressionStatement()) {
-				// TODO: May have to change this after RegisterAllocator is implemented
 				if (stmt.getClass().equals(CallStmt.class)) {
 					RegisterName reg;
 					
+					// TODO: May have to change this after RegisterAllocator is implemented
 					// Invalidate arg registers
 					for (int i = 0; i < ExpressionFlattenerVisitor.argumentRegs.length; i++) {
 						reg = new RegisterName(ExpressionFlattenerVisitor.argumentRegs[i]);
@@ -81,49 +76,45 @@ public class BlockCopyPropagationOptimizer {
 					reg = new RegisterName(Register.RAX);
 					resetVariable(reg);
 					
-					// Invalidate global vars;
-					for (Name name: this.varToTemps.keySet()) {
+					// Invalidate global vars and Vars to Registers
+					List<Name> resetName = new ArrayList<Name>();
+					for (Name name: this.varToVar.keySet()) {
 						if (name.getClass().equals(VarName.class)) {
 							VarName var = (VarName) name;
 							if (var.getBlockId() == -1) { // Global
-								resetVariable(name);
+								resetName.add(name);
 							}
 						}
+						
+						// TODO: Might change this after Register Allocator
+						if (this.varToVar.get(name).getClass().equals(RegisterName.class)) {
+							resetName.add(name);
+						}
+					}
+					
+					for (Name name: resetName) {
+						resetVariable(name);
 					}
 				}
 				continue;
 			}
+			
 			QuadrupletStmt qStmt = (QuadrupletStmt) stmt;
 			processStatement(qStmt);
 		}
 	}
 
-	private void resetVariable(Name dest) {
-		HashSet<Name> tempsToAssignedName = this.varToTemps.get(dest);
-		if (tempsToAssignedName != null) {
-			Iterator<Name> it = tempsToAssignedName.iterator();
-			while (it.hasNext()) {
-				Name temp = it.next();
-				this.tempToName.put(temp, temp);
-			}
-			
-			this.varToTemps.get(dest).clear();
-		}
-	}
-	
-	public void processStatement(QuadrupletStmt qStmt) {
+	private void processStatement(QuadrupletStmt qStmt) {
 		Name dest = qStmt.getDestination();
 		
-		// If the Name being assigned is a DynamicVarName
-		if (dest.getClass().equals(cpType) && qStmt.getOperator().equals(QuadrupletOp.MOVE)) {
+		// If the Name being assigned is a not a DynamicVarName
+		if (qStmt.getOperator().equals(QuadrupletOp.MOVE)) {
 			// Invariant: This statement has to be of the form [DynamicVarName = Name]
-			Name arg1 = qStmt.getArg1();
-			this.tempToName.put(dest, arg1);
-			if (!this.varToTemps.containsKey(arg1)) {
-				this.varToTemps.put(arg1, new HashSet<Name>());
-			}
-			this.varToTemps.get(arg1).add(dest);
+			Name newArg1 = processArgument(qStmt.getArg1());
+			qStmt.setArg1(newArg1);
 			
+			resetVariable(dest);
+			this.varToVar.put(dest, newArg1);
 		} else {
 			// Check the operands, if any of them are DynamicVarName, replace with Name from the tempToName map
 			Name newArg1 = processArgument(qStmt.getArg1());
@@ -131,24 +122,38 @@ public class BlockCopyPropagationOptimizer {
 			qStmt.setArg1(newArg1);
 			qStmt.setArg2(newArg2);
 			
-			// Clear varToTemps for the Name that was assigned, make the temps point to themselves
+			// Clear varToVar for the Name that was assigned, make the temps point to themselves
 			resetVariable(dest);
-		}
+		}		
 	}
 
-	public Name processArgument(Name arg1) {
+	private Name processArgument(Name arg1) {
 		if (arg1 != null) {
-			if (arg1.getClass().equals(cpType)) {
-				if (this.tempToName.containsKey(arg1)) {
-					return this.tempToName.get(arg1);
-				}
+			if (this.varToVar.containsKey(arg1)) {
+				return this.varToVar.get(arg1);
 			}
 		}
 		return arg1;
 	}
-	
-	public void reset() {
-		tempToName.clear();
-		varToTemps.clear();
+
+	private void resetVariable(Name name) {
+		if (name == null) return;
+		
+		this.varToVar.remove(name);	
+		
+		List<Name> varsToRemove = new ArrayList<Name>();
+		for (Name key: this.varToVar.keySet()) {
+			if (this.varToVar.get(key).equals(name)) {
+				varsToRemove.add(key);
+			}
+		}
+		
+		for (Name n: varsToRemove) {
+			this.varToVar.remove(n);
+		}
+	}
+
+	private void reset() {
+		this.varToVar.clear();		
 	}
 }

@@ -1,0 +1,9 @@
+class Program {
+	void foo(int a, int b, int c, int d) {
+		c = a + b + a + d;
+	}
+	
+	void main() {
+		
+	}
+}

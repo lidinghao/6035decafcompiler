@@ -18,7 +18,7 @@
 .text
 
 test_long_args:
-	enter	$96, $0
+	enter	$64, $0
 	mov	%rdi, %r10
 	mov	%r10, -8(%rbp)
 	mov	%rsi, %r10
@@ -36,25 +36,17 @@ test_long_args:
 	add	%r11, %r10
 	mov	%r10, -56(%rbp)
 	mov	-56(%rbp), %r10
-	mov	%r10, -64(%rbp)
-	mov	-56(%rbp), %r10
 	mov	-24(%rbp), %r11
 	add	%r11, %r10
 	mov	%r10, -56(%rbp)
-	mov	-56(%rbp), %r10
-	mov	%r10, -72(%rbp)
 	mov	-56(%rbp), %r10
 	mov	-32(%rbp), %r11
 	add	%r11, %r10
 	mov	%r10, -56(%rbp)
 	mov	-56(%rbp), %r10
-	mov	%r10, -80(%rbp)
-	mov	-56(%rbp), %r10
 	mov	-40(%rbp), %r11
 	add	%r11, %r10
 	mov	%r10, -56(%rbp)
-	mov	-56(%rbp), %r10
-	mov	%r10, -88(%rbp)
 	mov	-56(%rbp), %r10
 	mov	-48(%rbp), %r11
 	add	%r11, %r10
@@ -80,17 +72,27 @@ test_long_args:
 	mov	$2, %r11
 	sub	%r11, %r10
 	mov	%r10, %rsp
+	mov	-8(%rbp), %r10
+	mov	-16(%rbp), %r11
+	add	%r11, %r10
+	mov	%r10, -64(%rbp)
 	mov	-64(%rbp), %r10
-	mov	%r10, -96(%rbp)
-	mov	-72(%rbp), %r10
-	mov	%r10, -96(%rbp)
-	mov	-80(%rbp), %r10
-	mov	%r10, -96(%rbp)
-	mov	-88(%rbp), %r10
-	mov	%r10, -96(%rbp)
-	mov	-56(%rbp), %r10
-	mov	%r10, -96(%rbp)
-	mov	-96(%rbp), %r10
+	mov	-24(%rbp), %r11
+	add	%r11, %r10
+	mov	%r10, -64(%rbp)
+	mov	-64(%rbp), %r10
+	mov	-32(%rbp), %r11
+	add	%r11, %r10
+	mov	%r10, -64(%rbp)
+	mov	-64(%rbp), %r10
+	mov	-40(%rbp), %r11
+	add	%r11, %r10
+	mov	%r10, -64(%rbp)
+	mov	-64(%rbp), %r10
+	mov	-48(%rbp), %r11
+	add	%r11, %r10
+	mov	%r10, -64(%rbp)
+	mov	-64(%rbp), %r10
 	mov	%r10, %rax
 	leave
 	ret
@@ -167,31 +169,31 @@ main:
 	mov	%r10, -8(%rbp)
 	mov	$.main_str1, %r10
 	mov	%r10, %rdi
-	mov	$13, %r10
+	mov	field_in_class, %r10
 	mov	%r10, %rsi
-	mov	$14, %r10
+	mov	-8(%rbp), %r10
 	mov	%r10, %rdx
 	mov	$0, %r10
 	mov	%r10, %rax
 	call	printf
 	mov	field_in_class, %r10
 	mov	%r10, %rdi
-	mov	$14, %r10
+	mov	-8(%rbp), %r10
 	mov	%r10, %rsi
-	mov	$14, %r10
+	mov	-8(%rbp), %r10
 	mov	%r10, %rdx
 	call	test_args
 	mov	field_in_class, %r10
 	mov	%r10, %rdi
-	mov	%rdi, %r10
+	mov	field_in_class, %r10
 	mov	%r10, %rsi
-	mov	%rdi, %r10
+	mov	field_in_class, %r10
 	mov	%r10, %rdx
-	mov	$14, %r10
+	mov	-8(%rbp), %r10
 	mov	%r10, %rcx
-	mov	$14, %r10
+	mov	-8(%rbp), %r10
 	mov	%r10, %r8
-	mov	$14, %r10
+	mov	-8(%rbp), %r10
 	mov	%r10, %r9
 	call	test_long_args
 	mov	%rax, %r10

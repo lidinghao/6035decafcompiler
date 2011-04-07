@@ -24,7 +24,6 @@ public class BlockCSEOptimizer {
 	private HashMap<ValueExpr, DynamicVarName> expToTemp;
 	private HashMap<String, List<CFGBlock>> cfgMap;
 	private ProgramFlattener pf;
-	private int tempCount;
 	
 	public BlockCSEOptimizer(HashMap<String, List<CFGBlock>> cfgMap, ProgramFlattener pf) {
 		this.varToVal = new HashMap<Name, SymbolicValue>();
@@ -32,7 +31,6 @@ public class BlockCSEOptimizer {
 		this.expToTemp = new HashMap<ValueExpr, DynamicVarName>();
 		this.cfgMap = cfgMap;
 		this.pf = pf;
-		this.tempCount = 0;
 	}
 	
 	public void performCSE() {
@@ -45,18 +43,6 @@ public class BlockCSEOptimizer {
 				reset();
 			}
 			
-			// Fix stack size
-			for (CFGBlock block: this.cfgMap.get(s)) {
-				if (block.getIndex() == 0) {
-					for (LIRStatement stmt: block.getStatements()) {
-						if (stmt.getClass().equals(EnterStmt.class)) {
-							EnterStmt enter = (EnterStmt) stmt;
-							enter.setStackSize(enter.getStackSize() + tempCount);
-						}
-					}
-				}
-			}
-			
 			// Change statements
 			List<LIRStatement> stmts = new ArrayList<LIRStatement>();
 			
@@ -65,8 +51,6 @@ public class BlockCSEOptimizer {
 			}
 			
 			pf.getLirMap().put(s, stmts);
-			
-			this.tempCount = 0;
 		}
 	}
 	
@@ -138,7 +122,6 @@ public class BlockCSEOptimizer {
 			DynamicVarName temp = new DynamicVarName();
 			expToTemp.put(expr, temp);
 			newStmts.add(new QuadrupletStmt(QuadrupletOp.MOVE, temp, qStmt.getDestination(), null));
-			tempCount++;
 		}
 		else {
 			dest = expToVal.get(expr);

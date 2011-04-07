@@ -36,13 +36,13 @@ public class GlobalCSEOptimizer {
 	public void performGlobalCSE() {
 		if (availableGenerator.getTotalExpressionStmts() == 0)
 			return;
-		// Update the stack sizes of each method based on how many 
-		// additionally temporary variables it uses
-		updateStackSizes();
+
 		for (String s: this.cfgMap.keySet()) {
 			if (s.equals(ProgramFlattener.exceptionHandlerLabel)) continue;
+			
 			// Create temporary variables for each unique AvailableExpression
 			initializeTemporaryMap(s);
+			
 			// Optimize blocks
 			for (CFGBlock block: this.cfgMap.get(s)) {
 				optimize(block);
@@ -91,31 +91,11 @@ public class GlobalCSEOptimizer {
 		}
 	}
 	
-	private void updateStackSizes() {
-		for (String s: this.cfgMap.keySet()) {
-			List<AvailableExpression> methodExpr = availableGenerator.getMethodExpressions().get(s);
-			if (methodExpr != null) {
-				int tempsNeeded = methodExpr.size();
-				// Fix stack size
-				for (CFGBlock block: this.cfgMap.get(s)) {
-					if (block.getIndex() == 0) {
-						for (LIRStatement stmt: block.getStatements()) {
-							if (stmt.getClass().equals(EnterStmt.class)) {
-								EnterStmt enter = (EnterStmt) stmt;
-								enter.setStackSize(enter.getStackSize() + tempsNeeded);
-							}
-						}
-					}
-				}
-			} 
-		}
-	}
-	
 	private void optimize(CFGBlock block) {
 		List<LIRStatement> newStmts = new ArrayList<LIRStatement>();
 		List<AvailableExpression> exprs = availableGenerator.getBlockExpressions().get(block);
 		HashMap<Name, HashSet<Integer>> nameToExprs = availableGenerator.getNameToExprIds();
-		BlockFlow bFlow = availableGenerator.getBlockAvailableDefs().get(block);
+		BlockDataFlowState bFlow = availableGenerator.getBlockAvailableDefs().get(block);
 		
 		int exprIndex = 0;
 		for (LIRStatement stmt: block.getStatements()) {
@@ -126,6 +106,7 @@ public class GlobalCSEOptimizer {
 			
 			QuadrupletStmt qStmt = (QuadrupletStmt)stmt;
 			Name dest = qStmt.getDestination();
+			
 			// Update the set of Names that have been assigned
 			if (nameToExprs.containsKey(dest))
 				exprsClobbered.addAll(nameToExprs.get(dest));
@@ -138,6 +119,7 @@ public class GlobalCSEOptimizer {
 			// Statement is AvailableExpression
 			AvailableExpression expr = exprs.get(exprIndex);
 			DynamicVarName temp = exprToTemp.get(expr);
+			
 			// If available
 			if (bFlow.getIn().get(expr.getMyId())) {
 				if (!exprsClobbered.contains(expr.getMyId())) {
@@ -156,6 +138,7 @@ public class GlobalCSEOptimizer {
 				}
 			} else {
 				newStmts.add(stmt);
+				
 				// Check if expr is in Out set, and if so, assign corresponding temporary to it
 				if (bFlow.getOut().get(expr.getMyId())) {
 					QuadrupletStmt newStmt = new QuadrupletStmt(QuadrupletOp.MOVE, temp, dest, null);

@@ -33,7 +33,6 @@ public class BlockConsPropagationOptimizer {
 		for (String s: this.cfgMap.keySet()) {
 			if (s.equals(ProgramFlattener.exceptionHandlerLabel)) continue;
 			
-			DynamicVarName.reset();
 			for (CFGBlock block: this.cfgMap.get(s)) {
 				optimize(block);
 				reset();

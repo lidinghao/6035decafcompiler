@@ -1,41 +1,53 @@
 package decaf.dataflow.block;
 
-import decaf.codegen.flatir.DynamicVarName;
-import decaf.codegen.flatir.Name;
-import decaf.codegen.flatir.TempName;
 import decaf.codegen.flattener.ProgramFlattener;
 import decaf.dataflow.cfg.CFGBuilder;
 
 public class BlockOptimizer {
 	private BlockCSEOptimizer cse;
-	private BlockCopyPropagationOptimizer copy;
+	private BlockTempCPOptimizer copy;
 	private BlockConsPropagationOptimizer cons;
-	private BlockDeadCodeOptimizer dc;
+	private BlockTempDCOptimizer dc;
+	private BlockVarCPOptimizer copyVar;
+	private BlockVarDCOptimizer dcVar;
 	
 	public BlockOptimizer(CFGBuilder cb, ProgramFlattener pf) {
-		cse = new BlockCSEOptimizer(cb.getCfgMap(), pf);		
-		copy = new BlockCopyPropagationOptimizer(cb.getCfgMap(), pf);
+		cse = new BlockCSEOptimizer(cb.getCfgMap(), pf);	
+		
+		copy = new BlockTempCPOptimizer(cb.getCfgMap(), pf);
+		copyVar = new BlockVarCPOptimizer(cb.getCfgMap(), pf);
+		
 		cons = new BlockConsPropagationOptimizer(cb.getCfgMap(), pf);
-		dc = new BlockDeadCodeOptimizer(cb.getCfgMap(), pf);
+		
+		dc = new BlockTempDCOptimizer(cb.getCfgMap(), pf);
+		dcVar = new BlockVarDCOptimizer(cb.getCfgMap(), pf);
 	}
 	
 	public void optimizeBlocks(boolean[] opts) {
+		if(opts[3]) { // CONST
+			// Do Const Propagation
+			cons.performConsPropagation();
+			
+			// Do algebriac simplification
+		} 
+		
 		if(opts[1]) { // CSE
 			cse.performCSE();
 		}
+		
 		if(opts[2]) { // COPY
-			copy.cpType = DynamicVarName.class;
+			// CP DynamicVarNames
 			copy.performCopyPropagation();
-			copy.cpType = TempName.class;
-			copy.performCopyPropagation();
+			
+			// CP VarNames and TempNames
+			copyVar.performCopyPropagation();
 		} 
-		if(opts[3]) { // CONST
-			cons.performConsPropagation();
-		} 
+		
 		if(opts[4]) { // DC
-			dc.cpType = TempName.class;
-			dc.performDeadCodeElimination();
-			dc.cpType = DynamicVarName.class;
+			// DC VarNames and TempNames
+			dcVar.performDeadCodeElimination();
+			
+			// DC DynamicVarName
 			dc.performDeadCodeElimination();
 		}
 	}

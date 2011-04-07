@@ -3,54 +3,42 @@
 	.string	"RUNTIME ERROR: Array index out of bounds (%d, %d)\n"
 .methodcfend:
 	.string	"RUNTIME ERROR: Method at (%d, %d) reached end of control flow without returning\n"
-	.comm	A, 1, 8
 
 .text
 
 foo:
-	enter	$0, $0
+	enter	$40, $0
+	mov	%rcx, %r10
+	mov	%r10, -32(%rbp)
+	mov	%rdx, %r10
+	mov	%rcx, %r11
+	add	%r11, %r10
+	mov	%r10, -8(%rbp)
+	mov	-8(%rbp), %r10
+	mov	%r10, -40(%rbp)
+	mov	%rdx, %r10
+	mov	%r10, -8(%rbp)
+	mov	-40(%rbp), %r10
+	mov	%r10, -16(%rbp)
+	mov	%rdx, %r10
+	mov	-40(%rbp), %r11
+	add	%r11, %r10
+	mov	%r10, -24(%rbp)
 	leave
 	ret
 .foo_cfendhandler:
 	mov	$.methodcfend, %r10
 	mov	%r10, %rdi
-	mov	$4, %r10
+	mov	$2, %r10
 	mov	%r10, %rsi
-	mov	$17, %r10
+	mov	$18, %r10
 	mov	%r10, %rdx
 	call	exception_handler
 .foo_end:
 
 	.globl main
 main:
-	enter	$24, $0
-	mov	$0, %r10
-	mov	%r10, -8(%rbp)
-	mov	$0, %r10
-	mov	%r10, -16(%rbp)
-	mov	$0, %r10
-	mov	%r10, -24(%rbp)
-	mov	A, %r10
-	mov	%r10, -8(%rbp)
-	mov	$5, %r10
-	mov	%r10, A
-	mov	$10, %r10
-	mov	%r10, -8(%rbp)
-	mov	-8(%rbp), %r10
-	mov	%r10, -16(%rbp)
-	mov	-16(%rbp), %r10
-	mov	%r10, -24(%rbp)
-	mov	A, %r10
-	mov	%r10, -8(%rbp)
-	mov	-8(%rbp), %r10
-	mov	-24(%rbp), %r11
-	add	%r11, %r10
-	mov	%r10, -16(%rbp)
-	mov	-16(%rbp), %r10
-	mov	%r10, -24(%rbp)
-	call	foo
-	mov	A, %r10
-	mov	%r10, -8(%rbp)
+	enter	$0, $0
 	mov	$0, %r10
 	mov	%r10, %rax
 	leave
@@ -58,7 +46,7 @@ main:
 .main_cfendhandler:
 	mov	$.methodcfend, %r10
 	mov	%r10, %rdi
-	mov	$8, %r10
+	mov	$10, %r10
 	mov	%r10, %rsi
 	mov	$18, %r10
 	mov	%r10, %rdx
