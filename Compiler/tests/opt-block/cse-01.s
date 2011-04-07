@@ -31,26 +31,18 @@ main:
 	mov	$0, %r10
 	mov	%r10, -24(%rbp)
 	mov	A, %r10
+	mov	$5, %r11
+	add	%r11, %r10
 	mov	%r10, -8(%rbp)
-	mov	$5, %r10
-	mov	%r10, A
-	mov	$10, %r10
-	mov	%r10, -8(%rbp)
-	mov	-8(%rbp), %r10
-	mov	%r10, -16(%rbp)
-	mov	-16(%rbp), %r10
-	mov	%r10, -24(%rbp)
 	mov	A, %r10
-	mov	%r10, -8(%rbp)
-	mov	-8(%rbp), %r10
-	mov	-24(%rbp), %r11
+	mov	$5, %r11
 	add	%r11, %r10
 	mov	%r10, -16(%rbp)
-	mov	-16(%rbp), %r10
-	mov	%r10, -24(%rbp)
 	call	foo
 	mov	A, %r10
-	mov	%r10, -8(%rbp)
+	mov	$5, %r11
+	add	%r11, %r10
+	mov	%r10, -24(%rbp)
 	mov	$0, %r10
 	mov	%r10, %rax
 	leave
@@ -58,7 +50,7 @@ main:
 .main_cfendhandler:
 	mov	$.methodcfend, %r10
 	mov	%r10, %rdi
-	mov	$8, %r10
+	mov	$7, %r10
 	mov	%r10, %rsi
 	mov	$18, %r10
 	mov	%r10, %rdx

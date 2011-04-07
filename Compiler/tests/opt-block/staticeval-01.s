@@ -7,49 +7,42 @@
 
 .text
 
-foo:
-	enter	$0, $0
-	leave
-	ret
-.foo_cfendhandler:
-	mov	$.methodcfend, %r10
-	mov	%r10, %rdi
-	mov	$4, %r10
-	mov	%r10, %rsi
-	mov	$17, %r10
-	mov	%r10, %rdx
-	call	exception_handler
-.foo_end:
-
 	.globl main
 main:
-	enter	$24, $0
+	enter	$16, $0
 	mov	$0, %r10
 	mov	%r10, -8(%rbp)
 	mov	$0, %r10
 	mov	%r10, -16(%rbp)
-	mov	$0, %r10
-	mov	%r10, -24(%rbp)
-	mov	A, %r10
-	mov	%r10, -8(%rbp)
-	mov	$5, %r10
-	mov	%r10, A
 	mov	$10, %r10
+	mov	$5, %r11
+	add	%r11, %r10
 	mov	%r10, -8(%rbp)
 	mov	-8(%rbp), %r10
-	mov	%r10, -16(%rbp)
+	mov	$5, %r11
+	sub	%r11, %r10
+	mov	%r10, -8(%rbp)
+	mov	$0, %rdx
+	mov	-8(%rbp), %rax
+	mov	$8, %r10
+	idiv	%r10
+	mov	%rdx, -8(%rbp)
+	mov	$0, %rdx
+	mov	-8(%rbp), %rax
+	mov	$2, %r10
+	idiv	%r10
+	mov	%rax, -8(%rbp)
+	mov	$10, %r10
+	mov	-8(%rbp), %r11
+	imul	%r11, %r10
+	mov	%r10, -8(%rbp)
 	mov	-16(%rbp), %r10
-	mov	%r10, -24(%rbp)
-	mov	A, %r10
-	mov	%r10, -8(%rbp)
-	mov	-8(%rbp), %r10
-	mov	-24(%rbp), %r11
+	mov	$16, %r11
 	add	%r11, %r10
 	mov	%r10, -16(%rbp)
-	mov	-16(%rbp), %r10
-	mov	%r10, -24(%rbp)
-	call	foo
-	mov	A, %r10
+	mov	-8(%rbp), %r10
+	mov	-16(%rbp), %r11
+	add	%r11, %r10
 	mov	%r10, -8(%rbp)
 	mov	$0, %r10
 	mov	%r10, %rax
@@ -58,7 +51,7 @@ main:
 .main_cfendhandler:
 	mov	$.methodcfend, %r10
 	mov	%r10, %rdi
-	mov	$8, %r10
+	mov	$4, %r10
 	mov	%r10, %rsi
 	mov	$18, %r10
 	mov	%r10, %rdx

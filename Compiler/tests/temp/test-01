@@ -2,6 +2,16 @@ class Program {
   int get_int(int x) {
     return x;
   }
+  
+  void bool(boolean a, boolean b, boolean c, boolean d) {
+  	boolean x;
+  	x = (a || b) || (c && d);
+  }
+  
+  void test(int a, int b, int c, int d, int e, int f, int g) {
+  	int x;
+  	x = g;
+  }
 
   boolean get_bool(boolean x) {
     return x;

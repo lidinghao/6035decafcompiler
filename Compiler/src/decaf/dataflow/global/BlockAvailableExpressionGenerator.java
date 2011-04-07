@@ -22,7 +22,7 @@ import decaf.dataflow.cfg.CFGBlock;
 
 public class BlockAvailableExpressionGenerator {
 	private HashMap<String, List<CFGBlock>> cfgMap;
-	private HashMap<CFGBlock, BlockFlow> blockAvailableDefs;
+	private HashMap<CFGBlock, BlockDataFlowState> blockAvailableDefs;
 	private List<AvailableExpression> availableExpressions;
 	private HashMap<CFGBlock, List<AvailableExpression>> blockExpressions;
 	private HashMap<String, List<AvailableExpression>> methodExpressions;
@@ -35,7 +35,7 @@ public class BlockAvailableExpressionGenerator {
 	public BlockAvailableExpressionGenerator(HashMap<String, List<CFGBlock>> cMap) {
 		cfgMap = cMap;
 		nameToExprIds = new HashMap<Name, HashSet<Integer>>();
-		blockAvailableDefs = new HashMap<CFGBlock, BlockFlow>();
+		blockAvailableDefs = new HashMap<CFGBlock, BlockDataFlowState>();
 		availableExpressions = new ArrayList<AvailableExpression>();
 		blockExpressions = new HashMap<CFGBlock, List<AvailableExpression>>();
 		methodExpressions = new HashMap<String, List<AvailableExpression>>();
@@ -50,7 +50,7 @@ public class BlockAvailableExpressionGenerator {
 			return;
 		// Get the first block in the main function - TODO: is there a better way?
 		CFGBlock entry = cfgMap.get("main").get(0);
-		BlockFlow entryBlockFlow = new BlockFlow(totalExpressionStmts);
+		BlockDataFlowState entryBlockFlow = new BlockDataFlowState(totalExpressionStmts);
 		calculateGenKillSets(entry, entryBlockFlow);
 		entryBlockFlow.setOut(entryBlockFlow.getGen());
 		cfgBlocksToProcess.remove(entry);
@@ -59,7 +59,7 @@ public class BlockAvailableExpressionGenerator {
 		
 		while (cfgBlocksToProcess.size() != 0) {
 			CFGBlock block = (CFGBlock)(cfgBlocksToProcess.toArray())[0];
-			BlockFlow bFlow = generateForBlock(block);
+			BlockDataFlowState bFlow = generateForBlock(block);
 			blockAvailableDefs.put(block, bFlow);
 		}
 	}
@@ -118,14 +118,14 @@ public class BlockAvailableExpressionGenerator {
 		}
 	}
 	
-	public BlockFlow generateForBlock(CFGBlock block) {
+	public BlockDataFlowState generateForBlock(CFGBlock block) {
 		BitSet origOut;
 		if (blockAvailableDefs.containsKey(block)) {
 			origOut = blockAvailableDefs.get(block).getOut();
 		} else {
 			origOut = new BitSet(totalExpressionStmts);
 		}
-		BlockFlow bFlow = new BlockFlow(totalExpressionStmts);
+		BlockDataFlowState bFlow = new BlockDataFlowState(totalExpressionStmts);
 		// If there exists at least one predecessor, set In to null
 		if (block.getPredecessors().size() > 0) {
 			bFlow.getIn().set(0, totalExpressionStmts-1);
@@ -164,7 +164,7 @@ public class BlockAvailableExpressionGenerator {
 		return bFlow;
 	}
 	
-	private void calculateGenKillSets(CFGBlock block, BlockFlow bFlow) {
+	private void calculateGenKillSets(CFGBlock block, BlockDataFlowState bFlow) {
 		BitSet gen = bFlow.getGen();
 		List<AvailableExpression> blockExprs = blockExpressions.get(block);
 		List<LIRStatement> blockStmts = block.getStatements();
@@ -213,7 +213,7 @@ public class BlockAvailableExpressionGenerator {
 		}
 	}
 	
-	private void updateKillSet(Name dest, BlockFlow bFlow) {
+	private void updateKillSet(Name dest, BlockDataFlowState bFlow) {
 		BitSet kill = bFlow.getKill();
 		BitSet in = bFlow.getIn();
 		HashSet<Integer> stmtIdsForDest = nameToExprIds.get(dest);
@@ -257,11 +257,11 @@ public class BlockAvailableExpressionGenerator {
 		this.nameToExprIds = nameToStmtIds;
 	}
 	
-	public HashMap<CFGBlock, BlockFlow> getBlockAvailableDefs() {
+	public HashMap<CFGBlock, BlockDataFlowState> getBlockAvailableDefs() {
 		return blockAvailableDefs;
 	}
 
-	public void setBlockAvailableDefs(HashMap<CFGBlock, BlockFlow> blockReachingDefs) {
+	public void setBlockAvailableDefs(HashMap<CFGBlock, BlockDataFlowState> blockReachingDefs) {
 		this.blockAvailableDefs = blockReachingDefs;
 	}
 

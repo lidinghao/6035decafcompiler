@@ -6,49 +6,32 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import decaf.codegen.flatir.EnterStmt;
+import decaf.codegen.flatir.DynamicVarName;
 import decaf.codegen.flatir.LIRStatement;
 import decaf.codegen.flatir.Name;
+import decaf.codegen.flatir.QuadrupletOp;
 import decaf.codegen.flatir.QuadrupletStmt;
 import decaf.codegen.flattener.ProgramFlattener;
 import decaf.dataflow.cfg.CFGBlock;
 
-public class BlockDeadCodeOptimizer {
-	public Class<?> cpType;
+public class BlockTempDCOptimizer {
 	private Set<Name> neededSet;
 	private HashMap<String, List<CFGBlock>> cfgMap;
-	private Set<Name> deletedVars;
 	private ProgramFlattener pf;
 	
-	public BlockDeadCodeOptimizer(HashMap<String, List<CFGBlock>> cfgMap, ProgramFlattener pf) {
+	public BlockTempDCOptimizer(HashMap<String, List<CFGBlock>> cfgMap, ProgramFlattener pf) {
 		this.neededSet = new HashSet<Name>();
 		this.cfgMap = cfgMap;
 		this.pf = pf;
-		this.deletedVars = new HashSet<Name>();
 	}
 
 	public void performDeadCodeElimination() {
-		this.deletedVars.clear();
 		reset();
 		
 		for (String s: this.cfgMap.keySet()) {
 			for (CFGBlock block: this.cfgMap.get(s)) {
 				optimize(block);
 				reset();
-			}
-			
-			int tempRemoved = getTempsRemoved(s);
-
-			// Fix stack size
-			for (CFGBlock block: this.cfgMap.get(s)) {
-				if (block.getIndex() == 0) {
-					for (LIRStatement stmt: block.getStatements()) {
-						if (stmt.getClass().equals(EnterStmt.class)) {
-							EnterStmt enter = (EnterStmt) stmt;
-							enter.setStackSize(enter.getStackSize() - this.deletedVars.size());
-						}
-					}
-				}
 			}
 			
 			// Update statements in program flattener
@@ -59,32 +42,10 @@ public class BlockDeadCodeOptimizer {
 			}
 			
 			pf.getLirMap().put(s, stmts);
-			this.deletedVars.clear();
 		}
-	}
-	
-	private int getTempsRemoved(String s) {
-		for (CFGBlock block: this.cfgMap.get(s)) {
-			for (LIRStatement stmt: block.getStatements()) {
-				if (stmt.getClass().equals(QuadrupletStmt.class)) {
-					QuadrupletStmt qStmt = (QuadrupletStmt) stmt;
-					if (qStmt.getArg1() != null) {
-						this.deletedVars.remove(qStmt.getArg1());
-					}
-					if (qStmt.getArg2() != null) {
-						this.deletedVars.remove(qStmt.getArg2());
-					}
-					if (qStmt.getDestination() != null) {
-						this.deletedVars.remove(qStmt.getDestination());
-					}
-				}
-			}
-		}
-		
-		return this.deletedVars.size();
 	}
 
-	public CFGBlock getBlockWithIndex(int i, List<CFGBlock> list) {
+	private CFGBlock getBlockWithIndex(int i, List<CFGBlock> list) {
 		for (CFGBlock block: list) {
 			if (block.getIndex() == i) {
 				return block;
@@ -94,7 +55,7 @@ public class BlockDeadCodeOptimizer {
 		return null;
 	}
 	
-	public void optimize(CFGBlock block) {
+	private void optimize(CFGBlock block) {
 		int totalStmts = block.getStatements().size();
 		List<LIRStatement> blockStmts = block.getStatements();
 		List<LIRStatement> newStmts = new ArrayList<LIRStatement>();
@@ -107,12 +68,17 @@ public class BlockDeadCodeOptimizer {
 			}
 			
 			QuadrupletStmt qStmt = (QuadrupletStmt)stmt;
+			
+			// Don't add statements like x = x
+			if (qStmt.getOperator() == QuadrupletOp.MOVE) {
+				if (qStmt.getDestination().equals(qStmt.getArg1())) continue;
+			}
+			
 			Name dest = qStmt.getDestination();
 			
 			// If assigning to a required Name
-			if (dest.getClass().equals(cpType)) {
+			if (dest.getClass().equals(DynamicVarName.class)) {
 				if (!neededSet.contains(dest)) {
-					deletedVars.add(dest);
 					continue;
 				}
 			}

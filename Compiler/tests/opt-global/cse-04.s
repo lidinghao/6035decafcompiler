@@ -14,7 +14,7 @@ get_int:
 	enter	$8, $0
 	mov	%rdi, %r10
 	mov	%r10, -8(%rbp)
-	mov	-8(%rbp), %r10
+	mov	%rdi, %r10
 	mov	%r10, %rax
 	leave
 	ret
@@ -30,7 +30,7 @@ get_int:
 
 	.globl main
 main:
-	enter	$64, $0
+	enter	$56, $0
 	mov	$0, %r10
 	mov	%r10, -8(%rbp)
 	mov	$0, %r10
@@ -54,7 +54,7 @@ main:
 	mov	$0, %r10
 	mov	%r10, -32(%rbp)
 	mov	-8(%rbp), %r10
-	mov	-16(%rbp), %r11
+	mov	%rax, %r11
 	add	%r11, %r10
 	mov	%r10, -40(%rbp)
 	mov	-40(%rbp), %r10
@@ -65,20 +65,20 @@ main:
 	mov	%r10, -24(%rbp)
 	mov	-24(%rbp), %r10
 	mov	%r10, -56(%rbp)
+	mov	-40(%rbp), %r10
+	mov	%r10, -48(%rbp)
 	mov	-24(%rbp), %r10
 	mov	%r10, -32(%rbp)
 	mov	$.main_str0, %r10
 	mov	%r10, %rdi
 	mov	-24(%rbp), %r10
 	mov	%r10, %rsi
-	mov	%rsi, %r10
-	mov	%r10, -64(%rbp)
 	mov	$0, %r10
 	mov	%r10, %rax
 	call	printf
 	mov	$.main_str1, %r10
 	mov	%r10, %rdi
-	mov	-64(%rbp), %r10
+	mov	-24(%rbp), %r10
 	mov	%r10, %rsi
 	mov	$0, %r10
 	mov	%r10, %rax

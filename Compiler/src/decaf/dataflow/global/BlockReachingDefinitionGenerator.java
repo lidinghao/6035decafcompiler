@@ -19,7 +19,7 @@ import decaf.dataflow.cfg.CFGBlock;
 
 public class BlockReachingDefinitionGenerator {
 	private HashMap<String, List<CFGBlock>> cfgMap;
-	private HashMap<CFGBlock, BlockFlow> blockReachingDefs;
+	private HashMap<CFGBlock, BlockDataFlowState> blockReachingDefs;
 	private HashSet<CFGBlock> cfgBlocksToProcess;
 	// Map from Name to IDs of QuadrupletStmt which assign to that Name
 	private HashMap<Name, HashSet<Integer>> nameToStmtIds;
@@ -28,7 +28,7 @@ public class BlockReachingDefinitionGenerator {
 	public BlockReachingDefinitionGenerator(HashMap<String, List<CFGBlock>> cMap) {
 		cfgMap = cMap;
 		nameToStmtIds = new HashMap<Name, HashSet<Integer>>();
-		blockReachingDefs = new HashMap<CFGBlock, BlockFlow>();
+		blockReachingDefs = new HashMap<CFGBlock, BlockDataFlowState>();
 		cfgBlocksToProcess = new HashSet<CFGBlock>();
 		totalExpressionStmts = 0;
 	}
@@ -37,7 +37,7 @@ public class BlockReachingDefinitionGenerator {
 		initialize();
 		// Get the first block in the main function - TODO: is there a better way?
 		CFGBlock entry = cfgMap.get("main").get(0);
-		BlockFlow entryBlockFlow = new BlockFlow(totalExpressionStmts);
+		BlockDataFlowState entryBlockFlow = new BlockDataFlowState(totalExpressionStmts);
 		calculateGenKillSets(entry, entryBlockFlow);
 		entryBlockFlow.setOut(entryBlockFlow.getGen());
 		cfgBlocksToProcess.remove(entry);
@@ -45,7 +45,7 @@ public class BlockReachingDefinitionGenerator {
 		
 		while (cfgBlocksToProcess.size() != 0) {
 			CFGBlock block = (CFGBlock)(cfgBlocksToProcess.toArray())[0];
-			BlockFlow bFlow = generateForBlock(block);
+			BlockDataFlowState bFlow = generateForBlock(block);
 			blockReachingDefs.put(block, bFlow);
 		}
 	}
@@ -77,8 +77,8 @@ public class BlockReachingDefinitionGenerator {
 		}
 	}
 	
-	private BlockFlow generateForBlock(CFGBlock block) {
-		BlockFlow bFlow = new BlockFlow(totalExpressionStmts);
+	private BlockDataFlowState generateForBlock(CFGBlock block) {
+		BlockDataFlowState bFlow = new BlockDataFlowState(totalExpressionStmts);
 		BitSet in = bFlow.getIn();
 		for (CFGBlock pred : block.getPredecessors()) {
 			if (blockReachingDefs.containsKey(pred)) {
@@ -106,7 +106,7 @@ public class BlockReachingDefinitionGenerator {
 		return bFlow;
 	}
 	
-	private void calculateGenKillSets(CFGBlock block, BlockFlow bFlow) {
+	private void calculateGenKillSets(CFGBlock block, BlockDataFlowState bFlow) {
 		BitSet gen = bFlow.getGen();
 		List<LIRStatement> blockStmts = block.getStatements();
 		
@@ -142,7 +142,7 @@ public class BlockReachingDefinitionGenerator {
 		}
 	}
 	
-	private void updateKillSet(Name newDest, BlockFlow bFlow) {
+	private void updateKillSet(Name newDest, BlockDataFlowState bFlow) {
 		BitSet kill = bFlow.getKill();
 		BitSet in = bFlow.getIn();
 		HashSet<Integer> stmtIdsForDest = nameToStmtIds.get(newDest);
@@ -166,11 +166,11 @@ public class BlockReachingDefinitionGenerator {
 		this.nameToStmtIds = nameToStmtIds;
 	}
 	
-	public HashMap<CFGBlock, BlockFlow> getBlockReachingDefs() {
+	public HashMap<CFGBlock, BlockDataFlowState> getBlockReachingDefs() {
 		return blockReachingDefs;
 	}
 
-	public void setBlockReachingDefs(HashMap<CFGBlock, BlockFlow> blockReachingDefs) {
+	public void setBlockReachingDefs(HashMap<CFGBlock, BlockDataFlowState> blockReachingDefs) {
 		this.blockReachingDefs = blockReachingDefs;
 	}
 }
