@@ -148,7 +148,7 @@ public class ProgramFlattener {
 		return lirMap;
 	}
 
-	public void print(PrintStream out) {
+	public void printLIR(PrintStream out) {
 		for (DataStmt ds : dataStmtList) {
 			out.println(ds);
 		}

@@ -6,7 +6,6 @@ import java.util.List;
 
 import decaf.codegen.flatir.CallStmt;
 import decaf.codegen.flatir.ConstantName;
-import decaf.codegen.flatir.DynamicVarName;
 import decaf.codegen.flatir.LIRStatement;
 import decaf.codegen.flatir.Name;
 import decaf.codegen.flatir.QuadrupletOp;
@@ -123,7 +122,6 @@ public class BlockConsPropagationOptimizer {
 			if (this.constantMap.containsKey(qStmt.getArg1())) {
 				int val = this.constantMap.get(qStmt.getArg1());
 				qStmt.setArg1(new ConstantName(val));
-				this.constantMap.put(qStmt.getDestination(), val);
 				
 				arg1 = val;
 			}
@@ -137,7 +135,6 @@ public class BlockConsPropagationOptimizer {
 			if (this.constantMap.containsKey(qStmt.getArg2())) {
 				int val = this.constantMap.get(qStmt.getArg2());
 				qStmt.setArg2(new ConstantName(val));
-				this.constantMap.put(qStmt.getDestination(), val);
 				
 				arg2 = val;
 			}
@@ -206,6 +203,7 @@ public class BlockConsPropagationOptimizer {
 			}
 		}
 		
+		qStmt.setArg2(null);
 		qStmt.setArg1(new ConstantName(result));
 		qStmt.setOperator(QuadrupletOp.MOVE);
 		this.constantMap.put(qStmt.getDestination(), result);

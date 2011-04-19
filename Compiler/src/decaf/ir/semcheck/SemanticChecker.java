@@ -11,7 +11,7 @@ import decaf.test.Error;
 
 public class SemanticChecker {
 
-	public static boolean performSemanticChecks(ClassDecl cd, PrintStream out) {	
+	public static boolean performSemanticChecks(ClassDecl cd, PrintStream out, boolean optimize) {	
 		// Check integer overflow (must do before symbol table generation)
 		IntOverflowCheckVisitor ibv = new IntOverflowCheckVisitor();
 		cd.accept(ibv);
@@ -40,6 +40,12 @@ public class SemanticChecker {
 		// Array Size check
 		ArraySizeCheckVisitor av = new ArraySizeCheckVisitor();
 		cd.accept(av);
+		
+		if (optimize) {
+			// Unary Collapse Optimizer!
+			UnaryCollapseVisitor uc = new UnaryCollapseVisitor();
+			cd.accept(uc);
+		}
 		
 		boolean hasErrors = (ibv.getErrors().size() > 0 ||
 				stv.getErrors().size() > 0 ||

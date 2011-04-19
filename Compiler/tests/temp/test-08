@@ -1,0 +1,9 @@
+class Program {
+	int A[10];
+	
+	void main() {
+		int a,b,c,d;
+		
+		a = A[d + c] + 4;
+	}
+}
