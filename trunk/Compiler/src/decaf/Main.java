@@ -13,6 +13,7 @@ import decaf.dataflow.global.GlobalOptimizer;
 import decaf.ir.ast.ClassDecl;
 import decaf.ir.semcheck.*;
 import decaf.test.Error;
+import decaf.test.PrettyPrintVisitor;
 import antlr.Token;
 import java6035.tools.CLI.*;
 
@@ -92,7 +93,7 @@ class Main {
 				Error.fileName = getFileName(CLI.infile); 
 
 				// Check for semantic errors
-				if (!SemanticChecker.performSemanticChecks(cd, System.out)) {
+				if (!SemanticChecker.performSemanticChecks(cd, System.out, false)) {
 					System.exit(-1);
 				}
 			}
@@ -113,7 +114,7 @@ class Main {
 				Error.fileName = getFileName(CLI.infile);
 
 				// Check for semantic errors
-				if (!SemanticChecker.performSemanticChecks(cd, System.out)) {
+				if (!SemanticChecker.performSemanticChecks(cd, System.out, true)) { // Figure out opt flag
 					System.exit(-1);
 				}
 
@@ -123,7 +124,7 @@ class Main {
 				
 				if (CLI.debug) {
 					System.out.println("Low-level IR:");
-					pf.print(System.out);
+					pf.printLIR(System.out);
 					System.out.println();
 				}
 				
@@ -146,7 +147,7 @@ class Main {
 					
 					if (CLI.debug) {
 						System.out.println("\nAFTER LOCAL OPTIMIZATIONS: \n");
-						pf.print(System.out);
+						pf.printLIR(System.out);
 						System.out.println();
 					}
 					
@@ -161,14 +162,14 @@ class Main {
 						System.out.println();
 						globalCSE.printExprToTemp(System.out);
 						System.out.println();
-						pf.print(System.out);
+						pf.printLIR(System.out);
 						System.out.println();
 						cb.printCFG(System.out);
 						System.out.println();
 					}
 				} 
 								
-				cb.printCFG(System.out);
+				//cb.printCFG(System.out);
 
 				// Resolve names to locations
 				LocationResolver lr = new LocationResolver(pf, cd);
@@ -178,6 +179,8 @@ class Main {
 					System.out.println("Name -> Locations Mapping:");
 					lr.printLocations(System.out);
 				}
+				
+				pf.printLIR(System.out);
 				
 				// Generate code to file
 				CodeGenerator cg = new CodeGenerator(pf, cd, CLI.outfile);

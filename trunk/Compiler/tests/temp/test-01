@@ -1,4 +1,5 @@
 class Program {
+  int a, A[10];
   int get_int(int x) {
     return x;
   }

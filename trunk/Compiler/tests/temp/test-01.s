@@ -3,6 +3,8 @@
 	.string	"RUNTIME ERROR: Array index out of bounds (%d, %d)\n"
 .methodcfend:
 	.string	"RUNTIME ERROR: Method at (%d, %d) reached end of control flow without returning\n"
+	.comm	a, 1, 8
+	.comm	A, 80
 .main_str0:
 	.string	"%d\n"
 .main_str1:
@@ -16,14 +18,14 @@ get_int:
 	enter	$8, $0
 	mov	%rdi, %r10
 	mov	%r10, -8(%rbp)
-	mov	%rdi, %r10
+	mov	-8(%rbp), %r10
 	mov	%r10, %rax
 	leave
 	ret
 .get_int_cfendhandler:
 	mov	$.methodcfend, %r10
 	mov	%r10, %rdi
-	mov	$2, %r10
+	mov	$3, %r10
 	mov	%r10, %rsi
 	mov	$14, %r10
 	mov	%r10, %rdx
@@ -85,7 +87,7 @@ bool:
 .bool_cfendhandler:
 	mov	$.methodcfend, %r10
 	mov	%r10, %rdi
-	mov	$6, %r10
+	mov	$7, %r10
 	mov	%r10, %rsi
 	mov	$12, %r10
 	mov	%r10, %rdx
@@ -115,7 +117,7 @@ test:
 .test_cfendhandler:
 	mov	$.methodcfend, %r10
 	mov	%r10, %rdi
-	mov	$11, %r10
+	mov	$12, %r10
 	mov	%r10, %rsi
 	mov	$12, %r10
 	mov	%r10, %rdx
@@ -126,14 +128,14 @@ get_bool:
 	enter	$8, $0
 	mov	%rdi, %r10
 	mov	%r10, -8(%rbp)
-	mov	%rdi, %r10
+	mov	-8(%rbp), %r10
 	mov	%r10, %rax
 	leave
 	ret
 .get_bool_cfendhandler:
 	mov	$.methodcfend, %r10
 	mov	%r10, %rdi
-	mov	$16, %r10
+	mov	$17, %r10
 	mov	%r10, %rsi
 	mov	$19, %r10
 	mov	%r10, %rdx
@@ -142,7 +144,7 @@ get_bool:
 
 	.globl main
 main:
-	enter	$56, $0
+	enter	$48, $0
 	mov	$0, %r10
 	mov	%r10, -8(%rbp)
 	mov	$0, %r10
@@ -180,8 +182,6 @@ main:
 	mov	-16(%rbp), %r11
 	add	%r11, %r10
 	mov	%r10, -24(%rbp)
-	mov	-24(%rbp), %r10
-	mov	%r10, -56(%rbp)
 .main_if1_test:
 	mov	-48(%rbp), %r10
 	mov	$0, %r11
@@ -190,7 +190,9 @@ main:
 .main_if1_else:
 	jmp	.main_if1_end
 .main_if1_true:
-	mov	-56(%rbp), %r10
+	mov	-8(%rbp), %r10
+	mov	-16(%rbp), %r11
+	add	%r11, %r10
 	mov	%r10, -32(%rbp)
 	mov	$1, %r10
 	mov	%r10, -8(%rbp)
@@ -199,8 +201,6 @@ main:
 	mov	-16(%rbp), %r11
 	add	%r11, %r10
 	mov	%r10, -40(%rbp)
-	mov	-40(%rbp), %r10
-	mov	%r10, -56(%rbp)
 	mov	$.main_str0, %r10
 	mov	%r10, %rdi
 	mov	-24(%rbp), %r10
@@ -229,7 +229,7 @@ main:
 .main_cfendhandler:
 	mov	$.methodcfend, %r10
 	mov	%r10, %rdi
-	mov	$20, %r10
+	mov	$21, %r10
 	mov	%r10, %rsi
 	mov	$12, %r10
 	mov	%r10, %rdx

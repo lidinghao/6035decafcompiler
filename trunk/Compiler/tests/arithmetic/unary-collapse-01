@@ -1,0 +1,21 @@
+class Program { // Check AST!
+	void main() {
+		int a, b;
+		boolean c, d;
+		
+		c = !true;
+		c = !!!!!true;
+		d = !false;
+		d = !!false;
+		d = !!!!false;
+		c = !!!!!!!d;
+		
+		a = -5;
+		a = --5;
+		a = ---5;
+		b = -----10;
+		a = --b;
+		a = ---b;
+		a = a + -----b;
+	}
+}

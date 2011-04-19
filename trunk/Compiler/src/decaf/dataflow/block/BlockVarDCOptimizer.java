@@ -65,7 +65,7 @@ public class BlockVarDCOptimizer {
 				
 				if (this.definitionMap.containsKey(qStmt.getDestination())) {
 					if (this.lastDefUsed.get(qStmt.getDestination()) == false) {
-						// Last definition was not used
+						// Last definition was not used (Registers assignments will not be removed as they're for calls)
 						if (!qStmt.getDestination().getClass().equals(RegisterName.class)) {
 							newStmts.remove(this.definitionMap.get(qStmt.getDestination()));
 						}

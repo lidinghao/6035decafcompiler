@@ -108,10 +108,18 @@ public class ExpressionFlattenerVisitor implements ASTVisitor<Name> {
 		BinOpType op = expr.getOperator();
 
 		if (op == BinOpType.AND) {
+			if (expr.getLeftOperand().getClass().equals(BooleanLiteral.class) ||
+					expr.getLeftOperand().getClass().equals(BooleanLiteral.class)) {
+				return optimizeAnd(expr);
+			}
 			return shortCircuitAnd(expr);
 		}
 
 		if (op == BinOpType.OR) {
+			if (expr.getLeftOperand().getClass().equals(BooleanLiteral.class) ||
+					expr.getLeftOperand().getClass().equals(BooleanLiteral.class)) {
+				return optimizeOr(expr);
+			}
 			return shortCircuitOr(expr);
 		}
 
@@ -491,5 +499,105 @@ public class ExpressionFlattenerVisitor implements ASTVisitor<Name> {
 	
 	private String getArrayBoundPass() {
 		return methodName + "_array" + arrayBoundId + "_pass";
+	}
+	
+	private Name optimizeOr(BinOpExpr expr) {
+		BooleanLiteral arg1 = null;
+		BooleanLiteral arg2 = null;
+		TempName dest = new TempName();
+		
+		if (expr.getLeftOperand().getClass().equals(BooleanLiteral.class)) {
+			arg1 = (BooleanLiteral)expr.getLeftOperand();
+		}
+		
+		if (expr.getRightOperand().getClass().equals(BooleanLiteral.class)) {
+			arg2 = (BooleanLiteral)expr.getRightOperand();
+		}
+		
+		if (arg1 != null && arg2 != null) {
+			boolean a = arg1.getValue() == 1 ? true : false;
+			boolean b = arg2.getValue() == 1 ? true : false;
+			
+			if (a || b) {
+				this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE, dest, new ConstantName(1), null));
+			}
+			else {
+				this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE, dest, new ConstantName(0), null));
+			}
+		}
+		else if (arg1 != null) {
+			boolean a = arg1.getValue() == 1 ? true : false;
+			
+			if (a) {
+				this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE, dest, new ConstantName(1), null));
+			}
+			else {
+				Name val = expr.getRightOperand().accept(this);
+				this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE, dest, val, null));
+			}
+		}
+		else {
+			boolean b = arg2.getValue() == 1 ? true : false;
+			
+			if (b) {
+				this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE, dest, new ConstantName(1), null));
+			}
+			else {
+				Name val = expr.getLeftOperand().accept(this);
+				this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE, dest, val, null));
+			}
+		}
+		
+		return dest;
+	}
+
+	private Name optimizeAnd(BinOpExpr expr) {
+		BooleanLiteral arg1 = null;
+		BooleanLiteral arg2 = null;
+		TempName dest = new TempName();
+		
+		if (expr.getLeftOperand().getClass().equals(BooleanLiteral.class)) {
+			arg1 = (BooleanLiteral)expr.getLeftOperand();
+		}
+		
+		if (expr.getRightOperand().getClass().equals(BooleanLiteral.class)) {
+			arg2 = (BooleanLiteral)expr.getRightOperand();
+		}
+		
+		if (arg1 != null && arg2 != null) {
+			boolean a = arg1.getValue() == 1 ? true : false;
+			boolean b = arg2.getValue() == 1 ? true : false;
+			
+			if (a && b) {
+				this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE, dest, new ConstantName(1), null));
+			}
+			else {
+				this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE, dest, new ConstantName(0), null));
+			}
+		}
+		else if (arg1 != null) {
+			boolean a = arg1.getValue() == 1 ? true : false;
+			
+			if (a) {
+				Name val = expr.getRightOperand().accept(this);
+				this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE, dest, val, null));
+			}
+			else {
+				this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE, dest, new ConstantName(0), null));
+			}
+		}
+		else {
+			boolean b = arg2.getValue() == 1 ? true : false;
+			
+			if (b) {
+				Name val = expr.getLeftOperand().accept(this);
+				this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE, dest, val, null));
+			}
+			else {
+				this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE, dest, new ConstantName(0), null));
+			}
+		}
+		
+		return dest;
 	}
 }
