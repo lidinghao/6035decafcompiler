@@ -93,6 +93,8 @@ def testcase_scanner(cmd, testname, i, correct):
   return diff_answer(testname, scannormalize(correct), scannormalize(students))
 
 def testcase_codegen(cmd, testname, i, correct):
+  #Optimizer on!
+  cmd = cmd[0:-2] + ['-opt', 'all'] + cmd[-2:]
   '''check if cmd produces assembly that produces the output correct'''
   rv, stdoutlog, filename = run_tmpfile(cmd, i)
   if rv!=0:
