@@ -50,6 +50,7 @@ import decaf.ir.ast.VarLocation;
 public class ExpressionFlattenerVisitor implements ASTVisitor<Name> {	
 	public static Register[] argumentRegs = { Register.RDI, Register.RSI,
 			Register.RDX, Register.RCX, Register.R8, Register.R9 };
+	private static int callCount = 0;
 	private List<LIRStatement> statements;
 	private String methodName;
 	private int andCount;
@@ -300,6 +301,12 @@ public class ExpressionFlattenerVisitor implements ASTVisitor<Name> {
 			argNames.add(argName);
 		}
 		
+		// Add method call label
+		int myCC = ExpressionFlattenerVisitor.callCount;
+		ExpressionFlattenerVisitor.callCount++;
+		
+		this.statements.add(new LabelStmt("mcall_" + expr.getName() + "_" + myCC));
+		
 		// Save args in registers
 		for (int i = 0; i < argNames.size() && i < argumentRegs.length; i++) {
 			this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE,
@@ -325,6 +332,9 @@ public class ExpressionFlattenerVisitor implements ASTVisitor<Name> {
 		
 		// Save return value
 		this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE, rtnValue, new RegisterName(Register.RAX), null));
+		
+		// Add method call end label
+		this.statements.add(new LabelStmt("mcall_" + expr.getName() + "_" + myCC + "_end"));
 
 		return rtnValue;
 	}
