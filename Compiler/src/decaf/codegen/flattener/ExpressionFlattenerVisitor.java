@@ -31,6 +31,7 @@ import decaf.ir.ast.CalloutExpr;
 import decaf.ir.ast.CharLiteral;
 import decaf.ir.ast.ClassDecl;
 import decaf.ir.ast.ContinueStmt;
+import decaf.ir.ast.Expression;
 import decaf.ir.ast.Field;
 import decaf.ir.ast.FieldDecl;
 import decaf.ir.ast.ForStmt;
@@ -292,17 +293,23 @@ public class ExpressionFlattenerVisitor implements ASTVisitor<Name> {
 	public Name visit(MethodCallExpr expr) {
 		Name rtnValue = new TempName();
 		
+		// Go through arguments and generate List<Name>
+		List<Name> argNames = new ArrayList<Name>();
+		for (Expression arg : expr.getArguments()) {
+			Name argName = arg.accept(this);
+			argNames.add(argName);
+		}
+		
 		// Save args in registers
-		for (int i = 0; i < expr.getArguments().size() && i < argumentRegs.length; i++) {
-			Name src = expr.getArguments().get(i).accept(this);
+		for (int i = 0; i < argNames.size() && i < argumentRegs.length; i++) {
 			this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE,
-					new RegisterName(argumentRegs[i]), src, null));
+					new RegisterName(argumentRegs[i]), argNames.get(i), null));
 		}
 		
 		// Push other args to stack
 		if (expr.getArguments().size() > argumentRegs.length) {
 			for (int i = expr.getArguments().size() - 1; i >= argumentRegs.length; i--) {
-				this.statements.add(new PushStmt(expr.getArguments().get(i).accept(this)));
+				this.statements.add(new PushStmt(argNames.get(i)));
 			}
 		}
 		
