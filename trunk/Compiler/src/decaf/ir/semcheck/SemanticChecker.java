@@ -45,6 +45,10 @@ public class SemanticChecker {
 			// Unary Collapse Optimizer!
 			UnaryCollapseVisitor uc = new UnaryCollapseVisitor();
 			cd.accept(uc);
+			
+			// Boolean Collapse Optimizer!
+			BooleanCollapseVisitor bc = new BooleanCollapseVisitor();
+			cd.accept(bc);
 		}
 		
 		boolean hasErrors = (ibv.getErrors().size() > 0 ||
