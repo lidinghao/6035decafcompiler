@@ -17,8 +17,8 @@ public class BlockLivenessGenerator {
 	private HashMap<CFGBlock, BlockDataFlowState> blockLiveVars;
 	private HashSet<CFGBlock> cfgBlocksToProcess;
 	private HashMap<Name, HashSet<Integer>> nameToVarIds;
-	private List<LiveVar> variables; // all the variables in the program
-	private HashMap<QuadrupletStmt, List<LiveVar>> qStmtToVars; // each qStmt to the variables in it
+	private List<Variable> variables; // all the variables in the program
+	private HashMap<QuadrupletStmt, List<Variable>> qStmtToVars; // each qStmt to the variables in it
 	private int totalVars;
 	
 	public BlockLivenessGenerator(HashMap<String, List<CFGBlock>> cMap) {
@@ -51,7 +51,7 @@ public class BlockLivenessGenerator {
 	private void initialize() {
 		// LiveVar IDs that we assign should start from 0, so they can
 		// correspond to the appropriate index in the BitSet
-		LiveVar.setID(0);
+		Variable.setID(0);
 		for (String s: this.cfgMap.keySet()) {
 			if (s.equals(ProgramFlattener.exceptionHandlerLabel)) continue;
 			
@@ -62,16 +62,16 @@ public class BlockLivenessGenerator {
 					if (stmt.isExpressionStatement()) {
 						QuadrupletStmt qStmt = (QuadrupletStmt)stmt;
 						Name dest = qStmt.getDestination(); 
-						LiveVar dest_var = new LiveVar(dest);
+						Variable dest_var = new Variable(dest);
 						addToVariables(dest_var);
 						Name arg1 = qStmt.getArg1();
-						LiveVar arg1_var = new LiveVar(arg1);
+						Variable arg1_var = new Variable(arg1);
 						addToVariables(arg1_var);
 						Name arg2 = qStmt.getArg2();
-						LiveVar arg2_var = new LiveVar(arg2);
+						Variable arg2_var = new Variable(arg2);
 						addToVariables(arg2_var);
 						//update the map q statement to the variables
-						ArrayList<LiveVar> l = new ArrayList<LiveVar>(); 
+						ArrayList<Variable> l = new ArrayList<Variable>(); 
 						l.add(dest_var);
 						l.add(arg1_var);
 						l.add(arg2_var);
@@ -85,13 +85,13 @@ public class BlockLivenessGenerator {
 		totalVars = variables.size(); // the number of all variables
 	}
 
-	private void addToVariables(LiveVar var) {
+	private void addToVariables(Variable var) {
 		if(var == null) {
-			LiveVar.setID(LiveVar.getID() - 1); // decrement the global ID back
+			Variable.setID(Variable.getID() - 1); // decrement the global ID back
 		} else {
 			if(variables.contains(var)) {
 				var = variables.get(variables.indexOf(var));
-				LiveVar.setID(LiveVar.getID() - 1); 
+				Variable.setID(Variable.getID() - 1); 
 			} else {
 				variables.add(var);
 			}
