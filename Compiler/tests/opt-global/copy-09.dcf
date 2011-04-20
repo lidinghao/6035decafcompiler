@@ -8,7 +8,7 @@ class Program {
 			b = a;
 		}
 		for c = 0, 10 {
-			d = b; // should change to d = a - FAILS
+			d = b; // should change to d = a
 		}
 	}
 }

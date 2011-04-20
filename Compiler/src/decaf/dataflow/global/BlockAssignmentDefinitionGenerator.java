@@ -132,11 +132,11 @@ public class BlockAssignmentDefinitionGenerator {
 		for (CFGBlock pred : block.getPredecessors()) {
 			if (blockAssignReachingDefs.containsKey(pred)) {
 				in.and(blockAssignReachingDefs.get(pred).getOut());
-			} else {
+			} /*else {
 				// If a predecessor hasn't been processed, assume In is empty set
 				in.clear();
 				break;
-			}
+			}*/
 		}
 		calculateGenKillSets(block, bFlow);
 		// Calculate Out
