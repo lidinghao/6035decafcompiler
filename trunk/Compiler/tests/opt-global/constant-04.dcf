@@ -1,0 +1,16 @@
+class Program {
+	int a;
+	void main() {
+		int b, c, i;
+		a = 5;
+		if (a < 5) {
+			b = 1;
+		} else {
+			b = 1;
+		}
+		for i = 0, a { // comparison should be replaced with 5
+			b = a + i; // should be replaced with 5 + i
+		}
+		c = b; // should not be replaced, since b changed in for loop
+	}
+}

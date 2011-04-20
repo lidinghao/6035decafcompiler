@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
+import decaf.codegen.flatir.ArrayName;
 import decaf.codegen.flatir.CallStmt;
 import decaf.codegen.flatir.LIRStatement;
 import decaf.codegen.flatir.Name;
@@ -102,11 +103,27 @@ public class BlockAvailableExpressionGenerator {
 						// contain that Name
 						if (!nameToExprIds.containsKey(arg1)) {
 							nameToExprIds.put(arg1, new HashSet<Integer>());
+							// If argument is ArrayName, add the index Name mapping too
+							if (arg1.getClass().equals(ArrayName.class)) {
+								Name arrayIndex = ((ArrayName)arg1).getIndex();
+								if (!nameToExprIds.containsKey(arrayIndex)) {
+									nameToExprIds.put(arrayIndex, new HashSet<Integer>());
+								}
+								nameToExprIds.get(arrayIndex).add(expr.getMyId());
+							}
 						}
 						nameToExprIds.get(arg1).add(expr.getMyId());
 						if (arg2 != null) {
 							if (!nameToExprIds.containsKey(arg2)) {
 								nameToExprIds.put(arg2, new HashSet<Integer>());
+								// If argument is ArrayName, add the index Name mapping too
+								if (arg2.getClass().equals(ArrayName.class)) {
+									Name arrayIndex = ((ArrayName)arg2).getIndex();
+									if (!nameToExprIds.containsKey(arrayIndex)) {
+										nameToExprIds.put(arrayIndex, new HashSet<Integer>());
+									}
+									nameToExprIds.get(arrayIndex).add(expr.getMyId());
+								}
 							}
 							nameToExprIds.get(arg2).add(expr.getMyId());
 							totalExpressionStmts++;
@@ -126,7 +143,7 @@ public class BlockAvailableExpressionGenerator {
 			origOut = new BitSet(totalExpressionStmts);
 		}
 		BlockDataFlowState bFlow = new BlockDataFlowState(totalExpressionStmts);
-		// If there exists at least one predecessor, set In to null
+		// If there exists at least one predecessor, set In to all True
 		if (block.getPredecessors().size() > 0) {
 			bFlow.getIn().set(0, totalExpressionStmts-1);
 		}
@@ -160,7 +177,6 @@ public class BlockAvailableExpressionGenerator {
 			orderProcessed.remove(block);
 		}
 		orderProcessed.add(block);
-		blockAvailableDefs.put(block, bFlow);
 		return bFlow;
 	}
 	
