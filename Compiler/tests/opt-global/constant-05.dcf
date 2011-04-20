@@ -1,0 +1,21 @@
+class Program {
+	int a, b;
+	
+	void foo() {
+	}
+	
+	void main() {
+		int c,d;
+		a = 5;
+		if (a < 5) {
+			b = 1;
+			d = 2;
+		} else {
+			b = 1;
+			d = 2;
+		}
+		foo();
+		c = b; // should not be replaced, value of b can change in foo() since it is global
+		c = d; // should be replaced with c = 2
+	}
+}

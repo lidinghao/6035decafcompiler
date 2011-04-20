@@ -1,0 +1,12 @@
+class Program {
+	int a;
+	void main() {
+		int b;
+		a = 5;
+		if (a < 5) {
+			b = a; // should be replaced with 5
+		} else {
+			b = a*2; // should be replaced with 5*2 
+		}
+	}
+}

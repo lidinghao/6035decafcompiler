@@ -5,9 +5,13 @@ import decaf.dataflow.cfg.CFGBuilder;
 
 public class GlobalOptimizer {
 	private GlobalCSEOptimizer cse;
+	private GlobalConstantPropagationOptimizer constant;
+	private GlobalCopyPropagationOptimizer copy;
 
 	public GlobalOptimizer(CFGBuilder cb, ProgramFlattener pf) {
 		cse = new GlobalCSEOptimizer(cb.getCfgMap(), pf);
+		constant = new GlobalConstantPropagationOptimizer(cb.getCfgMap());
+		copy = new GlobalCopyPropagationOptimizer(cb.getCfgMap());
 	}
 	
 	public void optimizeBlocks(boolean[] opts) {
@@ -15,13 +19,13 @@ public class GlobalOptimizer {
 			cse.performGlobalCSE();
 		} 
 		if(opts[2]) { // COPY
-			//perform copy propagation here
+			copy.performGlobalCopyProp();
 		} 
 		if(opts[3]) { // CONST
-			//perform constant propagation here
+			constant.performGlobalConstantProp();
 		} 
 		if(opts[4]) { // DC
-			//perform dead code elimination here
+			// perform dead code elimination here
 		}
 	}
 	
@@ -32,4 +36,21 @@ public class GlobalOptimizer {
 	public void setCse(GlobalCSEOptimizer cse) {
 		this.cse = cse;
 	}
+	
+	public GlobalConstantPropagationOptimizer getConstant() {
+		return constant;
+	}
+
+	public void setConstant(GlobalConstantPropagationOptimizer constant) {
+		this.constant = constant;
+	}
+
+	public GlobalCopyPropagationOptimizer getCopy() {
+		return copy;
+	}
+
+	public void setCopy(GlobalCopyPropagationOptimizer copy) {
+		this.copy = copy;
+	}
 }
+

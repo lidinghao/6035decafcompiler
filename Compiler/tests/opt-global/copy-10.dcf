@@ -1,0 +1,15 @@
+class Program {
+	void main() {
+		int a, b, c, d;
+		a = 5;
+		if (a < 5) {
+			b = a;
+		} else {
+			b = a;
+		}
+		for c = 0, 10 {
+			d = b; // should not change
+			a = a + 1;
+		}
+	}
+}

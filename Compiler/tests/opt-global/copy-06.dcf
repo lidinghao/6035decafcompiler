@@ -1,0 +1,13 @@
+class Program {
+	void main() {
+		int a, b, c;
+		a = 5;
+		b = a + 5;
+		if (a < 5) {
+			a = b;
+		} else {
+			a = c;
+		}
+		c = a; // should not change, there are two definitions
+	}
+}

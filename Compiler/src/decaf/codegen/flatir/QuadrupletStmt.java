@@ -325,6 +325,12 @@ public class QuadrupletStmt extends LIRStatement {
 		return true;
 	}
 	
+	// Returns true if statement is of the form a = b, false otherwise
+	public boolean isAssignmentStatement() {
+		return (getDestination() != null && getArg1() != null && 
+				getArg2() == null && getOperator() == QuadrupletOp.MOVE);
+	}
+	
 	public int getMyId() {
 		return myId;
 	}

@@ -1,0 +1,12 @@
+class Program {
+	int a;
+	
+	void main() {
+		int i, b;
+		a = 5;
+		for i = 0, 10 {
+			b = a; // should not be replaced
+			a = a + 1; // should not be replaced
+		}
+	}
+}
