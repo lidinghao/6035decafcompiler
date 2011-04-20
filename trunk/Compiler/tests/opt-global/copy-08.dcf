@@ -9,6 +9,6 @@ class Program {
 		} else {
 			a = b;
 		}
-		c = a; // should not change
+		c = a; // should not change, 'a' is redefined in one execution path
 	}
 }
