@@ -7,11 +7,13 @@ public class GlobalOptimizer {
 	private GlobalCSEOptimizer cse;
 	private GlobalConstantPropagationOptimizer constant;
 	private GlobalCopyPropagationOptimizer copy;
+	private GlobalDeadCodeOptimizer dc;
 
 	public GlobalOptimizer(CFGBuilder cb, ProgramFlattener pf) {
 		cse = new GlobalCSEOptimizer(cb.getCfgMap(), pf);
 		constant = new GlobalConstantPropagationOptimizer(cb.getCfgMap());
 		copy = new GlobalCopyPropagationOptimizer(cb.getCfgMap());
+		dc = null; //new GlobalDeadCodeOptimizer(cb.getCfgMap(), pf);
 	}
 	
 	public void optimizeBlocks(boolean[] opts) {
@@ -25,7 +27,7 @@ public class GlobalOptimizer {
 			constant.performGlobalConstantProp();
 		} 
 		if(opts[4]) { // DC
-			// perform dead code elimination here
+			dc.performDeadCodeElimination();
 		}
 	}
 	
@@ -51,6 +53,14 @@ public class GlobalOptimizer {
 
 	public void setCopy(GlobalCopyPropagationOptimizer copy) {
 		this.copy = copy;
+	}
+
+	public GlobalDeadCodeOptimizer getDc() {
+		return dc;
+	}
+
+	public void setDc(GlobalDeadCodeOptimizer dc) {
+		this.dc = dc;
 	}
 }
 

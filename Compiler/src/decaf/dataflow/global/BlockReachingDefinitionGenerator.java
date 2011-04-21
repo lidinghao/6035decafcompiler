@@ -122,20 +122,19 @@ public class BlockReachingDefinitionGenerator {
 		List<LIRStatement> blockStmts = block.getStatements();
 		
 		for (LIRStatement stmt : blockStmts) {
-			if (!stmt.isExpressionStatement()) {
-				if (stmt.getClass().equals(CallStmt.class)) {
-					invalidateContextSwitch(bFlow);
-				}
+			if (stmt.getClass().equals(CallStmt.class)) {
+				invalidateContextSwitch(bFlow);
 				continue;
 			}
-			
-			QuadrupletStmt qStmt = (QuadrupletStmt)stmt;
-			Name dest = qStmt.getDestination();
-			if (dest != null) {
-				// Valid reaching definition
-				updateKillSet(dest, bFlow);
-				// Gen - add current statement id
-				gen.set(qStmt.getMyId(), true);
+			if (stmt.getClass().equals(QuadrupletStmt.class)) {
+				QuadrupletStmt qStmt = (QuadrupletStmt)stmt;
+				Name dest = qStmt.getDestination();
+				if (dest != null) {
+					// Valid reaching definition
+					updateKillSet(dest, bFlow);
+					// Gen - add current statement id
+					gen.set(qStmt.getMyId(), true);
+				}
 			}
 		}
 	}

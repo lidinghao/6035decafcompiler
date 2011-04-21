@@ -56,6 +56,8 @@ public class GlobalCopyPropagationOptimizer {
 				assignmentDefGenerator.updateKillGenSet(qStmt.getDestination(), bFlow);
 				// Update BlockDataFlowState in set by using updated kill set
 				bFlow.getIn().xor(bFlow.getKill());
+			} else if (true) {
+				// Optimize pop, push, cmp stmts
 			}
 		}
 	}

@@ -26,24 +26,23 @@ public class GlobalDeadCodeOptimizer {
 		this.cfgMap = cfgMap;
 		this.pf = pf;
 		this.livenessGenerator = new BlockLivenessGenerator(cfgMap);
-	//	this.exprToTemp = new HashMap<AvailableExpression, DynamicVarName>();
-
-		// Generate Available Expressions for CFG
 		this.livenessGenerator.generate();
 		this.blockLiveVars = livenessGenerator.getBlockLiveVars();
-		this.nameToStmtIds = livenessGenerator.getNameToStmtIds();
+		//this.nameToStmtIds = livenessGenerator.getNameToStmtIds();
 	}
 	
 	public void performDeadCodeElimination(){
 
-		for(String s: this.cfgMap.keySet()){
+		for (String s: this.cfgMap.keySet()) {
 			if (s.equals(ProgramFlattener.exceptionHandlerLabel)) continue;
 			
 			for (CFGBlock block: this.cfgMap.get(s)) {
 				optimize(block);
 			}
 			
-		// Change statements
+			
+			
+			// Change statements
 			List<LIRStatement> stmts = new ArrayList<LIRStatement>();
 			
 			for (int i = 0; i < this.cfgMap.get(s).size(); i++) {
@@ -97,5 +96,4 @@ public class GlobalDeadCodeOptimizer {
 		
 		return null;
 	}
-	
 }
