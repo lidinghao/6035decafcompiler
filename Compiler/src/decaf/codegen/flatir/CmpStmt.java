@@ -32,8 +32,6 @@ public class CmpStmt extends LIRStatement {
 		return "cmp " + arg1 + ", " + arg2;
 	}
 	
-	
-	
 	private void processStmt(PrintStream out) {
 		moveToRegister(out, this.getArg1(), Register.R10);
 		moveToRegister(out, this.getArg2(), Register.R11);

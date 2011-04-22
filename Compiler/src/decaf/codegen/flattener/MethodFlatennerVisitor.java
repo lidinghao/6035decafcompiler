@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import decaf.codegen.flatir.CallStmt;
+import decaf.codegen.flatir.CmpStmt;
 import decaf.codegen.flatir.ConstantName;
 import decaf.codegen.flatir.EnterStmt;
 import decaf.codegen.flatir.JumpCondOp;
@@ -209,8 +210,7 @@ public class MethodFlatennerVisitor implements ASTVisitor<Integer> {
 		Name finalValue = stmt.getFinalValue().accept(this.exprFlatenner);
 		TempName dest = new TempName();
 		this.statements.add(new QuadrupletStmt(QuadrupletOp.LT, dest, loopId, finalValue));
-		this.statements.add(new QuadrupletStmt(QuadrupletOp.CMP, null, dest,
-				new ConstantName(0)));
+		this.statements.add(new CmpStmt(dest, new ConstantName(0)));
 		this.statements.add(new JumpStmt(JumpCondOp.EQ, new LabelStmt(
 				getForEnd())));
 //		this.statements.add(new QuadrupletStmt(QuadrupletOp.CMP, null, loopId,
@@ -245,8 +245,7 @@ public class MethodFlatennerVisitor implements ASTVisitor<Integer> {
 		// Test block
 		this.statements.add(new LabelStmt(getIfTest()));
 		Name condition = stmt.getCondition().accept(this.exprFlatenner);
-		this.statements.add(new QuadrupletStmt(QuadrupletOp.CMP, null, condition,
-				new ConstantName(0)));
+		this.statements.add(new CmpStmt(condition, new ConstantName(0)));
 		this.statements.add(new JumpStmt(JumpCondOp.NEQ, new LabelStmt(
 				getIfTrue())));
 

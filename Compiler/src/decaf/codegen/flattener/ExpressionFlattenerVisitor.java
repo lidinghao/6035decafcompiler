@@ -5,6 +5,7 @@ import java.util.List;
 
 import decaf.codegen.flatir.ArrayName;
 import decaf.codegen.flatir.CallStmt;
+import decaf.codegen.flatir.CmpStmt;
 import decaf.codegen.flatir.ConstantName;
 import decaf.codegen.flatir.JumpCondOp;
 import decaf.codegen.flatir.JumpStmt;
@@ -397,8 +398,7 @@ public class ExpressionFlattenerVisitor implements ASTVisitor<Name> {
 		// Test LHS
 		this.statements.add(new LabelStmt(getAndTestLHS()));
 		Name lhs = expr.getLeftOperand().accept(this);
-		this.statements.add(new QuadrupletStmt(QuadrupletOp.CMP, null, lhs,
-				new ConstantName(0)));
+		this.statements.add(new CmpStmt(lhs, new ConstantName(0)));
 		this.statements.add(new JumpStmt(JumpCondOp.NEQ, new LabelStmt(
 				getAndTestRHS())));
 		this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE, dest,
@@ -429,8 +429,7 @@ public class ExpressionFlattenerVisitor implements ASTVisitor<Name> {
 		// Test LHS
 		this.statements.add(new LabelStmt(getOrTestLHS()));
 		Name lhs = expr.getLeftOperand().accept(this);
-		this.statements.add(new QuadrupletStmt(QuadrupletOp.CMP, null, lhs,
-				new ConstantName(0)));
+		this.statements.add(new CmpStmt(lhs, new ConstantName(0)));
 		this.statements.add(new JumpStmt(JumpCondOp.EQ, new LabelStmt(
 				getOrTestRHS())));
 		this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE, dest,
@@ -482,11 +481,11 @@ public class ExpressionFlattenerVisitor implements ASTVisitor<Name> {
 		arrayBoundId++;
 		
 		Name index = loc.getExpr().accept(this); // Re-eval expressions
-		this.statements.add(new QuadrupletStmt(QuadrupletOp.CMP, null, index, new ConstantName(loc.getSize())));
+		this.statements.add(new CmpStmt(index, new ConstantName(loc.getSize())));
 		this.statements.add(new JumpStmt(JumpCondOp.GTE, arrayCheckFail)); // size >= length?
 		
 		index = loc.getExpr().accept(this); // Re-eval expressions
-		this.statements.add(new QuadrupletStmt(QuadrupletOp.CMP, null, index, new ConstantName(0)));
+		this.statements.add(new CmpStmt(index, new ConstantName(0)));
 		this.statements.add(new JumpStmt(JumpCondOp.LT, arrayCheckFail)); // size < 0?
 		this.statements.add(new JumpStmt(JumpCondOp.NONE, arrayCheckPass)); // passed
 		

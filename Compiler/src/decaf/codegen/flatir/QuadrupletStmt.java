@@ -52,8 +52,6 @@ public class QuadrupletStmt extends LIRStatement {
 	@Override
 	public String toString() {
 		switch (this.operator) {
-			case CMP:
-				return "compare " + arg1 + ", " + arg2;
 			case ADD:
 				return dest + " = " + arg1 + " + " + arg2;
 			case SUB:
@@ -90,9 +88,6 @@ public class QuadrupletStmt extends LIRStatement {
 	@Override
 	public void generateAssembly(PrintStream out) {
 		switch(this.operator) {
-			case CMP:
-				processCompareQuadruplet(out);
-				break;
 			case MOVE:
 				processMoveQuadruplet(out);
 				break;
@@ -222,13 +217,6 @@ public class QuadrupletStmt extends LIRStatement {
 		out.println(instr + Register.R11 + ", " + Register.R10);
 		
 		moveFromRegister(out, Register.R10, this.getDestination(), Register.R11);
-	}
-	
-	private void processCompareQuadruplet(PrintStream out) {
-		moveToRegister(out, this.getArg1(), Register.R10);
-		moveToRegister(out, this.getArg2(), Register.R11);
-		
-		out.println("\tcmp\t" + Register.R11 + ", " + Register.R10);
 	}
 	
 	private void moveToRegister(PrintStream out, Name name, Register register) {
