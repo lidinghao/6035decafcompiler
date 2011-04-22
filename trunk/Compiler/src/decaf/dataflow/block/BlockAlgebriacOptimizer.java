@@ -64,23 +64,17 @@ public class BlockAlgebriacOptimizer {
 			
 			boolean inOrder = false;
 			
-			if (qStmt.getArg1() != null) {
-				if (qStmt.getArg1().getClass().equals(ConstantName.class)) {
-					arg1 = Integer.parseInt(((ConstantName)qStmt.getArg1()).getValue());
-					inOrder = true;
-				}
-				
-				arg2 = qStmt.getArg1();
+			if (qStmt.getArg1().getClass().equals(ConstantName.class)) {
+				arg1 = Integer.parseInt(((ConstantName)qStmt.getArg1()).getValue());
+				inOrder = true;
+				arg2 = qStmt.getArg2();
 			}
 			
-			if (qStmt.getArg2() != null) {
-				if (qStmt.getArg2().getClass().equals(ConstantName.class)) {
-					if (arg1 != null) return;
+			if (qStmt.getArg2().getClass().equals(ConstantName.class)) {
+					if (arg1 != null) return; // Both constants, should be simplified by ConstProp
 					arg1 = Integer.parseInt(((ConstantName)qStmt.getArg2()).getValue());
-				}
-				
-				if (arg2 != null) return;
-				arg2 = qStmt.getArg2();
+					
+					arg2 = qStmt.getArg1();
 			}
 			
 			if (arg1 != null && arg2 != null) {
@@ -124,7 +118,7 @@ public class BlockAlgebriacOptimizer {
 				break;
 			case DIV:
 				if (!inOrder) {
-					if (arg1 == 1) { // x / 1 = x
+					if (arg1 == 1) { // x/1 = x
 						qStmt.setOperator(QuadrupletOp.MOVE);
 						qStmt.setArg1(arg2);
 						qStmt.setArg2(null);
@@ -133,7 +127,7 @@ public class BlockAlgebriacOptimizer {
 				break;
 			case MOD:
 				if (!inOrder) {
-					if (arg1 == 1) { // x % 1 = 0
+					if (arg1 == 1) { // x%1 = 0
 						qStmt.setOperator(QuadrupletOp.MOVE);
 						qStmt.setArg1(new ConstantName(0));
 						qStmt.setArg2(null);
