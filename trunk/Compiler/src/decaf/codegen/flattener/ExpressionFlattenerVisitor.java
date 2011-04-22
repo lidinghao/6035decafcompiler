@@ -480,6 +480,8 @@ public class ExpressionFlattenerVisitor implements ASTVisitor<Name> {
 		LabelStmt arrayCheckFail = new LabelStmt(getArrayBoundFail());
 		arrayBoundId++;
 		
+		this.statements.add(new LabelStmt(getArrayBoundBegin()));
+		
 		Name index = loc.getExpr().accept(this); // Re-eval expressions
 		this.statements.add(new CmpStmt(index, new ConstantName(loc.getSize())));
 		this.statements.add(new JumpStmt(JumpCondOp.GTE, arrayCheckFail)); // size >= length?
@@ -507,6 +509,10 @@ public class ExpressionFlattenerVisitor implements ASTVisitor<Name> {
 		
 		this.statements.add(arrayCheckPass); // Array check passed label
 		
+	}
+	
+	private String getArrayBoundBegin() {
+		return methodName + "_array" + arrayBoundId + "_begin";
 	}
 	
 	private String getArrayBoundFail() {
