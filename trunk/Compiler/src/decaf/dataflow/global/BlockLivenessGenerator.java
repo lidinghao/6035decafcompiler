@@ -19,6 +19,14 @@ public class BlockLivenessGenerator {
 	private HashSet<CFGBlock> cfgBlocksToProcess;
 	// One Variable per Name
 	private HashMap<Name, Variable> nameToVar;
+	public HashMap<Name, Variable> getNameToVar() {
+		return nameToVar;
+	}
+
+	public void setNameToVar(HashMap<Name, Variable> nameToVar) {
+		this.nameToVar = nameToVar;
+	}
+
 	// List of Variable IDs which correspond to global names
 	private List<Integer> globalVarIDs;
 	private int totalVars;
