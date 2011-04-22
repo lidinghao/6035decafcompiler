@@ -305,8 +305,8 @@ public class QuadrupletStmt extends LIRStatement {
 	}
 	
 	@Override
-	public boolean isExpressionStatement() {
-		if (this.operator == QuadrupletOp.CMP) {
+	public boolean isAvailableExpression() {
+		if (this.operator == QuadrupletOp.MOVE) {
 			return false;
 		}
 		
@@ -314,14 +314,7 @@ public class QuadrupletStmt extends LIRStatement {
 	}
 	
 	@Override
-	public boolean isAvailableExpression() {
-		if (!isExpressionStatement()) {
-			return false;
-		} else {
-			if (this.operator == QuadrupletOp.MOVE) {
-				return false;
-			}
-		}
+	public boolean isUseStatement() {
 		return true;
 	}
 	

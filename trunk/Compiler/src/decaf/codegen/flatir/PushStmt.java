@@ -45,4 +45,9 @@ public class PushStmt extends LIRStatement {
 		
 		return false;
 	}
+	
+	@Override
+	public boolean isUseStatement() {
+		return true;
+	}
 }

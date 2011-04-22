@@ -20,7 +20,6 @@ import decaf.codegen.flattener.ProgramFlattener;
 import decaf.dataflow.cfg.CFGBlock;
 
 public class BlockTempCPOptimizer {
-	private Class<?> cpType;
 	private HashMap<Name, Name> tempToName;
 	private HashMap<Name, HashSet<Name>> varToTemps;
 	private HashMap<String, List<CFGBlock>> cfgMap;
@@ -31,7 +30,6 @@ public class BlockTempCPOptimizer {
 		this.varToTemps = new HashMap<Name, HashSet<Name>>();
 		this.cfgMap = cfgMap;
 		this.pf = pf;
-		this.cpType = DynamicVarName.class;
 	}
 	
 	public void performCopyPropagation() {
@@ -68,7 +66,7 @@ public class BlockTempCPOptimizer {
 	
 	public void optimize(CFGBlock block) {
 		for (LIRStatement stmt: block.getStatements()) {
-			if (!stmt.isExpressionStatement()) {
+			if (!stmt.getClass().equals(QuadrupletStmt.class)) {
 				// TODO: May have to change this after RegisterAllocator is implemented
 				if (stmt.getClass().equals(CallStmt.class)) {
 					RegisterName reg;
@@ -95,6 +93,7 @@ public class BlockTempCPOptimizer {
 				}
 				continue;
 			}
+			
 			QuadrupletStmt qStmt = (QuadrupletStmt) stmt;
 			processStatement(qStmt);
 		}
@@ -117,7 +116,7 @@ public class BlockTempCPOptimizer {
 		Name dest = qStmt.getDestination();
 		
 		// If the Name being assigned is a DynamicVarName
-		if (dest.getClass().equals(cpType) && qStmt.getOperator().equals(QuadrupletOp.MOVE)) {
+		if (dest.getClass().equals(DynamicVarName.class) && qStmt.getOperator().equals(QuadrupletOp.MOVE)) {
 			// Invariant: This statement has to be of the form [DynamicVarName = Name]
 			Name arg1 = qStmt.getArg1();
 			this.tempToName.put(dest, arg1);
@@ -140,7 +139,7 @@ public class BlockTempCPOptimizer {
 
 	public Name processArgument(Name arg1) {
 		if (arg1 != null) {
-			if (arg1.getClass().equals(cpType)) {
+			if (arg1.getClass().equals(DynamicVarName.class)) {
 				if (this.tempToName.containsKey(arg1)) {
 					return this.tempToName.get(arg1);
 				}

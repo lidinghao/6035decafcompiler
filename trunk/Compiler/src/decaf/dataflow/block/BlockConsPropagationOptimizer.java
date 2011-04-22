@@ -5,9 +5,12 @@ import java.util.HashMap;
 import java.util.List;
 
 import decaf.codegen.flatir.CallStmt;
+import decaf.codegen.flatir.CmpStmt;
 import decaf.codegen.flatir.ConstantName;
 import decaf.codegen.flatir.LIRStatement;
 import decaf.codegen.flatir.Name;
+import decaf.codegen.flatir.PopStmt;
+import decaf.codegen.flatir.PushStmt;
 import decaf.codegen.flatir.QuadrupletOp;
 import decaf.codegen.flatir.QuadrupletStmt;
 import decaf.codegen.flatir.Register;
@@ -55,7 +58,7 @@ public class BlockConsPropagationOptimizer {
 
 	private void optimize(CFGBlock block) {
 		for (LIRStatement stmt: block.getStatements()) {
-			if (!stmt.isExpressionStatement()) {
+			if (!stmt.isUseStatement()) {
 				// TODO: May have to change this after RegisterAllocator is implemented
 				if (stmt.getClass().equals(CallStmt.class)) {			
 					invalidateFunctionCall();
@@ -63,9 +66,32 @@ public class BlockConsPropagationOptimizer {
 				continue;
 			}
 			
-			QuadrupletStmt qStmt = (QuadrupletStmt) stmt;
-			processStatement(qStmt);
+			if (stmt.getClass().equals(QuadrupletStmt.class)) {
+				QuadrupletStmt qStmt = (QuadrupletStmt) stmt;
+				processStatement(qStmt);
+			}
+			else if (stmt.getClass().equals(CmpStmt.class)) {
+				CmpStmt cStmt = (CmpStmt) stmt;
+				cStmt.setArg1(processName(cStmt.getArg1()));
+				cStmt.setArg2(processName(cStmt.getArg2()));
+			}
+			else if (stmt.getClass().equals(PushStmt.class)) {
+				PushStmt pStmt = (PushStmt) stmt;
+				pStmt.setAddress(processName(pStmt.getAddress()));
+			}
+			else if (stmt.getClass().equals(PopStmt.class)) {
+				PopStmt pStmt = (PopStmt) stmt;
+				pStmt.setAddress(processName(pStmt.getAddress()));
+			}
 		}		
+	}
+
+	private Name processName(Name name) {
+		if (name != null && this.constantMap.containsKey(name)) {
+			return new ConstantName(this.constantMap.get(name));
+		}
+		
+		return name;
 	}
 
 	private void invalidateFunctionCall() {

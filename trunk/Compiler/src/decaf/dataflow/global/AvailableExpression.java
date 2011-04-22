@@ -63,8 +63,6 @@ public class AvailableExpression {
 	public String toString() {
 		String out = "ID : " + Integer.toString(myId) + " -- ";
 		switch (this.operator) {
-			case CMP:
-				out += "compare " + arg1 + ", " + arg2; break;
 			case ADD: 
 				out += arg1 + " + " + arg2; break;
 			case SUB:
