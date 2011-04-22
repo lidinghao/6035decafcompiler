@@ -19,7 +19,8 @@ public class GlobalDeadCodeOptimizer {
 	
 	private HashMap<CFGBlock, BlockDataFlowState> blockLiveVars;
 	private HashSet<CFGBlock> cfgBlocksToProcess;
-	private HashMap<Name, HashSet<Integer>> nameToStmtIds;
+	//private HashMap<Name, HashSet<Integer>> nameToVarIds;
+	private HashMap<Name, Variable> nameToVar;
 	private int totalExpressionStmts;
 	
 	public GlobalDeadCodeOptimizer(HashMap<String, List<CFGBlock>> cfgMap, ProgramFlattener pf) {
@@ -28,7 +29,7 @@ public class GlobalDeadCodeOptimizer {
 		this.livenessGenerator = new BlockLivenessGenerator(cfgMap);
 		this.livenessGenerator.generate();
 		this.blockLiveVars = livenessGenerator.getBlockLiveVars();
-		//this.nameToStmtIds = livenessGenerator.getNameToStmtIds();
+		this.nameToVar = livenessGenerator.getNameToVar();
 	}
 	
 	public void performDeadCodeElimination(){
@@ -57,7 +58,7 @@ public class GlobalDeadCodeOptimizer {
 	private void optimize(CFGBlock block) {
 		List<LIRStatement> newStmts = new ArrayList<LIRStatement>();
 		BlockDataFlowState bFlow = blockLiveVars.get(block);
-		Integer stmtID; //will be an integer ;)
+		Integer stmtID; // will be an integer - get value from here ;)
 		
 		for (LIRStatement stmt: block.getStatements()){
 			if (!stmt.isExpressionStatement()) {
@@ -68,8 +69,8 @@ public class GlobalDeadCodeOptimizer {
 			QuadrupletStmt qStmt = (QuadrupletStmt)stmt;
 			Name dest = qStmt.getDestination();
 			
-			if(this.nameToStmtIds.containsKey(dest)){
-				stmtID =  null;//this.nameToStmtIds.get(dest);
+			if(this.nameToVar.containsKey(dest)){
+				stmtID =  this.nameToVar.get(dest).getMyId();//null;//TODO:this.nameToStmtIds.get(dest);
 				if(isDead(stmtID, bFlow.getIn(), bFlow.getOut())){
 					continue;
 				}
