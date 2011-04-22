@@ -1,0 +1,26 @@
+class Program {
+   boolean and(boolean a, boolean b) {
+   		if (a && b) {
+   		  return true;
+   		} else {
+   		  return false;
+   		}
+   }
+
+   void main() {
+      boolean a,b;
+      int ret;
+      ret = 0; // should be eliminated
+      a = true; // cannot be eliminated
+      b = true; // cannot be eliminated
+      if (and(a,b)) {
+        ret = 1;
+      } else {
+        ret = 0;
+      }
+      a = true; // cannot be eliminated
+      if(a) {
+      	callout("printf","%d\n",ret); // 1
+      }
+   }
+}
