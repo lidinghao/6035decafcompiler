@@ -13,7 +13,7 @@ public class GlobalOptimizer {
 		cse = new GlobalCSEOptimizer(cb.getCfgMap(), pf);
 		constant = new GlobalConstantPropagationOptimizer(cb.getCfgMap());
 		copy = new GlobalCopyPropagationOptimizer(cb.getCfgMap());
-		dc = null; //new GlobalDeadCodeOptimizer(cb.getCfgMap(), pf);
+		dc = new GlobalDeadCodeOptimizer(cb.getCfgMap(), pf);
 	}
 	
 	public void optimizeBlocks(boolean[] opts) {
