@@ -6,8 +6,11 @@ import java.util.HashSet;
 import java.util.List;
 
 import decaf.codegen.flatir.CallStmt;
+import decaf.codegen.flatir.CmpStmt;
 import decaf.codegen.flatir.LIRStatement;
 import decaf.codegen.flatir.Name;
+import decaf.codegen.flatir.PopStmt;
+import decaf.codegen.flatir.PushStmt;
 import decaf.codegen.flatir.QuadrupletStmt;
 import decaf.codegen.flattener.ProgramFlattener;
 import decaf.dataflow.cfg.CFGBlock;
@@ -39,6 +42,10 @@ public class GlobalCopyPropagationOptimizer {
 	private void optimize(CFGBlock block) {
 		BlockDataFlowState bFlow = assignmentDefGenerator.getBlockAssignReachingDefs().get(block);
 		QuadrupletStmt qStmt;
+		PopStmt popStmt;
+		PushStmt pushStmt;
+		CmpStmt cStmt;
+		Name newArg1, newArg2;
 		
 		for (LIRStatement stmt: block.getStatements()) {
 			// Reset kill set
@@ -48,16 +55,49 @@ public class GlobalCopyPropagationOptimizer {
 				assignmentDefGenerator.invalidateContextSwitch(bFlow);
 				// Update BlockDataFlowState in set by using updated kill set
 				bFlow.getIn().xor(bFlow.getKill());
+				
 			} else if (stmt.getClass().equals(QuadrupletStmt.class)) {
 				qStmt = (QuadrupletStmt)stmt;
-				copyPropagateOnArg(qStmt.getArg1(), qStmt, bFlow);
-				copyPropagateOnArg(qStmt.getArg2(), qStmt, bFlow);
+				newArg1 = copyPropagateOnArg(qStmt.getArg1(), bFlow);
+				if (newArg1 != null) {
+					qStmt.setArg1(newArg1);
+				}
+				newArg2 = copyPropagateOnArg(qStmt.getArg2(), bFlow);
+				if (newArg2 != null) {
+					qStmt.setArg2(newArg2);
+				}
 				// Update BlockDataFlowState kill set
 				assignmentDefGenerator.updateKillGenSet(qStmt.getDestination(), bFlow);
 				// Update BlockDataFlowState in set by using updated kill set
 				bFlow.getIn().xor(bFlow.getKill());
-			} else if (true) {
-				// Optimize pop, push, cmp stmts
+				
+			// Optimize PopStmt
+			} else if (stmt.getClass().equals(PopStmt.class)) {
+				popStmt = (PopStmt)stmt;
+				newArg1 = copyPropagateOnArg(popStmt.getAddress(), bFlow);
+				if (newArg1 != null) {
+					popStmt.setAddress(newArg1);
+				}
+			
+			// Optimize PushStmt
+			} else if (stmt.getClass().equals(PushStmt.class)) {
+				pushStmt = (PushStmt)stmt;
+				newArg1 = copyPropagateOnArg(pushStmt.getAddress(), bFlow);
+				if (newArg1 != null) {
+					pushStmt.setAddress(newArg1);
+				}
+				
+			// Optimize CmpStmt
+			} else if (stmt.getClass().equals(CmpStmt.class)) {
+				cStmt = (CmpStmt)stmt;
+				newArg1 = copyPropagateOnArg(cStmt.getArg1(), bFlow);
+				if (newArg1 != null) {
+					cStmt.setArg1(newArg1);
+				}
+				newArg2 = copyPropagateOnArg(cStmt.getArg2(), bFlow);
+				if (newArg2 != null) {
+					cStmt.setArg2(newArg2);
+				}
 			}
 		}
 	}
@@ -65,7 +105,7 @@ public class GlobalCopyPropagationOptimizer {
 	// For each use of a Name, see all the reaching definitions for that Name
 	// If there exists only ONE reaching assignment definition that assigns to Name, 
 	// replace Name with definition's LHS
-	private void copyPropagateOnArg(Name arg, QuadrupletStmt qStmt, BlockDataFlowState bFlow) {
+	private Name copyPropagateOnArg(Name arg, BlockDataFlowState bFlow) {
 		if (arg != null) {
 			HashMap<Name, HashSet<QuadrupletStmt>> nameToStmtsThatAssignIt = 
 				assignmentDefGenerator.getNameToQStmtsThatAssignIt();
@@ -85,11 +125,13 @@ public class GlobalCopyPropagationOptimizer {
 				}
 				if (numReachingDefs == 1) {
 					// There is exactly one assignment statement reaching this block
-					// so we can safely modify the statement
-					qStmt.setArg1(reachingAssignmentStmt.getArg1());
+					// so we can perform copy propagation
+					// Return the name which we should replace the arg with
+					return reachingAssignmentStmt.getArg1();
 				}
 			}
 		}
+		return null;
 	}
 	
 	public HashMap<String, List<CFGBlock>> getCfgMap() {
