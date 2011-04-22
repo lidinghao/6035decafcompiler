@@ -6,8 +6,11 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
+import decaf.codegen.flatir.CmpStmt;
 import decaf.codegen.flatir.LIRStatement;
 import decaf.codegen.flatir.Name;
+import decaf.codegen.flatir.PopStmt;
+import decaf.codegen.flatir.PushStmt;
 import decaf.codegen.flatir.QuadrupletStmt;
 import decaf.codegen.flatir.VarName;
 import decaf.codegen.flattener.ProgramFlattener;
@@ -159,31 +162,48 @@ public class BlockLivenessGenerator {
 	
 	private void calculateUseDefSets(CFGBlock block, BlockDataFlowState bFlow){
 		List<LIRStatement> blockStmts = block.getStatements();
+		PopStmt popStmt;
+		PushStmt pushStmt;
+		CmpStmt cStmt;
+		QuadrupletStmt qStmt;
+		Name arg1 = null, arg2 = null, dest = null;
 		
 		// Traverse statements in reverse order
 		for (int i = blockStmts.size()-1; i >= 0; i--) {
 			LIRStatement stmt = blockStmts.get(i);
-			// Add pop, push, cmp
 			
 			if (stmt.getClass().equals(QuadrupletStmt.class)) {
-				QuadrupletStmt qStmt = (QuadrupletStmt)stmt;
-				Name dest = qStmt.getDestination();
-				if (dest != null) {
-					// Set dest -> id to true in current gen set
-					bFlow.getKill().set(nameToVar.get(dest).getMyId());
-					// Set dest -> id to false in current use set
-					bFlow.getGen().set(nameToVar.get(dest).getMyId(), false);
-				}
-				Name arg1 = qStmt.getArg1();
-				if (arg1 != null) {
-					// Set arg1 -> id to true in current use set
-					bFlow.getGen().set(nameToVar.get(arg1).getMyId());
-				}
-				Name arg2 = qStmt.getArg2();
-				if (arg2 != null) {
-					// Set arg2 -> id to true in current use set
-					bFlow.getGen().set(nameToVar.get(arg2).getMyId());
-				}
+				qStmt = (QuadrupletStmt)stmt;
+				dest = qStmt.getDestination();
+				arg1 = qStmt.getArg1();
+				arg2 = qStmt.getArg2();
+			} else if (stmt.getClass().equals(PopStmt.class)) {
+				popStmt = (PopStmt)stmt;
+				arg1 = popStmt.getAddress();
+				
+			} else if (stmt.getClass().equals(PushStmt.class)) {
+				pushStmt = (PushStmt)stmt;
+				arg1 = pushStmt.getAddress();
+				
+			} else if (stmt.getClass().equals(CmpStmt.class)) {
+				cStmt = (CmpStmt)stmt;
+				arg1 = cStmt.getArg1();
+				arg2 = cStmt.getArg2();
+				
+			}
+			if (dest != null) {
+				// Set dest -> id to true in current def set
+				bFlow.getKill().set(nameToVar.get(dest).getMyId());
+				// Set dest -> id to false in current use set
+				bFlow.getGen().set(nameToVar.get(dest).getMyId(), false);
+			}
+			if (arg1 != null) {
+				// Set arg1 -> id to true in current use set
+				bFlow.getGen().set(nameToVar.get(arg1).getMyId());
+			}
+			if (arg2 != null) {
+				// Set arg2 -> id to true in current use set
+				bFlow.getGen().set(nameToVar.get(arg2).getMyId());
 			}
 		}
 	}

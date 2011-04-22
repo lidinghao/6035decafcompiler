@@ -5,9 +5,12 @@ import java.util.HashSet;
 import java.util.List;
 
 import decaf.codegen.flatir.CallStmt;
+import decaf.codegen.flatir.CmpStmt;
 import decaf.codegen.flatir.ConstantName;
 import decaf.codegen.flatir.LIRStatement;
 import decaf.codegen.flatir.Name;
+import decaf.codegen.flatir.PopStmt;
+import decaf.codegen.flatir.PushStmt;
 import decaf.codegen.flatir.QuadrupletStmt;
 import decaf.codegen.flattener.ProgramFlattener;
 import decaf.dataflow.cfg.CFGBlock;
@@ -38,6 +41,11 @@ public class GlobalConstantPropagationOptimizer {
 	
 	private void optimize(CFGBlock block) {
 		BlockDataFlowState bFlow = reachingDefGenerator.getBlockReachingDefs().get(block);
+		PopStmt popStmt;
+		PushStmt pushStmt;
+		CmpStmt cStmt;
+		QuadrupletStmt qStmt;
+		ConstantName arg1, arg2;
 		
 		for (LIRStatement stmt: block.getStatements()) {
 			// Reset kill set
@@ -48,11 +56,11 @@ public class GlobalConstantPropagationOptimizer {
 				// Update BlockDataFlowState in set by using updated kill set
 				bFlow.getIn().xor(bFlow.getKill());
 			} else if (stmt.getClass().equals(QuadrupletStmt.class)){
-				QuadrupletStmt qStmt = (QuadrupletStmt)stmt;
+				qStmt = (QuadrupletStmt)stmt;
 				// For each use of a Name, see all the reaching definitions for that Name
 				// If all reaching definitions assign the Name to the same constant, replace Name with that constant
-				ConstantName arg1 = reachingDefsHaveSameConstant(qStmt.getArg1(), bFlow);
-				ConstantName arg2 = reachingDefsHaveSameConstant(qStmt.getArg2(), bFlow);
+				arg1 = reachingDefsHaveSameConstant(qStmt.getArg1(), bFlow);
+				arg2 = reachingDefsHaveSameConstant(qStmt.getArg2(), bFlow);
 				if (arg1 != null)
 					// Set arg1 to Constant
 					qStmt.setArg1(arg1);
@@ -63,8 +71,34 @@ public class GlobalConstantPropagationOptimizer {
 				reachingDefGenerator.updateKillSet(qStmt.getDestination(), bFlow);
 				// Update BlockDataFlowState in set by using updated kill set
 				bFlow.getIn().xor(bFlow.getKill());
-			} else if (true) {
-				// Optimize pop, push, cmp stmts
+				
+			// Optimize PopStmt
+			} else if (stmt.getClass().equals(PopStmt.class)) {
+				popStmt = (PopStmt)stmt;
+				arg1 = reachingDefsHaveSameConstant(popStmt.getAddress(), bFlow);
+				if (arg1 != null) {
+					popStmt.setAddress(arg1);
+				}
+				
+			// Optimize PushStmt
+			} else if (stmt.getClass().equals(PushStmt.class)) {
+				pushStmt = (PushStmt)stmt;
+				arg1 = reachingDefsHaveSameConstant(pushStmt.getAddress(), bFlow);
+				if (arg1 != null) {
+					pushStmt.setAddress(arg1);
+				}
+			
+			// Optimize CmpStmt
+			} else if (stmt.getClass().equals(CmpStmt.class)) {
+				cStmt = (CmpStmt)stmt;
+				arg1 = reachingDefsHaveSameConstant(cStmt.getArg1(), bFlow);
+				if (arg1 != null) {
+					cStmt.setArg1(arg1);
+				}
+				arg2 = reachingDefsHaveSameConstant(cStmt.getArg2(), bFlow);
+				if (arg2 != null) {
+					cStmt.setArg2(arg2);
+				}
 			}
 		}		
 	}
