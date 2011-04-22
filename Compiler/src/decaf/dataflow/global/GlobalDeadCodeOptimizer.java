@@ -16,12 +16,8 @@ public class GlobalDeadCodeOptimizer {
 	private HashMap<String, List<CFGBlock>> cfgMap;
 	private BlockLivenessGenerator livenessGenerator;
 	private ProgramFlattener pf;
-	
 	private HashMap<CFGBlock, BlockDataFlowState> blockLiveVars;
-	private HashSet<CFGBlock> cfgBlocksToProcess;
-	//private HashMap<Name, HashSet<Integer>> nameToVarIds;
 	private HashMap<Name, Variable> nameToVar;
-	private int totalExpressionStmts;
 	
 	public GlobalDeadCodeOptimizer(HashMap<String, List<CFGBlock>> cfgMap, ProgramFlattener pf) {
 		this.cfgMap = cfgMap;
@@ -41,8 +37,6 @@ public class GlobalDeadCodeOptimizer {
 				optimize(block);
 			}
 			
-			
-			
 			// Change statements
 			List<LIRStatement> stmts = new ArrayList<LIRStatement>();
 			
@@ -58,34 +52,30 @@ public class GlobalDeadCodeOptimizer {
 	private void optimize(CFGBlock block) {
 		List<LIRStatement> newStmts = new ArrayList<LIRStatement>();
 		BlockDataFlowState bFlow = blockLiveVars.get(block);
-		Integer stmtID; // will be an integer - get value from here ;)
+		Integer varId; 
 		
 		for (LIRStatement stmt: block.getStatements()){
-			if (!stmt.isExpressionStatement()) {
-				newStmts.add(stmt);
-				continue;
-			}
-			
-			QuadrupletStmt qStmt = (QuadrupletStmt)stmt;
-			Name dest = qStmt.getDestination();
-			
-			if(this.nameToVar.containsKey(dest)){
-				stmtID =  this.nameToVar.get(dest).getMyId();//null;//TODO:this.nameToStmtIds.get(dest);
-				if(isDead(stmtID, bFlow.getIn(), bFlow.getOut())){
-					continue;
+			if (stmt.getClass().equals(QuadrupletStmt.class)) {
+				QuadrupletStmt qStmt = (QuadrupletStmt)stmt;
+				Name dest = qStmt.getDestination();
+				if (nameToVar.containsKey(dest)) {
+					varId = nameToVar.get(dest).getMyId();
+					if (isDead(varId, bFlow.getOut())) {
+						// Don't add statement
+						continue;
+					}
 				}
-				//newStmts.add(stmt);
 			}
 			newStmts.add(stmt);
 		}
 		block.setStatements(newStmts);
 	}
 	
-	private boolean isDead(Integer stmtID, BitSet inBits, BitSet outBits){
-		if(!(inBits.get(stmtID) || outBits.get(stmtID))){
-			return true;
-		}
-		return false;
+	private boolean isDead(int varId, BitSet out){
+		// Check if variable Id is true (live) in the outset
+		// If it is not live, then it is redefined (or not used) after this block, 
+		// so anything assigning the corresponding variable can be eliminated
+		return !out.get(varId);
 	}
 
 	private CFGBlock getBlockWithIndex(int i, List<CFGBlock> list) {
@@ -94,7 +84,6 @@ public class GlobalDeadCodeOptimizer {
 				return block;
 			}
 		}
-		
 		return null;
 	}
 }
