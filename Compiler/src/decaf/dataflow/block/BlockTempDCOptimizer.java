@@ -62,7 +62,7 @@ public class BlockTempDCOptimizer {
 		
 		for (int i = totalStmts - 1; i >= 0; i--) {
 			LIRStatement stmt = blockStmts.get(i);
-			if (!stmt.isExpressionStatement()) {
+			if (!stmt.getClass().equals(QuadrupletStmt.class)) {
 				newStmts.add(0, stmt);
 				continue;
 			}

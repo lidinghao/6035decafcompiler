@@ -48,7 +48,7 @@ public class BlockAlgebriacOptimizer {
 
 	private void optimize(CFGBlock block) {
 		for (LIRStatement stmt: block.getStatements()) {
-			if (!stmt.isExpressionStatement()) {
+			if (!stmt.getClass().equals(QuadrupletStmt.class)) {
 				continue;
 			}
 			
@@ -58,8 +58,7 @@ public class BlockAlgebriacOptimizer {
 	}
 
 	private void processStatement(QuadrupletStmt qStmt) {
-		if (qStmt.getOperator() != QuadrupletOp.MOVE &&
-				qStmt.getOperator() != QuadrupletOp.CMP) {
+		if (qStmt.getOperator() != QuadrupletOp.MOVE) {
 			Integer arg1 = null;
 			Name arg2 = null;
 			

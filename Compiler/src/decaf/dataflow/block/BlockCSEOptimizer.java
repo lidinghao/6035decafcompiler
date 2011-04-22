@@ -6,7 +6,6 @@ import java.util.List;
 
 import decaf.codegen.flatir.CallStmt;
 import decaf.codegen.flatir.DynamicVarName;
-import decaf.codegen.flatir.EnterStmt;
 import decaf.codegen.flatir.LIRStatement;
 import decaf.codegen.flatir.Name;
 import decaf.codegen.flatir.QuadrupletOp;
@@ -69,7 +68,7 @@ public class BlockCSEOptimizer {
 		List<LIRStatement> newStmts = new ArrayList<LIRStatement>();
 		
 		for (LIRStatement stmt: block.getStatements()) {
-			if (!stmt.isExpressionStatement()) {
+			if (!stmt.getClass().equals(QuadrupletStmt.class)) {
 				newStmts.add(stmt);
 				
 				// TODO: May have to change this after RegisterAllocator is implemented

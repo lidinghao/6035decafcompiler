@@ -53,7 +53,6 @@ public class BlockVarDCOptimizer {
 			
 			if (stmt.getClass().equals(QuadrupletStmt.class)) {
 				QuadrupletStmt qStmt = (QuadrupletStmt) stmt;
-				if (qStmt.getOperator() == QuadrupletOp.CMP) continue;
 				
 				if (qStmt.getArg1() != null) {
 					this.lastDefUsed.put(qStmt.getArg1(), true);

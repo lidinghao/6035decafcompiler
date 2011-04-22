@@ -5,8 +5,11 @@ import java.util.HashMap;
 import java.util.List;
 
 import decaf.codegen.flatir.CallStmt;
+import decaf.codegen.flatir.CmpStmt;
 import decaf.codegen.flatir.LIRStatement;
 import decaf.codegen.flatir.Name;
+import decaf.codegen.flatir.PopStmt;
+import decaf.codegen.flatir.PushStmt;
 import decaf.codegen.flatir.QuadrupletOp;
 import decaf.codegen.flatir.QuadrupletStmt;
 import decaf.codegen.flatir.Register;
@@ -61,7 +64,7 @@ public class BlockVarCPOptimizer {
 
 	public void optimize(CFGBlock block) {
 		for (LIRStatement stmt: block.getStatements()) {
-			if (!stmt.isExpressionStatement()) {
+			if (!stmt.isUseStatement()) {
 				if (stmt.getClass().equals(CallStmt.class)) {
 					RegisterName reg;
 					
@@ -99,8 +102,23 @@ public class BlockVarCPOptimizer {
 				continue;
 			}
 			
-			QuadrupletStmt qStmt = (QuadrupletStmt) stmt;
-			processStatement(qStmt);
+			if (stmt.getClass().equals(QuadrupletStmt.class)) {
+				QuadrupletStmt qStmt = (QuadrupletStmt) stmt;
+				processStatement(qStmt);
+			}
+			else if (stmt.getClass().equals(CmpStmt.class)) {
+				CmpStmt cStmt = (CmpStmt) stmt;
+				cStmt.setArg1(processArgument(cStmt.getArg1()));
+				cStmt.setArg2(processArgument(cStmt.getArg2()));
+			}
+			else if (stmt.getClass().equals(PushStmt.class)) {
+				PushStmt pStmt = (PushStmt) stmt;
+				pStmt.setAddress(processArgument(pStmt.getAddress()));
+			}
+			else if (stmt.getClass().equals(PopStmt.class)) {
+				PopStmt pStmt = (PopStmt) stmt;
+				pStmt.setAddress(processArgument(pStmt.getAddress()));
+			}
 		}
 	}
 

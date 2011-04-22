@@ -209,7 +209,7 @@ public class BlockAvailableExpressionGenerator {
 					}
 				}
 				
-				if (stmt.isExpressionStatement()) {
+				if (stmt.getClass().equals(QuadrupletStmt.class)) {
 					qStmt = (QuadrupletStmt)stmt;
 					// MOVE is not considered an AvailableExpression but it still effects the Kill set
 					if (qStmt.getOperator() == QuadrupletOp.MOVE) {

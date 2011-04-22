@@ -99,7 +99,7 @@ public class GlobalCSEOptimizer {
 		
 		int exprIndex = 0;
 		for (LIRStatement stmt: block.getStatements()) {
-			if (!stmt.isExpressionStatement()) {
+			if (!stmt.getClass().equals(QuadrupletStmt.class)) {
 				newStmts.add(stmt);
 				continue;
 			}

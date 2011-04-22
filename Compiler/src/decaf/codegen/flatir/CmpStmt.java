@@ -80,7 +80,7 @@ public class CmpStmt extends LIRStatement {
 	}
 	
 	@Override
-	public boolean isExpressionStatement() {
+	public boolean isUseStatement() {
 		return true;
 	}
 }
