@@ -1,0 +1,15 @@
+class Program {
+	void main() {
+		int i, b;
+		b = 10; // should be eliminated
+		for i = 0, 10 {
+			b = i; // should not be eliminated, since it might be used later in the callout
+			if (i < 5) {
+				callout("printf", "%d\n", b);
+				continue;
+			}
+			callout("printf","%d\n",i);
+		}
+		
+	}
+}	
