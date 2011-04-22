@@ -476,11 +476,12 @@ public class ExpressionFlattenerVisitor implements ASTVisitor<Name> {
 	}
 	
 	private void addArrayBoundCheck(ArrayLocation loc) {
-		LabelStmt arrayCheckPass = new LabelStmt(getArrayBoundPass());
-		LabelStmt arrayCheckFail = new LabelStmt(getArrayBoundFail());
+		LabelStmt arrayCheckStart = new LabelStmt(getArrayBoundBegin(loc.getId()));
+		LabelStmt arrayCheckPass = new LabelStmt(getArrayBoundPass(loc.getId()));
+		LabelStmt arrayCheckFail = new LabelStmt(getArrayBoundFail(loc.getId()));
 		arrayBoundId++;
 		
-		this.statements.add(new LabelStmt(getArrayBoundBegin()));
+		this.statements.add(arrayCheckStart);
 		
 		Name index = loc.getExpr().accept(this); // Re-eval expressions
 		this.statements.add(new CmpStmt(index, new ConstantName(loc.getSize())));
@@ -511,16 +512,16 @@ public class ExpressionFlattenerVisitor implements ASTVisitor<Name> {
 		
 	}
 	
-	private String getArrayBoundBegin() {
-		return methodName + "_array" + arrayBoundId + "_begin";
+	private String getArrayBoundBegin(String name) {
+		return methodName + "_array_" + name + "_" + arrayBoundId + "_begin";
 	}
 	
-	private String getArrayBoundFail() {
-		return methodName + "_array" + arrayBoundId + "_fail";
+	private String getArrayBoundFail(String name) {
+		return methodName + "_array_" + name + "_" + arrayBoundId + "_fail";
 	}
 	
-	private String getArrayBoundPass() {
-		return methodName + "_array" + arrayBoundId + "_pass";
+	private String getArrayBoundPass(String name) {
+		return methodName + "_array_" + name + "_" + arrayBoundId + "_pass";
 	}
 	
 	private Name optimizeOr(BinOpExpr expr) {
