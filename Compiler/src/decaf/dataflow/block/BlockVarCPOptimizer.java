@@ -113,11 +113,11 @@ public class BlockVarCPOptimizer {
 			}
 			else if (stmt.getClass().equals(PushStmt.class)) {
 				PushStmt pStmt = (PushStmt) stmt;
-				pStmt.setAddress(processArgument(pStmt.getAddress()));
+				pStmt.setName(processArgument(pStmt.getName()));
 			}
 			else if (stmt.getClass().equals(PopStmt.class)) {
 				PopStmt pStmt = (PopStmt) stmt;
-				pStmt.setAddress(processArgument(pStmt.getAddress()));
+				pStmt.setName(processArgument(pStmt.getName()));
 			}
 		}
 	}

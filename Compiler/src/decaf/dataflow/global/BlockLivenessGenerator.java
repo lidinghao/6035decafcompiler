@@ -179,11 +179,11 @@ public class BlockLivenessGenerator {
 				arg2 = qStmt.getArg2();
 			} else if (stmt.getClass().equals(PopStmt.class)) {
 				popStmt = (PopStmt)stmt;
-				arg1 = popStmt.getAddress();
+				arg1 = popStmt.getName();
 				
 			} else if (stmt.getClass().equals(PushStmt.class)) {
 				pushStmt = (PushStmt)stmt;
-				arg1 = pushStmt.getAddress();
+				arg1 = pushStmt.getName();
 				
 			} else if (stmt.getClass().equals(CmpStmt.class)) {
 				cStmt = (CmpStmt)stmt;

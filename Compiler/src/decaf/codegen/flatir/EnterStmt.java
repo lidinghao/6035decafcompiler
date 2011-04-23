@@ -56,4 +56,9 @@ public class EnterStmt extends LIRStatement {
 		
 		return false;
 	}
+	
+	@Override
+	public Object clone() {
+		return new EnterStmt(this.stackSize);
+	}
 }

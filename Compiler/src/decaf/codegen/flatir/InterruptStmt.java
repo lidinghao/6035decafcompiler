@@ -41,4 +41,9 @@ public class InterruptStmt extends LIRStatement {
 		
 		return false;
 	}
+	
+	@Override
+	public Object clone() {
+		return new InterruptStmt(this.interruptId);
+	}
 }

@@ -329,4 +329,9 @@ public class QuadrupletStmt extends LIRStatement {
 	public static void setID(int iD) {
 		ID = iD;
 	}
+	
+	@Override
+	public Object clone() {
+		return new QuadrupletStmt(this.operator, this.dest, this.arg1, this.arg2);
+	}
 }

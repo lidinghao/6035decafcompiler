@@ -74,17 +74,17 @@ public class GlobalCopyPropagationOptimizer {
 			// Optimize PopStmt
 			} else if (stmt.getClass().equals(PopStmt.class)) {
 				popStmt = (PopStmt)stmt;
-				newArg1 = copyPropagateOnArg(popStmt.getAddress(), bFlow);
+				newArg1 = copyPropagateOnArg(popStmt.getName(), bFlow);
 				if (newArg1 != null) {
-					popStmt.setAddress(newArg1);
+					popStmt.setName(newArg1);
 				}
 			
 			// Optimize PushStmt
 			} else if (stmt.getClass().equals(PushStmt.class)) {
 				pushStmt = (PushStmt)stmt;
-				newArg1 = copyPropagateOnArg(pushStmt.getAddress(), bFlow);
+				newArg1 = copyPropagateOnArg(pushStmt.getName(), bFlow);
 				if (newArg1 != null) {
-					pushStmt.setAddress(newArg1);
+					pushStmt.setName(newArg1);
 				}
 				
 			// Optimize CmpStmt

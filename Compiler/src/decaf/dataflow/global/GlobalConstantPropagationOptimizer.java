@@ -75,17 +75,17 @@ public class GlobalConstantPropagationOptimizer {
 			// Optimize PopStmt
 			} else if (stmt.getClass().equals(PopStmt.class)) {
 				popStmt = (PopStmt)stmt;
-				arg1 = reachingDefsHaveSameConstant(popStmt.getAddress(), bFlow);
+				arg1 = reachingDefsHaveSameConstant(popStmt.getName(), bFlow);
 				if (arg1 != null) {
-					popStmt.setAddress(arg1);
+					popStmt.setName(arg1);
 				}
 				
 			// Optimize PushStmt
 			} else if (stmt.getClass().equals(PushStmt.class)) {
 				pushStmt = (PushStmt)stmt;
-				arg1 = reachingDefsHaveSameConstant(pushStmt.getAddress(), bFlow);
+				arg1 = reachingDefsHaveSameConstant(pushStmt.getName(), bFlow);
 				if (arg1 != null) {
-					pushStmt.setAddress(arg1);
+					pushStmt.setName(arg1);
 				}
 			
 			// Optimize CmpStmt

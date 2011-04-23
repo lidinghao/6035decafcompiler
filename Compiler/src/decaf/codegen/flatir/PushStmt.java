@@ -3,29 +3,29 @@ package decaf.codegen.flatir;
 import java.io.PrintStream;
 
 public class PushStmt extends LIRStatement {
-	private Name address; // Can be register, memory or immediate
+	private Name name; // Can be register, memory or immediate
 	
 	public PushStmt(Name address) {
-		this.setAddress(address);
+		this.setName(address);
 		this.isLeader = false;
 	}
 
-	public void setAddress(Name address) {
-		this.address = address;
+	public void setName(Name address) {
+		this.name = address;
 	}
 
-	public Name getAddress() {
-		return address;
+	public Name getName() {
+		return name;
 	}
 	
 	@Override
 	public String toString() {
-		return "push " + address;
+		return "push " + name;
 	}
 	
 	@Override
 	public void generateAssembly(PrintStream out) {
-		out.println("\tpush\t" + this.address.getLocation().getASMRepresentation());
+		out.println("\tpush\t" + this.name.getLocation().getASMRepresentation());
 	}
 	
 	@Override
@@ -39,7 +39,7 @@ public class PushStmt extends LIRStatement {
 		if (!o.getClass().equals(PushStmt.class)) return false;
 		
 		PushStmt stmt = (PushStmt) o;
-		if (stmt.getAddress().equals(this.address)) {
+		if (stmt.getName().equals(this.name)) {
 			return true;
 		}
 		
@@ -49,5 +49,10 @@ public class PushStmt extends LIRStatement {
 	@Override
 	public boolean isUseStatement() {
 		return true;
+	}
+	
+	@Override
+	public Object clone() {
+		return new PushStmt(this.name);
 	}
 }

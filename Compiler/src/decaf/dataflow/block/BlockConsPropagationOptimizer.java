@@ -77,11 +77,11 @@ public class BlockConsPropagationOptimizer {
 			}
 			else if (stmt.getClass().equals(PushStmt.class)) {
 				PushStmt pStmt = (PushStmt) stmt;
-				pStmt.setAddress(processName(pStmt.getAddress()));
+				pStmt.setName(processName(pStmt.getName()));
 			}
 			else if (stmt.getClass().equals(PopStmt.class)) {
 				PopStmt pStmt = (PopStmt) stmt;
-				pStmt.setAddress(processName(pStmt.getAddress()));
+				pStmt.setName(processName(pStmt.getName()));
 			}
 		}		
 	}

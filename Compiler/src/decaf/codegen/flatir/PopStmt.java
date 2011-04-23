@@ -3,29 +3,29 @@ package decaf.codegen.flatir;
 import java.io.PrintStream;
 
 public class PopStmt extends LIRStatement {
-	private Name address; // Can be register or memory
+	private Name name; // Can be register or memory
 	
 	public PopStmt(Name address) {
-		this.setAddress(address);
+		this.setName(address);
 		this.isLeader = false;
 	}
 
-	public void setAddress(Name address) {
-		this.address = address;
+	public void setName(Name address) {
+		this.name = address;
 	}
 
-	public Name getAddress() {
-		return address;
+	public Name getName() {
+		return name;
 	}
 	
 	@Override
 	public String toString() {
-		return "pop " + address;
+		return "pop " + name;
 	}
 
 	@Override
 	public void generateAssembly(PrintStream out) {
-		out.println("\tpop\t" + this.address.getLocation().getASMRepresentation());
+		out.println("\tpop\t" + this.name.getLocation().getASMRepresentation());
 	}
 	
 	@Override
@@ -39,7 +39,7 @@ public class PopStmt extends LIRStatement {
 		if (!o.getClass().equals(PopStmt.class)) return false;
 		
 		PopStmt stmt = (PopStmt) o;
-		if (stmt.getAddress().equals(this.address)) {
+		if (stmt.getName().equals(this.name)) {
 			return true;
 		}
 		
@@ -49,5 +49,10 @@ public class PopStmt extends LIRStatement {
 	@Override
 	public boolean isUseStatement() {
 		return true;
+	}
+	
+	@Override
+	public Object clone() {
+		return new PopStmt(this.name);
 	}
 }
