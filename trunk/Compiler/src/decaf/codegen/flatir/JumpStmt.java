@@ -116,4 +116,9 @@ public class JumpStmt extends LIRStatement {
 		
 		return false;
 	}
+	
+	@Override
+	public Object clone() {
+		return new JumpStmt(this.condition, this.label);
+	}
 }

@@ -59,4 +59,9 @@ public class LabelStmt extends LIRStatement {
 		
 		return false;
 	}
+	
+	@Override
+	public Object clone() {
+		return new LabelStmt(this.label);
+	}
 }

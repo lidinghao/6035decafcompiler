@@ -78,6 +78,11 @@ public class CmpStmt extends LIRStatement {
 	}
 	
 	@Override
+	public Object clone() {
+		return new CmpStmt(this.arg1, this.arg2);
+	}
+	
+	@Override
 	public boolean isUseStatement() {
 		return true;
 	}

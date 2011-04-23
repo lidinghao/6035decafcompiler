@@ -32,4 +32,9 @@ public class LeaveStmt extends LIRStatement {
 		
 		return true;
 	}
+	
+	@Override
+	public Object clone() {
+		return new LeaveStmt();
+	}
 }

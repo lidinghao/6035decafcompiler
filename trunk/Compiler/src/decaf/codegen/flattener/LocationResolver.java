@@ -43,11 +43,11 @@ public class LocationResolver {
 				}
 				else if (stmt.getClass().equals(PopStmt.class)) {
 					PopStmt popStmt = (PopStmt)stmt;
-					resolveName(popStmt.getAddress());
+					resolveName(popStmt.getName());
 				}
 				else if (stmt.getClass().equals(PushStmt.class)) {
 					PushStmt pushStmt = (PushStmt)stmt;
-					resolveName(pushStmt.getAddress());
+					resolveName(pushStmt.getName());
 				}
 			}
 			
@@ -79,11 +79,11 @@ public class LocationResolver {
 				}
 				else if (stmt.getClass().equals(PopStmt.class)) {
 					PopStmt popStmt = (PopStmt)stmt;
-					out.add(getLocationEntry(popStmt.getAddress()));
+					out.add(getLocationEntry(popStmt.getName()));
 				}
 				else if (stmt.getClass().equals(PushStmt.class)) {
 					PushStmt pushStmt = (PushStmt)stmt;
-					out.add(getLocationEntry(pushStmt.getAddress()));
+					out.add(getLocationEntry(pushStmt.getName()));
 				}
 			}
 			
