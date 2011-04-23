@@ -41,6 +41,11 @@ public class LocationResolver {
 					resolveName(qStmt.getArg2());
 					resolveName(qStmt.getDestination());
 				}
+				else if (stmt.getClass().equals(CmpStmt.class)) {
+					CmpStmt cStmt = (CmpStmt)stmt;
+					resolveName(cStmt.getArg1());
+					resolveName(cStmt.getArg2());
+				}
 				else if (stmt.getClass().equals(PopStmt.class)) {
 					PopStmt popStmt = (PopStmt)stmt;
 					resolveName(popStmt.getName());
