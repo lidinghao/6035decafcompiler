@@ -1,6 +1,19 @@
 class Program {
 	int a, b;
-	
+	void foo() {
+		int c, d;
+		a = 6;
+		if (a < 5) {
+			b = a;
+			d = 2;
+		} else {
+			b = a;
+			d = 1;
+		}
+		c = b; // should be replaced with b = 6
+		c = d; // should not be replaced
+	}	
+
 	void main() {
 		int c, d;
 		a = 5;

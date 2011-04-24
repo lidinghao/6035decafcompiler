@@ -1,0 +1,16 @@
+class Program {
+	int a[10];
+	
+	void main() {
+		int c, d, e;
+		c = 5;
+		d = c + e;
+		e = c + d + e;
+		if (d > 0) {
+			a[c] = e;
+		} else {
+			a[c] = e;
+		}
+		d = a[c]; // c should be replaced with 5
+	}
+}

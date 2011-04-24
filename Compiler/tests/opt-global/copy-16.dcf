@@ -1,0 +1,16 @@
+class Program {
+	int a, b;
+	
+	void main() {
+		int c, d, e;
+		e = a + b + c;
+		a = 5;
+		for i = 0, a {
+			d = e - 1;
+			if (d == 2) {
+				d = e;
+			}
+			c = d; // should not be replaced
+		}
+	}
+}

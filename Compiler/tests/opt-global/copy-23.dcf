@@ -1,0 +1,26 @@
+class Program {
+	// test for handling multiple CFGs
+	void foo() {
+		int a, b, c;
+		a = 5;
+		b = a + 5;
+		if (a < 5) {
+			a = b;
+		} else {
+			a = b;
+		}
+		c = a; // should change to c = b
+	}
+
+	void main() {
+		int a, b, c;
+		a = 5;
+		b = a + 5;
+		if (a < 5) {
+			a = b;
+		} else {
+			// nothing
+		}
+		c = a; // should not change
+	}
+}
