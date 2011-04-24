@@ -28,22 +28,22 @@ public class CFGBuilder {
 	}
 	
 	public void generateCFGs() {
-		for (String s: lirMap.keySet()) {
-			List<CFGBlock> cfgList = generateCFGBlocks(lirMap.get(s));
+		for (String methodName: lirMap.keySet()) {
+			List<CFGBlock> cfgList = generateCFGBlocks(methodName);
 			generateCFG(cfgList);
-			cfgMap.put(s, cfgList);
+			cfgMap.put(methodName, cfgList);
 		}
 	}
 
-	private List<CFGBlock> generateCFGBlocks(List<LIRStatement> list) {
+	private List<CFGBlock> generateCFGBlocks(String methodName) {
 		List<CFGBlock> cfgList = new ArrayList<CFGBlock>();
 		CFGBlock cfg = null;
 		int i = 0;
 		
-		for (LIRStatement stmt: list) {
+		for (LIRStatement stmt: this.lirMap.get(methodName)) {
 			if (stmt.isLeader()) {
 				if (cfg != null) cfgList.add(cfg);
-				cfg = new CFGBlock();
+				cfg = new CFGBlock(methodName);
 				cfg.setIndex(i); // Set index
 				cfg.setLeader(stmt); // Set leader
 				cfg.setStatements(new ArrayList<LIRStatement>()); // Initialize statements
