@@ -1,0 +1,14 @@
+class Program {
+	int a[10];
+	
+	void main() {
+		int c, d;
+		c = 5;
+		if (d > 0) {
+			a[c] = 3; // c should be replaced with 5
+		} else {
+			a[c] = 3; // c should be replaced with 5
+		}
+		d = a[c]; // a[c] should be replaced with 3
+	}
+}
