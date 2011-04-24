@@ -212,6 +212,12 @@ public class ExpressionFlattenerVisitor implements ASTVisitor<Name> {
 			argNames.add(argName);
 		}
 		
+		// Add method call label
+		int myCC = ExpressionFlattenerVisitor.callCount;
+		ExpressionFlattenerVisitor.callCount++;
+		
+		this.statements.add(new LabelStmt("mcall_" + expr.getMethodName() + "_" + myCC));
+		
 		// Save args in registers
 		for (int i = 0; i < expr.getArguments().size() && i < argumentRegs.length; i++) {
 			this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE,
