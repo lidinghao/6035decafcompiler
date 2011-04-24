@@ -8,25 +8,29 @@ public class GlobalOptimizer {
 	private GlobalConstantPropagationOptimizer constant;
 	private GlobalCopyPropagationOptimizer copy;
 	private GlobalDeadCodeOptimizer dc;
+	private CFGBuilder cb;
+	private ProgramFlattener pf;
 
 	public GlobalOptimizer(CFGBuilder cb, ProgramFlattener pf) {
-		cse = new GlobalCSEOptimizer(cb.getCfgMap(), pf);
-		constant = new GlobalConstantPropagationOptimizer(cb.getCfgMap());
-		copy = new GlobalCopyPropagationOptimizer(cb.getCfgMap());
-		dc = new GlobalDeadCodeOptimizer(cb.getCfgMap(), pf);
+		this.cb = cb;
+		this.pf = pf;
 	}
 	
 	public void optimizeBlocks(boolean[] opts) {
 		if(opts[1]) { // CSE
+			cse = new GlobalCSEOptimizer(cb.getCfgMap(), pf);
 			cse.performGlobalCSE();
 		} 
 		if(opts[2]) { // COPY
+			copy = new GlobalCopyPropagationOptimizer(cb.getCfgMap());
 			copy.performGlobalCopyProp();
 		} 
 		if(opts[3]) { // CONST
+			constant = new GlobalConstantPropagationOptimizer(cb.getCfgMap());
 			constant.performGlobalConstantProp();
 		} 
 		if(opts[4]) { // DC
+			dc = new GlobalDeadCodeOptimizer(cb.getCfgMap(), pf);
 			dc.performDeadCodeElimination();
 		}
 	}

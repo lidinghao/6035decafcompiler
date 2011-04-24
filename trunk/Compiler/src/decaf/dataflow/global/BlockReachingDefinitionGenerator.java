@@ -1,5 +1,6 @@
 package decaf.dataflow.global;
 
+import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -21,12 +22,12 @@ public class BlockReachingDefinitionGenerator {
 	private HashMap<CFGBlock, BlockDataFlowState> blockReachingDefs;
 	private HashSet<CFGBlock> cfgBlocksToProcess;
 	// Map from Name to QuadrupletStmt which assign to that Name
-	private HashMap<Name, HashSet<QuadrupletStmt>> nameToQStmts;
+	private HashMap<Name, ArrayList<QuadrupletStmt>> nameToQStmts;
 	private int totalDefinitions;
 
 	public BlockReachingDefinitionGenerator(HashMap<String, List<CFGBlock>> cMap) {
 		cfgMap = cMap;
-		nameToQStmts = new HashMap<Name, HashSet<QuadrupletStmt>>();
+		nameToQStmts = new HashMap<Name, ArrayList<QuadrupletStmt>>();
 		blockReachingDefs = new HashMap<CFGBlock, BlockDataFlowState>();
 		cfgBlocksToProcess = new HashSet<CFGBlock>();
 		totalDefinitions = 0;
@@ -70,7 +71,7 @@ public class BlockReachingDefinitionGenerator {
 							// of something
 							qStmt.setMyId();
 							if (!nameToQStmts.containsKey(dest)) {
-								nameToQStmts.put(dest, new HashSet<QuadrupletStmt>());
+								nameToQStmts.put(dest, new ArrayList<QuadrupletStmt>());
 							}
 							nameToQStmts.get(dest).add(qStmt);
 							totalDefinitions++;
@@ -162,7 +163,7 @@ public class BlockReachingDefinitionGenerator {
 	public void updateKillSet(Name newDest, BlockDataFlowState bFlow) {
 		BitSet kill = bFlow.getKill();
 		BitSet in = bFlow.getIn();
-		HashSet<QuadrupletStmt> qStmtsForDest = nameToQStmts.get(newDest);
+		ArrayList<QuadrupletStmt> qStmtsForDest = nameToQStmts.get(newDest);
 		if (qStmtsForDest != null) {
 			// Kill if it is part of In
 			for (QuadrupletStmt q : qStmtsForDest) {
@@ -174,11 +175,11 @@ public class BlockReachingDefinitionGenerator {
 		}
 	}
 	
-	public HashMap<Name, HashSet<QuadrupletStmt>> getNameToQStmts() {
+	public HashMap<Name, ArrayList<QuadrupletStmt>> getNameToQStmts() {
 		return nameToQStmts;
 	}
 
-	public void setNameToQStmts(HashMap<Name, HashSet<QuadrupletStmt>> nameToQStmts) {
+	public void setNameToQStmts(HashMap<Name, ArrayList<QuadrupletStmt>> nameToQStmts) {
 		this.nameToQStmts = nameToQStmts;
 	}
 	
