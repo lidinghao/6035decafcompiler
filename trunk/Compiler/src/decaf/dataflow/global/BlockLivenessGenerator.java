@@ -22,23 +22,16 @@ public class BlockLivenessGenerator {
 	private HashSet<CFGBlock> cfgBlocksToProcess;
 	// One Variable per Name
 	private HashMap<Name, Variable> nameToVar;
-	public HashMap<Name, Variable> getNameToVar() {
-		return nameToVar;
-	}
-
-	public void setNameToVar(HashMap<Name, Variable> nameToVar) {
-		this.nameToVar = nameToVar;
-	}
-
 	// List of Variable IDs which correspond to global names
 	private List<Integer> globalVarIDs;
 	private int totalVars;
 	
 	public BlockLivenessGenerator(HashMap<String, List<CFGBlock>> cMap) {
-		this.cfgMap = cMap;
+		cfgMap = cMap;
 		blockLiveVars = new HashMap<CFGBlock, BlockDataFlowState>();
 		cfgBlocksToProcess = new HashSet<CFGBlock>();
 		globalVarIDs = new ArrayList<Integer>();
+		nameToVar = new HashMap<Name, Variable>();
 		totalVars = 0;
 	}
 	
@@ -119,10 +112,14 @@ public class BlockLivenessGenerator {
 	}
 
 	private void updateGlobalVarIDs(Name arg) {
-		if (arg.getClass().equals(VarName.class)) {
-			VarName var = (VarName) arg;
-			if (var.getBlockId() == -1) { // Global
-				globalVarIDs.add(nameToVar.get(arg).getMyId());
+		if (arg != null) {
+			if (arg.getClass().equals(VarName.class)) {
+				VarName var = (VarName) arg;
+				if (var.getBlockId() == -1) { // Global
+					Variable v = nameToVar.get(arg);
+					if (v != null)
+						globalVarIDs.add(v.getMyId());
+				}
 			}
 		}
 	}
@@ -167,6 +164,7 @@ public class BlockLivenessGenerator {
 		CmpStmt cStmt;
 		QuadrupletStmt qStmt;
 		Name arg1 = null, arg2 = null, dest = null;
+		Variable destVar, arg1Var, arg2Var;
 		
 		// Traverse statements in reverse order
 		for (int i = blockStmts.size()-1; i >= 0; i--) {
@@ -193,17 +191,26 @@ public class BlockLivenessGenerator {
 			}
 			if (dest != null) {
 				// Set dest -> id to true in current def set
-				bFlow.getKill().set(nameToVar.get(dest).getMyId());
-				// Set dest -> id to false in current use set
-				bFlow.getGen().set(nameToVar.get(dest).getMyId(), false);
+				destVar = nameToVar.get(dest);
+				if (destVar != null) {
+					bFlow.getKill().set(destVar.getMyId());
+					// Set dest -> id to false in current use set
+					bFlow.getGen().set(destVar.getMyId(), false);
+				}
 			}
 			if (arg1 != null) {
 				// Set arg1 -> id to true in current use set
-				bFlow.getGen().set(nameToVar.get(arg1).getMyId());
+				arg1Var = nameToVar.get(arg1);
+				if (arg1Var != null) {
+					bFlow.getGen().set(arg1Var.getMyId());
+				}
 			}
 			if (arg2 != null) {
 				// Set arg2 -> id to true in current use set
-				bFlow.getGen().set(nameToVar.get(arg2).getMyId());
+				arg2Var = nameToVar.get(arg2);
+				if (arg2Var != null) {
+					bFlow.getGen().set(arg2Var.getMyId());
+				}
 			}
 		}
 	}
@@ -214,5 +221,13 @@ public class BlockLivenessGenerator {
 
 	public HashMap<CFGBlock, BlockDataFlowState> getBlockLiveVars() {
 		return blockLiveVars;
+	}
+	
+	public HashMap<Name, Variable> getNameToVar() {
+		return nameToVar;
+	}
+
+	public void setNameToVar(HashMap<Name, Variable> nameToVar) {
+		this.nameToVar = nameToVar;
 	}
 }
