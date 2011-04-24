@@ -1,9 +1,10 @@
 package decaf.dataflow.global;
 
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 
+import decaf.codegen.flatir.ArrayName;
 import decaf.codegen.flatir.CallStmt;
 import decaf.codegen.flatir.CmpStmt;
 import decaf.codegen.flatir.ConstantName;
@@ -28,7 +29,7 @@ public class GlobalConstantPropagationOptimizer {
 	public void performGlobalConstantProp() {
 		if (reachingDefGenerator.getTotalDefinitions() == 0)
 			return;
-
+		
 		for (String s: this.cfgMap.keySet()) {
 			if (s.equals(ProgramFlattener.exceptionHandlerLabel)) continue;
 			
@@ -45,7 +46,8 @@ public class GlobalConstantPropagationOptimizer {
 		PushStmt pushStmt;
 		CmpStmt cStmt;
 		QuadrupletStmt qStmt;
-		ConstantName arg1, arg2;
+		ConstantName arg1, arg2, arrIndex;
+		Name qDest;
 		
 		for (LIRStatement stmt: block.getStatements()) {
 			// Reset kill set
@@ -61,6 +63,13 @@ public class GlobalConstantPropagationOptimizer {
 				// If all reaching definitions assign the Name to the same constant, replace Name with that constant
 				arg1 = reachingDefsHaveSameConstant(qStmt.getArg1(), bFlow);
 				arg2 = reachingDefsHaveSameConstant(qStmt.getArg2(), bFlow);
+				qDest = qStmt.getDestination();
+				// If destination is ArrayName, try to optimize the index
+				if (qDest.getClass().equals(ArrayName.class)) {
+					arrIndex = reachingDefsHaveSameConstant(((ArrayName)qDest).getIndex(), bFlow);
+					if (arrIndex != null)
+						((ArrayName)qDest).setIndex(arrIndex);
+				}
 				if (arg1 != null)
 					// Set arg1 to Constant
 					qStmt.setArg1(arg1);
@@ -107,10 +116,26 @@ public class GlobalConstantPropagationOptimizer {
 	private ConstantName reachingDefsHaveSameConstant(Name arg, BlockDataFlowState bFlow) {
 		if (arg == null)
 			return null;
-		HashMap<Name, HashSet<QuadrupletStmt>> nameToStmts = reachingDefGenerator.getNameToQStmts();
-		HashSet<QuadrupletStmt> stmtsForName = nameToStmts.get(arg);
-		if (stmtsForName == null)
+		
+		// If the Name is ArrayName, we try to optimize the entire Name first, and if that does not work,
+		// we try to optimize the array index name
+		boolean isArrName = false;
+		if (arg.getClass().equals(ArrayName.class))
+			isArrName = true;
+		
+		ConstantName arrIndex;
+		HashMap<Name, ArrayList<QuadrupletStmt>> nameToStmts = reachingDefGenerator.getNameToQStmts();
+		ArrayList<QuadrupletStmt> stmtsForName = nameToStmts.get(arg);
+		if (stmtsForName == null) {
+			if (isArrName) {
+				// Try optimizing index if ArrayName
+				arrIndex = reachingDefsHaveSameConstant(((ArrayName)arg).getIndex(), bFlow);
+				if (arrIndex != null) {
+					((ArrayName)arg).setIndex(arrIndex);
+				}
+			}
 			return null;
+		}
 		
 		ConstantName cName = null;
 		for (QuadrupletStmt qStmt : stmtsForName) {
@@ -122,11 +147,25 @@ public class GlobalConstantPropagationOptimizer {
 						cName = (ConstantName)arg1;
 					} else {
 						if (!((ConstantName)arg1).equals(cName)) {
+							if (isArrName) {
+								// Try optimizing index if ArrayName
+								arrIndex = reachingDefsHaveSameConstant(((ArrayName)arg).getIndex(), bFlow);
+								if (arrIndex != null) {
+									((ArrayName)arg).setIndex(arrIndex);
+								}
+							}
 							return null;
 						}
 					}
 				} else {
 					// Statement is not of type arg = constant
+					if (isArrName) {
+						// Try optimizing index if ArrayName
+						arrIndex = reachingDefsHaveSameConstant(((ArrayName)arg).getIndex(), bFlow);
+						if (arrIndex != null) {
+							((ArrayName)arg).setIndex(arrIndex);
+						}
+					}
 					return null;
 				}
 			}
