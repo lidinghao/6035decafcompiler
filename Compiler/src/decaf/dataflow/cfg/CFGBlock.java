@@ -11,8 +11,10 @@ public class CFGBlock {
 	private List<CFGBlock> predecessors;
 	private List<CFGBlock> successors;
 	private int index;
+	private String methodName;
 	
-	public CFGBlock() {
+	public CFGBlock(String methodName) {
+		this.methodName = methodName;
 		this.leader = null;
 		this.statements = new ArrayList<LIRStatement>();
 		this.predecessors = new ArrayList<CFGBlock>();
@@ -100,5 +102,18 @@ public class CFGBlock {
 		}
 		
 		return rtn;
+	}
+	
+	public String getMethodName() {
+		return methodName;
+	}
+
+	public void setMethodName(String methodName) {
+		this.methodName = methodName;
+	}
+
+	@Override
+	public int hashCode() {
+		return this.index + 17*this.methodName.hashCode();
 	}
 }
