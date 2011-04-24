@@ -1,0 +1,21 @@
+class Program {
+	int a, b;
+	
+	void main() {
+		int c, d, e;
+		a = 5;
+		e = a + b + c;
+		if (a < 5) {
+			d = e;
+			if (a > 10) {
+				d = e;
+			} else {
+				d = e+1;
+			}
+		} else {
+			d = e;
+		}
+		c = d; // d should not be replaced with e
+	}
+}
+

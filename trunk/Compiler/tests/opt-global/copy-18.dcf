@@ -2,18 +2,20 @@ class Program {
 	int a, b;
 	
 	void main() {
-		int c, d;
+		int c, d, e;
 		a = 5;
+		e = a + b + c;
 		if (a < 5) {
-			d = 3;
+			d = e;
 			if (a > 10) {
-				d = 2;
+				d = e;
 			} else {
-				d = 2;
+				d = e;
 			}
 		} else {
-			d = 2;
+			d = e;
 		}
-		c = d; // d should be replaced with d
+		c = d; // d should be replaced with e
 	}
 }
+

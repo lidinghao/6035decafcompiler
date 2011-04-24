@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
+import decaf.codegen.flatir.ArrayName;
 import decaf.codegen.flatir.CallStmt;
 import decaf.codegen.flatir.CmpStmt;
 import decaf.codegen.flatir.LIRStatement;
@@ -45,8 +46,8 @@ public class GlobalCopyPropagationOptimizer {
 		PopStmt popStmt;
 		PushStmt pushStmt;
 		CmpStmt cStmt;
-		Name newArg1, newArg2;
-		
+		Name newArg1, newArg2, dest;
+
 		for (LIRStatement stmt: block.getStatements()) {
 			// Reset kill set
 			bFlow.getKill().clear();
@@ -66,8 +67,19 @@ public class GlobalCopyPropagationOptimizer {
 				if (newArg2 != null) {
 					qStmt.setArg2(newArg2);
 				}
+				dest = qStmt.getDestination();
+				if (dest != null) {
+					// Check if dest is ArrayName and try to optimize index
+					if (dest.getClass().equals(ArrayName.class)) {
+						Name arrIndex = ((ArrayName)dest).getIndex();
+						Name propagatedName = copyPropagateOnArg(arrIndex, bFlow);
+						if (propagatedName != null)
+							((ArrayName)dest).setIndex(propagatedName);
+					}
+				}
+				
 				// Update BlockDataFlowState kill set
-				assignmentDefGenerator.updateKillGenSet(qStmt.getDestination(), bFlow);
+				assignmentDefGenerator.updateKillGenSet(dest, bFlow);
 				// Update BlockDataFlowState in set by using updated kill set
 				bFlow.getIn().xor(bFlow.getKill());
 				
@@ -129,6 +141,13 @@ public class GlobalCopyPropagationOptimizer {
 					// Return the name which we should replace the arg with
 					return reachingAssignmentStmt.getArg1();
 				}
+			}
+			// Check if Name is ArrayName and try to optimize index
+			if (arg.getClass().equals(ArrayName.class)) {
+				Name arrIndex = ((ArrayName)arg).getIndex();
+				Name propagatedName = copyPropagateOnArg(arrIndex, bFlow);
+				if (propagatedName != null)
+					((ArrayName)arg).setIndex(propagatedName);
 			}
 		}
 		return null;

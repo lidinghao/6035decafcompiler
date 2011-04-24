@@ -1,0 +1,23 @@
+class Program {
+	int a;
+	
+	void foo() {
+		int b, c;
+		c = b; // should not change to c = c
+	}
+	
+	void main() {
+		int b, c;
+		a = 5;
+		b = a + 5;
+		if (a < 5) {
+			a = b;
+			b = c;
+		} else {
+			a = b;
+			b = c;
+		}
+		foo();
+		c = a; // should not change since 'a' can change in foo since it is a global
+	}
+}

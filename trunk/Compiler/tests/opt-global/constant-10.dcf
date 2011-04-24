@@ -11,6 +11,6 @@ class Program {
 		} else {
 			d = 2;
 		}
-		c = d; // should not be replaced with d = 2, since the for loop might not execute
+		c = d; // d should not be replaced with 2, since the for loop might not execute
 	}
 }

@@ -1,0 +1,16 @@
+class Program {
+	int a[10];
+	
+	void main() {
+		int c, d, e;
+		c = 5;
+		d = c + e;
+		e = c + d + e;
+		if (d > 0) {
+			a[5] = e;
+		} else {
+			a[5] = e;
+		}
+		d = a[5]; // a[5] should be replaced with e
+	}
+}
