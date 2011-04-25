@@ -1,29 +1,15 @@
 class Program {
-  int get_int(int x) {
-    return x;
-  }
-
-  boolean get_bool(boolean x) {
-    return x;
-  }
-
   void main() {
     int a, b, c, d;
     boolean x;
-
-    a = get_int(2);
-    b = get_int(3);
-    x = get_bool(true);
-    c = 0; // should be eliminated 
+    a = 2;
+    b = 3;
+    x = true; 
     d = 0; // should be eliminated
 
     if (x) {
-      c = a + b;
-      d = 54; // should be eliminated
+      d = 5; // should be eliminated
     }
-    d = a + b;
-
-    callout("printf", "%d\n", c);
-    callout("printf", "%d\n", d);
+    d = a + b; // should be eliminated
   }
 }
