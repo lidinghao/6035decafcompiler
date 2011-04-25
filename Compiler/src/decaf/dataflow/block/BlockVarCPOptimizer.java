@@ -15,7 +15,6 @@ import decaf.codegen.flatir.QuadrupletStmt;
 import decaf.codegen.flatir.Register;
 import decaf.codegen.flatir.RegisterName;
 import decaf.codegen.flatir.VarName;
-import decaf.codegen.flattener.ExpressionFlattenerVisitor;
 import decaf.codegen.flattener.ProgramFlattener;
 import decaf.dataflow.cfg.CFGBlock;
 
@@ -87,6 +86,14 @@ public class BlockVarCPOptimizer {
 							if (var.getBlockId() == -1) { // Global
 								resetName.add(name);
 							}
+						}
+						
+						if (name.isArray()) { // Arrays are also global
+							resetName.add(name);
+						}
+						
+						if (name.getClass().equals(RegisterName.class)) { // Register name
+							resetName.add(name);
 						}
 					}
 					
