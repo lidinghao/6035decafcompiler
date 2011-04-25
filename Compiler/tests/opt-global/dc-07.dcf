@@ -1,0 +1,8 @@
+class Program {
+	int a;
+	void main() {
+		int b, c;
+		a = b + c; // should not be eliminated
+		b = a; // should be eliminated
+	}
+}

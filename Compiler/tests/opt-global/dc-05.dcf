@@ -1,15 +1,15 @@
 class Program {
 	int fib(int i) {
-		int b;
-		b = 0; /cannot be aliminated
-		int j;
-		int j = 1; // can be eliminated
-		callout("printf","%d\n",i);
-		if(i == 0 || i ==1){
-			j = 10;
-			callout("printf","%d\n",b);
+		int j, b;
+		b = 0; 
+		j = 1; // should be eliminated
+		callout("printf", "%d\n", i);
+		if (i == 0 || i == 1) {
+			j = 10; // should be eliminated
+			callout("printf", "%d\n", b);
 			return 1;
-		}else{
+		} else {
+			b = 1; // should be eliminated
 			return fib(i-1) + fib(i-2);
 		}
 		

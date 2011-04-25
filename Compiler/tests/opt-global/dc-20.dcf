@@ -1,0 +1,11 @@
+class Program {
+	int a[10];
+
+	void main() {
+		int b, c;
+		c = b + 4; // no dead code!
+		a[c+2] = b + 5; // dead code! (we need to turn copy prop on and run copy prop + dc multiple times)
+		b = 3; // no dead code!
+		a[c+2] = a[b] + c; // no dead code!
+	}
+}

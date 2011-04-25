@@ -61,7 +61,7 @@ public class GlobalDeadCodeOptimizer {
 		PushStmt pushStmt;
 		CmpStmt cStmt;
 		QuadrupletStmt qStmt;
-		Name arg1 = null, arg2 = null, arrIndex = null;
+		Name arg1 = null, arg2 = null, dest = null, arrIndex = null;
 		Variable arg1Var, arg2Var;
 		
 		// Only QuadrupletStmt is dead code eliminated
@@ -71,11 +71,12 @@ public class GlobalDeadCodeOptimizer {
 				qStmt = (QuadrupletStmt)stmt;
 				if (!assigningRegisters(qStmt)) {
 					// Only dead code eliminate statements that don't assign registers
-					Name dest = qStmt.getDestination();
+					dest = qStmt.getDestination();
 					if (nameToVar.containsKey(dest)) {
 						varId = nameToVar.get(dest).getMyId();
 						if (isDead(varId, bFlow.getOut())) {
 							// Don't add statement
+							System.out.println("Stmt REMOVED: " + stmt);
 							continue;
 						}
 					}
@@ -104,6 +105,17 @@ public class GlobalDeadCodeOptimizer {
 			// This ensures correctness within each block so statements that are not used
 			// OUT of the block BUT are used in the future WITHIN the block are still
 			// retained
+			if (dest != null) {
+				// If dest is a ArrayName, process the index Name
+				if (dest.getClass().equals(ArrayName.class)) {
+					arrIndex = ((ArrayName)dest).getIndex();
+					arg1Var = nameToVar.get(arrIndex);
+					if (arg1Var != null) {	
+						bFlow.getOut().set(arg1Var.getMyId());
+					}
+				}
+				// If dest is not ArrayName, we don't care about it
+			}
 			if (arg1 != null) {
 				// Set arg1 -> id to true in current use set
 				arg1Var = nameToVar.get(arg1);

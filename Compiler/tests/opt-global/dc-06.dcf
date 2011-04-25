@@ -6,7 +6,6 @@ class Program {
    		  return false;
    		}
    }
-
    void main() {
       boolean a,b;
       int ret;

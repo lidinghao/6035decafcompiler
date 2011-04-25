@@ -1,0 +1,21 @@
+class Program {
+	int a;
+
+	void main() {
+		int b, c;
+		b = 3;
+		if (b < 3) {
+			if (b > 6) {
+				a = b + c; // dead code!
+			}
+		} else {
+			c = b; // dead code!
+			if (b < 5) {
+				c = a;
+			} else {
+				c = b;
+			}
+		}
+		a = c;
+	}
+}
