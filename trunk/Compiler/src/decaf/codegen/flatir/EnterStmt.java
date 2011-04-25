@@ -10,7 +10,7 @@ public class EnterStmt extends LIRStatement {
 	}
 	
 	public EnterStmt() {
-		stackSize = 0;
+		stackSize = -1;
 	}
 
 	public void setStackSize(int stackSize) {
@@ -24,7 +24,7 @@ public class EnterStmt extends LIRStatement {
 	@Override 
 	public String toString() {
 		String rtn = "enter ";
-		if (stackSize == 0) {
+		if (stackSize == -1) {
 			rtn += "<undefined>";
 		}
 		else {
