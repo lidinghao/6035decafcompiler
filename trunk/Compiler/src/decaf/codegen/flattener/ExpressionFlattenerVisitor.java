@@ -212,7 +212,7 @@ public class ExpressionFlattenerVisitor implements ASTVisitor<Name> {
 		}
 		
 		// Add method call label		
-		this.statements.add(new LabelStmt(getMethodCallStart(expr.getMethodName())));
+		this.statements.add(new LabelStmt(getMethodCallStart(expr.getMethodName().substring(1, expr.getMethodName().length()-2))));
 		
 		// Save args in registers
 		for (int i = 0; i < expr.getArguments().size() && i < Register.argumentRegs.length; i++) {
@@ -243,7 +243,7 @@ public class ExpressionFlattenerVisitor implements ASTVisitor<Name> {
 		// Save return value
 		this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE, rtnValue, new RegisterName(Register.RAX), null));
 		
-		this.statements.add(new LabelStmt(getMethodCallEnd(expr.getMethodName())));
+		this.statements.add(new LabelStmt(getMethodCallEnd(expr.getMethodName().substring(1, expr.getMethodName().length()-2))));
 
 		return rtnValue;
 	}
