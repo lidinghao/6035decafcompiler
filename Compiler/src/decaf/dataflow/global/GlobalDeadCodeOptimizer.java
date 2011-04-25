@@ -5,8 +5,12 @@ import java.util.BitSet;
 import java.util.HashMap;
 import java.util.List;
 import decaf.dataflow.cfg.CFGBlock;
+import decaf.codegen.flatir.ArrayName;
+import decaf.codegen.flatir.CmpStmt;
 import decaf.codegen.flatir.LIRStatement;
 import decaf.codegen.flatir.Name;
+import decaf.codegen.flatir.PopStmt;
+import decaf.codegen.flatir.PushStmt;
 import decaf.codegen.flatir.QuadrupletStmt;
 import decaf.codegen.flattener.ProgramFlattener;
 
@@ -27,7 +31,6 @@ public class GlobalDeadCodeOptimizer {
 	}
 	
 	public void performDeadCodeElimination(){
-
 		for (String s: this.cfgMap.keySet()) {
 			if (s.equals(ProgramFlattener.exceptionHandlerLabel)) continue;
 			
@@ -51,10 +54,19 @@ public class GlobalDeadCodeOptimizer {
 		List<LIRStatement> newStmts = new ArrayList<LIRStatement>();
 		BlockDataFlowState bFlow = blockLiveVars.get(block);
 		Integer varId; 
+		LIRStatement stmt;
+		PopStmt popStmt;
+		PushStmt pushStmt;
+		CmpStmt cStmt;
+		QuadrupletStmt qStmt;
+		Name arg1 = null, arg2 = null, arrIndex = null;
+		Variable arg1Var, arg2Var;
 		
-		for (LIRStatement stmt: block.getStatements()){
+		// Only QuadrupletStmt is dead code eliminated
+		for (int i = block.getStatements().size()-1; i >= 0 ; i--) {
+			stmt = block.getStatements().get(i);
 			if (stmt.getClass().equals(QuadrupletStmt.class)) {
-				QuadrupletStmt qStmt = (QuadrupletStmt)stmt;
+				qStmt = (QuadrupletStmt)stmt;
 				Name dest = qStmt.getDestination();
 				if (nameToVar.containsKey(dest)) {
 					varId = nameToVar.get(dest).getMyId();
@@ -64,7 +76,61 @@ public class GlobalDeadCodeOptimizer {
 					}
 				}
 			}
-			newStmts.add(stmt);
+			// Add the arguments to the out set for different types of statements
+			if (stmt.getClass().equals(QuadrupletStmt.class)) {
+				qStmt = (QuadrupletStmt)stmt;
+				arg1 = qStmt.getArg1();
+				arg2 = qStmt.getArg2();
+				
+			} else if (stmt.getClass().equals(PopStmt.class)) {
+				popStmt = (PopStmt)stmt;
+				arg1 = popStmt.getName();
+				
+			} else if (stmt.getClass().equals(PushStmt.class)) {
+				pushStmt = (PushStmt)stmt;
+				arg1 = pushStmt.getName();
+				
+			} else if (stmt.getClass().equals(CmpStmt.class)) {
+				cStmt = (CmpStmt)stmt;
+				arg1 = cStmt.getArg1();
+				arg2 = cStmt.getArg2();
+				
+			}
+			// This ensures correctness within each block so statements that are not used
+			// OUT of the block BUT are used in the future WITHIN the block are still
+			// retained
+			if (arg1 != null) {
+				// Set arg1 -> id to true in current use set
+				arg1Var = nameToVar.get(arg1);
+				if (arg1Var != null) {	
+					bFlow.getOut().set(arg1Var.getMyId());
+				}
+				// If arg1 is a ArrayName, process the index Name
+				if (arg1.getClass().equals(ArrayName.class)) {
+					arrIndex = ((ArrayName)arg1).getIndex();
+					arg1Var = nameToVar.get(arrIndex);
+					if (arg1Var != null) {	
+						bFlow.getOut().set(arg1Var.getMyId());
+					}
+				}
+			}
+			if (arg2 != null) {
+				// Set arg2 -> id to true in current use set
+				arg2Var = nameToVar.get(arg2);
+				if (arg2Var != null) {
+					bFlow.getOut().set(arg2Var.getMyId());
+				}
+				// If arg2 is a ArrayName, process the index Name
+				if (arg2.getClass().equals(ArrayName.class)) {
+					arrIndex = ((ArrayName)arg2).getIndex();
+					arg2Var = nameToVar.get(arrIndex);
+					if (arg2Var != null) {	
+						bFlow.getOut().set(arg2Var.getMyId());
+					}
+				}
+			}
+			// Add to beginning
+			newStmts.add(0, stmt);
 		}
 		block.setStatements(newStmts);
 	}

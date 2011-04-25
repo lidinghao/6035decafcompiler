@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
+import decaf.codegen.flatir.ArrayName;
 import decaf.codegen.flatir.CmpStmt;
 import decaf.codegen.flatir.LIRStatement;
 import decaf.codegen.flatir.Name;
@@ -45,6 +46,8 @@ public class BlockLivenessGenerator {
 			blockLiveVars.put(block, bFlow);
 		}
 		
+		printNameToVar();
+		printBlockLiveMap();
 	}
 	
 	// Initialize the out BitSet for each CFG block that has no successors to the BitSet which
@@ -61,12 +64,19 @@ public class BlockLivenessGenerator {
 				for (Integer globalId : globalVarIDs) {
 					out.set(globalId);
 				}
-				// Kill = Def
+				// Kill = Defs
 				// Gen = Use
 				calculateUseDefSets(block, bFlow);
 				BitSet in = bFlow.getIn();
 				in.or(out);
-				in.xor(bFlow.getKill()); // Kill is subset of out
+				// Kill is not a subset of out, so iterate manually
+				for (int i = 0; i < bFlow.getKill().size(); i++) {
+					if (bFlow.getKill().get(i)) {
+						if (bFlow.getIn().get(i)) {
+							bFlow.getIn().set(i, false);
+						}
+					}
+				}			
 				in.or(bFlow.getGen());
 				cfgBlocksToProcess.remove(block);
 				blockLiveVars.put(block, bFlow);
@@ -142,7 +152,14 @@ public class BlockLivenessGenerator {
 		// Calculate In
 		BitSet in = bFlow.getIn();
 		in.or(out);
-		in.xor(bFlow.getKill()); // Invariant: kill (def) is a subset of out
+		// Kill (def) is not always a subset of out, so iterate manually
+		for (int i = 0; i < bFlow.getKill().size(); i++) {
+			if (bFlow.getKill().get(i)) {
+				if (bFlow.getIn().get(i)) {
+					bFlow.getIn().set(i, false);
+				}
+			}
+		}
 		in.or(bFlow.getGen());
 		if (!in.equals(origIn)) {
 			// Add predecessors to cfgBlocks list
@@ -163,7 +180,7 @@ public class BlockLivenessGenerator {
 		PushStmt pushStmt;
 		CmpStmt cStmt;
 		QuadrupletStmt qStmt;
-		Name arg1 = null, arg2 = null, dest = null;
+		Name arg1 = null, arg2 = null, dest = null, arrIndex = null;
 		Variable destVar, arg1Var, arg2Var;
 		
 		// Traverse statements in reverse order
@@ -187,7 +204,6 @@ public class BlockLivenessGenerator {
 				cStmt = (CmpStmt)stmt;
 				arg1 = cStmt.getArg1();
 				arg2 = cStmt.getArg2();
-				
 			}
 			if (dest != null) {
 				// Set dest -> id to true in current def set
@@ -201,8 +217,16 @@ public class BlockLivenessGenerator {
 			if (arg1 != null) {
 				// Set arg1 -> id to true in current use set
 				arg1Var = nameToVar.get(arg1);
-				if (arg1Var != null) {
+				if (arg1Var != null) {	
 					bFlow.getGen().set(arg1Var.getMyId());
+				}
+				// If arg1 is a ArrayName, process the index Name
+				if (arg1.getClass().equals(ArrayName.class)) {
+					arrIndex = ((ArrayName)arg1).getIndex();
+					arg1Var = nameToVar.get(arrIndex);
+					if (arg1Var != null) {	
+						bFlow.getGen().set(arg1Var.getMyId());
+					}
 				}
 			}
 			if (arg2 != null) {
@@ -211,10 +235,33 @@ public class BlockLivenessGenerator {
 				if (arg2Var != null) {
 					bFlow.getGen().set(arg2Var.getMyId());
 				}
+				// If arg2 is a ArrayName, process the index Name
+				if (arg2.getClass().equals(ArrayName.class)) {
+					arrIndex = ((ArrayName)arg2).getIndex();
+					arg2Var = nameToVar.get(arrIndex);
+					if (arg2Var != null) {	
+						bFlow.getGen().set(arg2Var.getMyId());
+					}
+				}
 			}
 		}
 	}
 
+	public void printNameToVar() {
+		for (Name n : nameToVar.keySet()) {
+			System.out.println("NAME: " + n + " --> " + nameToVar.get(n).getMyId());
+		}
+		System.out.println("----");
+	}
+	
+	public void printBlockLiveMap() {
+		for (CFGBlock block : blockLiveVars.keySet()) {
+			System.out.println("BLOCK # " + block.getIndex());
+			System.out.println(blockLiveVars.get(block));
+			System.out.println("----");
+		}
+	}
+	
 	public void setBlockLiveVars(HashMap<CFGBlock, BlockDataFlowState> blockLiveVars) {
 		this.blockLiveVars = blockLiveVars;
 	}
