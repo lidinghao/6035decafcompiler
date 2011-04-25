@@ -13,6 +13,7 @@ import decaf.codegen.flatir.Name;
 import decaf.codegen.flatir.PopStmt;
 import decaf.codegen.flatir.PushStmt;
 import decaf.codegen.flatir.QuadrupletStmt;
+import decaf.codegen.flatir.RegisterName;
 import decaf.codegen.flattener.ProgramFlattener;
 import decaf.dataflow.cfg.CFGBlock;
 
@@ -115,6 +116,9 @@ public class GlobalConstantPropagationOptimizer {
 	// Returns a ConstantName if all reaching definitions assign arg to the same constant, null otherwise
 	private ConstantName reachingDefsHaveSameConstant(Name arg, BlockDataFlowState bFlow) {
 		if (arg == null)
+			return null;
+		// Don't constant propagate register values
+		if (arg.getClass().equals(RegisterName.class))
 			return null;
 		
 		// If the Name is ArrayName, we try to optimize the entire Name first, and if that does not work,

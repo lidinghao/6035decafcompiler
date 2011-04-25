@@ -46,6 +46,8 @@ public class BlockLivenessGenerator {
 			blockLiveVars.put(block, bFlow);
 		}
 		
+		System.out.println("AFTER LIVENESS");
+		printGlobalVarIds();
 		printNameToVar();
 		printBlockLiveMap();
 	}
@@ -88,6 +90,11 @@ public class BlockLivenessGenerator {
 		// LiveVar IDs that we assign should start from 0, so they can
 		// correspond to the appropriate index in the BitSet
 		Variable.setID(0);
+		Name dest = null, arg1 = null, arg2 = null;
+		QuadrupletStmt qStmt;
+		PopStmt popStmt;
+		PushStmt pushStmt;
+		CmpStmt cStmt;
 		for (String s: this.cfgMap.keySet()) {
 			if (s.equals(ProgramFlattener.exceptionHandlerLabel)) continue;
 			
@@ -96,24 +103,37 @@ public class BlockLivenessGenerator {
 				for (int i = 0; i < blockStmts.size(); i++) {
 					LIRStatement stmt = blockStmts.get(i);
 					if (stmt.getClass().equals(QuadrupletStmt.class)) {
-						QuadrupletStmt qStmt = (QuadrupletStmt)stmt;
-						Name dest = qStmt.getDestination();
-						if (!nameToVar.containsKey(dest)) {
-							nameToVar.put(dest, new Variable(dest));
-							updateGlobalVarIDs(dest);
-						}
-						Name arg1 = qStmt.getArg1();
-						if (!nameToVar.containsKey(arg1)) {
-							nameToVar.put(dest, new Variable(arg1));
-							updateGlobalVarIDs(arg1);
-						}
-						Name arg2 = qStmt.getArg2();
-						if (!nameToVar.containsKey(arg2)) {
-							nameToVar.put(dest, new Variable(arg2));
-							updateGlobalVarIDs(arg2);
-						}
-					} 
+						qStmt = (QuadrupletStmt)stmt;
+						dest = qStmt.getDestination();
+						arg1 = qStmt.getArg1();
+						arg2 = qStmt.getArg2();
 						
+					} else if (stmt.getClass().equals(PopStmt.class)) {
+						popStmt = (PopStmt)stmt;
+						arg1 = popStmt.getName();
+						
+					} else if (stmt.getClass().equals(PushStmt.class)) {
+						pushStmt = (PushStmt)stmt;
+						arg1 = pushStmt.getName();
+						
+					} else if (stmt.getClass().equals(CmpStmt.class)) {
+						cStmt = (CmpStmt)stmt;
+						arg1 = cStmt.getArg1();
+						arg2 = cStmt.getArg2();
+					}
+					// Update the Name to Variable map
+					if (!nameToVar.containsKey(dest)) {
+						nameToVar.put(dest, new Variable(dest));
+						updateGlobalVarIDs(dest);
+					}
+					if (!nameToVar.containsKey(arg1)) {
+						nameToVar.put(arg1, new Variable(arg1));
+						updateGlobalVarIDs(arg1);
+					}
+					if (!nameToVar.containsKey(arg2)) {
+						nameToVar.put(arg2, new Variable(arg2));
+						updateGlobalVarIDs(arg2);
+					}
 				}
 				cfgBlocksToProcess.add(block);
 			}
@@ -127,8 +147,15 @@ public class BlockLivenessGenerator {
 				VarName var = (VarName) arg;
 				if (var.getBlockId() == -1) { // Global
 					Variable v = nameToVar.get(arg);
-					if (v != null)
+					if (v != null) {
 						globalVarIDs.add(v.getMyId());
+					}
+				}
+			// ArrayName is by default global so check for that as well
+			} else if (arg.getClass().equals(ArrayName.class)) {
+				Variable v = nameToVar.get(arg);
+				if (v != null) {
+					globalVarIDs.add(v.getMyId());
 				}
 			}
 		}
@@ -247,19 +274,23 @@ public class BlockLivenessGenerator {
 		}
 	}
 
-	public void printNameToVar() {
+	private void printNameToVar() {
 		for (Name n : nameToVar.keySet()) {
 			System.out.println("NAME: " + n + " --> " + nameToVar.get(n).getMyId());
 		}
 		System.out.println("----");
 	}
 	
-	public void printBlockLiveMap() {
+	private void printBlockLiveMap() {
 		for (CFGBlock block : blockLiveVars.keySet()) {
 			System.out.println("BLOCK # " + block.getIndex());
 			System.out.println(blockLiveVars.get(block));
 			System.out.println("----");
 		}
+	}
+	
+	private void printGlobalVarIds() {
+		System.out.println("GLOBAL VAR IDs: " + globalVarIDs);
 	}
 	
 	public void setBlockLiveVars(HashMap<CFGBlock, BlockDataFlowState> blockLiveVars) {

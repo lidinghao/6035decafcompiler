@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.HashMap;
 import java.util.List;
-import decaf.dataflow.cfg.CFGBlock;
+
 import decaf.codegen.flatir.ArrayName;
 import decaf.codegen.flatir.CmpStmt;
 import decaf.codegen.flatir.LIRStatement;
@@ -12,7 +12,9 @@ import decaf.codegen.flatir.Name;
 import decaf.codegen.flatir.PopStmt;
 import decaf.codegen.flatir.PushStmt;
 import decaf.codegen.flatir.QuadrupletStmt;
+import decaf.codegen.flatir.RegisterName;
 import decaf.codegen.flattener.ProgramFlattener;
+import decaf.dataflow.cfg.CFGBlock;
 
 public class GlobalDeadCodeOptimizer {
 	private HashMap<String, List<CFGBlock>> cfgMap;
@@ -67,12 +69,15 @@ public class GlobalDeadCodeOptimizer {
 			stmt = block.getStatements().get(i);
 			if (stmt.getClass().equals(QuadrupletStmt.class)) {
 				qStmt = (QuadrupletStmt)stmt;
-				Name dest = qStmt.getDestination();
-				if (nameToVar.containsKey(dest)) {
-					varId = nameToVar.get(dest).getMyId();
-					if (isDead(varId, bFlow.getOut())) {
-						// Don't add statement
-						continue;
+				if (!assigningRegisters(qStmt)) {
+					// Only dead code eliminate statements that don't assign registers
+					Name dest = qStmt.getDestination();
+					if (nameToVar.containsKey(dest)) {
+						varId = nameToVar.get(dest).getMyId();
+						if (isDead(varId, bFlow.getOut())) {
+							// Don't add statement
+							continue;
+						}
 					}
 				}
 			}
@@ -133,6 +138,14 @@ public class GlobalDeadCodeOptimizer {
 			newStmts.add(0, stmt);
 		}
 		block.setStatements(newStmts);
+	}
+	
+	private boolean assigningRegisters(QuadrupletStmt qStmt) {
+		Name dest = qStmt.getDestination();
+		if (dest != null) {
+			return dest.getClass().equals(RegisterName.class);
+		}
+		return false;
 	}
 	
 	private boolean isDead(int varId, BitSet out){

@@ -92,6 +92,13 @@ public class BlockAssignmentDefinitionGenerator {
 								qStmt.setMyId();
 								Name dest = qStmt.getDestination();
 								Name arg1 = qStmt.getArg1();
+								// If argument is Register Name, ignore - this indirectly prevents copy propagation
+								// in the following scenario:
+								// a = %reg
+								// b = a
+								// We will not change the above to b = %reg since the register allocator will take care of this
+								if (arg1.getClass().equals(RegisterName.class))
+									continue;
 								if (!nameToQStmtsThatAssignIt.containsKey(dest)) {
 									nameToQStmtsThatAssignIt.put(dest, new HashSet<QuadrupletStmt>());
 								}
