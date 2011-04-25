@@ -54,7 +54,7 @@ public class GlobalConstantPropagationOptimizer {
 			bFlow.getKill().clear();
 			if (stmt.getClass().equals(CallStmt.class)) {
 				// Update BlockDataFlowState kill set
-				reachingDefGenerator.invalidateContextSwitch(bFlow);
+				reachingDefGenerator.invalidateFunctionCall(bFlow);
 				// Update BlockDataFlowState in set by using updated kill set
 				bFlow.getIn().xor(bFlow.getKill());
 			} else if (stmt.getClass().equals(QuadrupletStmt.class)){

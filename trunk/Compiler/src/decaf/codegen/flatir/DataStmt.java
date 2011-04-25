@@ -97,4 +97,13 @@ public class DataStmt extends LIRStatement {
 				break;
 		}
 	}
+
+	@Override
+	public Object clone() {
+		DataStmt d = new DataStmt(this.label);
+		d.setArrLength(this.arrLength);
+		d.setStringVal(this.stringVal);
+		d.setType(this.type);
+		return d;
+	}
 }

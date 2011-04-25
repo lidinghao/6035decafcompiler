@@ -3,9 +3,6 @@ package decaf.codegen.flatir;
 public class ConstantName extends Name { // Hack for array index
 	private String value;
 	
-	public ConstantName() {
-	}
-	
 	public ConstantName(int value) {
 		this.setValue(value);
 	}
@@ -53,5 +50,12 @@ public class ConstantName extends Name { // Hack for array index
 		ConstantName cName = (ConstantName)name;
 		
 		return this.hashString().equals(cName.hashString());
+	}
+
+	@Override
+	public Object clone() {
+		ConstantName c = new ConstantName(this.value);
+		c.setLocation(this.getLocation());
+		return c;
 	}
 }

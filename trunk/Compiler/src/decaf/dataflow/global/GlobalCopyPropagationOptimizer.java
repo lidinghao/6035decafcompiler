@@ -53,7 +53,7 @@ public class GlobalCopyPropagationOptimizer {
 			bFlow.getKill().clear();
 			if (stmt.getClass().equals(CallStmt.class)) {
 				// Update BlockDataFlowState kill set
-				assignmentDefGenerator.invalidateContextSwitch(bFlow);
+				assignmentDefGenerator.invalidateFunctionCall(bFlow);
 				// Update BlockDataFlowState in set by using updated kill set
 				bFlow.getIn().xor(bFlow.getKill());
 				

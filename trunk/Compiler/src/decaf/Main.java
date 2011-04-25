@@ -12,6 +12,7 @@ import decaf.dataflow.global.GlobalCSEOptimizer;
 import decaf.dataflow.global.GlobalOptimizer;
 import decaf.ir.ast.ClassDecl;
 import decaf.ir.semcheck.*;
+import decaf.ralloc.WebGenerator;
 import decaf.test.Error;
 import decaf.test.PrettyPrintVisitor;
 import antlr.Token;
@@ -153,7 +154,7 @@ class Main {
 					
 					// Global optimizations
 					GlobalOptimizer go = new GlobalOptimizer(cb, pf);
-					go.optimizeBlocks(CLI.opts);
+					//go.optimizeBlocks(CLI.opts);
 					
 					if (CLI.debug) {
 						System.out.println("\nAFTER GLOBAL OPTIMIZATIONS: \n");
@@ -168,19 +169,23 @@ class Main {
 						System.out.println();
 					}
 				} 
-								
-				//cb.printCFG(System.out);
-
-				// Resolve names to locations
+				
+				// Resolve names to locations (and sets stack size)
 				LocationResolver lr = new LocationResolver(pf, cd);
 				lr.resolveLocations();
+				
+				pf.printLIR(System.out);
+				
+				cb.printCFG(System.out);
+				
+//				WebGenerator wg = new WebGenerator(cb.getCfgMap());
+//				wg.generateWebs();
+//				System.out.println(wg.getWebMap().get("foo"));
 				
 				if (CLI.debug) {
 					System.out.println("Name -> Locations Mapping:");
 					lr.printLocations(System.out);
 				}
-				
-				pf.printLIR(System.out);
 				
 				// Generate code to file
 				CodeGenerator cg = new CodeGenerator(pf, cd, CLI.outfile);

@@ -43,4 +43,11 @@ public class RegisterName extends Name {
 		
 		return this.hashString().equals(rName.hashString());
 	}
+
+	@Override
+	public Object clone() {
+		RegisterName r = new RegisterName(this.register);
+		r.setLocation(this.getLocation());
+		return r;
+	}
 }

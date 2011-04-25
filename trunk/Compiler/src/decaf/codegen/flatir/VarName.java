@@ -80,4 +80,14 @@ public class VarName extends Name {
 	public boolean isArray() {
 		return false;
 	}
+
+	@Override
+	public Object clone() {
+		VarName v = new VarName(this.id);
+		v.isString = this.isString;
+		v.stringValue = this.stringValue;
+		v.blockId = this.blockId;
+		v.setLocation(this.getLocation());
+		return v;
+	}
 }

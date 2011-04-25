@@ -1,13 +1,9 @@
 class Program {
-  int x;
-
-  void foo() {
-    x = 42;
-  }
+  int x, A[10];
 
   void main() {
-    x = 0;
-    foo();
-    callout("printf", "should be 42: %d\n", x);
+  	int x, y;
+  	x = A[x];
+  	y = A[y];
   }
 }

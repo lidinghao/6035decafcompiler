@@ -124,7 +124,7 @@ public class BlockReachingDefinitionGenerator {
 		
 		for (LIRStatement stmt : blockStmts) {
 			if (stmt.getClass().equals(CallStmt.class)) {
-				invalidateContextSwitch(bFlow);
+				invalidateFunctionCall(bFlow);
 				continue;
 			}
 			if (stmt.getClass().equals(QuadrupletStmt.class)) {
@@ -140,10 +140,10 @@ public class BlockReachingDefinitionGenerator {
 		}
 	}
 	
-	public void invalidateContextSwitch(BlockDataFlowState bFlow) {
+	public void invalidateFunctionCall(BlockDataFlowState bFlow) {
 		// Invalidate arg registers
-		for (int i = 0; i < ExpressionFlattenerVisitor.argumentRegs.length; i++) {
-			updateKillSet(new RegisterName(ExpressionFlattenerVisitor.argumentRegs[i]), bFlow);
+		for (int i = 0; i < Register.argumentRegs.length; i++) {
+			updateKillSet(new RegisterName(Register.argumentRegs[i]), bFlow);
 		}
 		
 		// Reset symbolic value for %RAX

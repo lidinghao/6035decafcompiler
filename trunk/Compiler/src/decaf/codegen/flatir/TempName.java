@@ -47,4 +47,12 @@ public class TempName extends Name {
 	public boolean isArray() {
 		return false;
 	}
+
+	@Override
+	public Object clone() {
+		TempName t = new TempName();
+		t.setId(this.id);
+		t.setLocation(this.getLocation());
+		return t;
+	}
 }

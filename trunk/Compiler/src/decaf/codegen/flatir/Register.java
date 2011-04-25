@@ -23,4 +23,7 @@ public enum Register {
 		String s = super.toString();
 		return "%" + s.toLowerCase();
 	}
+	
+	public static Register[] argumentRegs = { RDI, RSI, RDX, RCX, R8, R9 };
+	public static Register[] calleeSaved = { RBX, R12, R13, R14, R15}; // No need to save RBP
 }

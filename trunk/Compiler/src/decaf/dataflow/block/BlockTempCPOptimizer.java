@@ -15,7 +15,6 @@ import decaf.codegen.flatir.QuadrupletStmt;
 import decaf.codegen.flatir.Register;
 import decaf.codegen.flatir.RegisterName;
 import decaf.codegen.flatir.VarName;
-import decaf.codegen.flattener.ExpressionFlattenerVisitor;
 import decaf.codegen.flattener.ProgramFlattener;
 import decaf.dataflow.cfg.CFGBlock;
 
@@ -72,8 +71,8 @@ public class BlockTempCPOptimizer {
 					RegisterName reg;
 					
 					// Invalidate arg registers
-					for (int i = 0; i < ExpressionFlattenerVisitor.argumentRegs.length; i++) {
-						reg = new RegisterName(ExpressionFlattenerVisitor.argumentRegs[i]);
+					for (int i = 0; i < Register.argumentRegs.length; i++) {
+						reg = new RegisterName(Register.argumentRegs[i]);
 						resetVariable(reg);
 					}
 					

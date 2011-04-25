@@ -191,8 +191,8 @@ public class BlockAvailableExpressionGenerator {
 			if (!stmt.isAvailableExpression()) {
 				if (stmt.getClass().equals(CallStmt.class)) {
 					// Invalidate arg registers
-					for (int i = 0; i < ExpressionFlattenerVisitor.argumentRegs.length; i++) {
-						updateKillSet(new RegisterName(ExpressionFlattenerVisitor.argumentRegs[i]), bFlow);
+					for (int i = 0; i < Register.argumentRegs.length; i++) {
+						updateKillSet(new RegisterName(Register.argumentRegs[i]), bFlow);
 					}
 					
 					// Reset symbolic value for %RAX

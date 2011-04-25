@@ -9,8 +9,8 @@ package decaf.codegen.flatir;
 public class DynamicVarName extends Name {
 	public static int ID = 0;
 	public static String NAME = "tmp";
+	
 	private boolean forGlobal;
-
 	private int myId;
 	
 	public DynamicVarName() {
@@ -24,6 +24,8 @@ public class DynamicVarName extends Name {
 		this.forGlobal = forGlobal;
 		ID++;
 	}
+	
+	public DynamicVarName(Object o) { }
 	
 	public static void reset() {
 		ID = 0;
@@ -72,6 +74,15 @@ public class DynamicVarName extends Name {
 		DynamicVarName vName = (DynamicVarName)name;
 		
 		return this.hashString().equals(vName.hashString());
+	}
+
+	@Override
+	public Object clone() {
+		DynamicVarName d = new DynamicVarName(null);
+		d.setForGlobal(this.forGlobal);
+		d.myId = this.myId;
+		d.setLocation(this.getLocation());
+		return d;
 	}
 
 
