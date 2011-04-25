@@ -58,7 +58,7 @@ public class BlockAlgebriacOptimizer {
 	}
 
 	private void processStatement(QuadrupletStmt qStmt) {
-		if (qStmt.getOperator() != QuadrupletOp.MOVE) {
+		if (qStmt.hasTwoArgs()) {
 			Integer arg1 = null;
 			Name arg2 = null;
 			
