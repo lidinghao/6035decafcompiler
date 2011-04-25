@@ -1,0 +1,13 @@
+class Program {
+	int a;
+
+	void main() {
+		int b, c;
+		b = 3;
+		if (b < 3) {
+			a = b + c;
+		} else {
+			c = b;  // dead code!
+		}
+	}
+}

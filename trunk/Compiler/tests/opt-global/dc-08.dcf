@@ -1,0 +1,14 @@
+class Program {
+	int a;
+	void foo(int k) {
+		int b, c;
+		a = b + c; // should not be eliminated
+		b = a; // should be eliminated
+	}
+	void main() {
+		int b, c;
+		a = b + c; // should not be eliminated
+		b = a;
+		foo(b);
+	}
+}

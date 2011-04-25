@@ -1,0 +1,19 @@
+class Program {
+	int a;
+
+	void main() {
+		int i, j, b, c;
+		if (i < 0) {
+			for i = 0, 10 {
+				a = b + c; // dead code!
+				c = c + 1; 
+			}
+		} else {
+			for i = 0, 10 {
+				a = c + 3; // dead code!
+				b = b + i; 
+			}
+		}
+		a = b;
+	}
+}

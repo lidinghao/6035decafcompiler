@@ -240,6 +240,14 @@ public class BlockLivenessGenerator {
 					// Set dest -> id to false in current use set
 					bFlow.getGen().set(destVar.getMyId(), false);
 				}
+				// If dest is a ArrayName, process the index Name
+				if (dest.getClass().equals(ArrayName.class)) {
+					arrIndex = ((ArrayName)dest).getIndex();
+					arg1Var = nameToVar.get(arrIndex);
+					if (arg1Var != null) {	
+						bFlow.getGen().set(arg1Var.getMyId());
+					}
+				}
 			}
 			if (arg1 != null) {
 				// Set arg1 -> id to true in current use set

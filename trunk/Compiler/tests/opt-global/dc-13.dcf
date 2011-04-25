@@ -1,0 +1,17 @@
+class Program {
+	int a;
+
+	void main() {
+		int i, b, c;
+		b = 3; // dead code!
+		for i = 0, 10 {
+			b = i + c; // no dead code!
+			i = i; // dead code!
+		}
+		c = 3; // no dead code!
+		for i = 0, c {
+			c = c + i; // no dead code!
+			b = c; // dead code!
+		}
+	}
+}

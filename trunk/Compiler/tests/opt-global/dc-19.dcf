@@ -1,0 +1,12 @@
+class Program {
+	int a[10];
+
+	void main() {
+		int b, c;
+		c = b + 4;
+		a[c] = b + 20;
+		c = 5;
+		a[a[c]] = b + 5; // dead code! (we need to turn copy prop on and run copy prop + dc multiple times)
+		a[a[c]] = b + 5;
+	}
+}

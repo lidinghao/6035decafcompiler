@@ -1,0 +1,9 @@
+class Program {
+	int a[10];
+
+	void main() {
+		int b, c;
+		a[0] = b + 5;
+		c = a[0] + a[1]; // dead code!
+	}
+}
