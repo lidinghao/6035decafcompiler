@@ -9,7 +9,6 @@ import java.util.Map.Entry;
 import decaf.codegen.flatir.CallStmt;
 import decaf.codegen.flatir.ConstantName;
 import decaf.codegen.flatir.DataStmt;
-import decaf.codegen.flatir.EnterStmt;
 import decaf.codegen.flatir.InterruptStmt;
 import decaf.codegen.flatir.LIRStatement;
 import decaf.codegen.flatir.LabelStmt;
@@ -115,19 +114,10 @@ public class ProgramFlattener {
 	private void processMethodDecl(MethodDecl md) throws Exception {
 		this.mfv.setMethodName(md.getId());
 
-		int stackSize = md.accept(this.mfv);
-		stackSize += tni.indexTemps(this.mfv.getStatements());
-		stackSize += Math.min(md.getParameters().size(), 6); // Also save register
-		// arguments on stack
+		md.accept(this.mfv);
+		tni.indexTemps(this.mfv.getStatements());
 
 		lirMap.put(md.getId(), this.mfv.getStatements());
-
-		// Set stack size in 'enter' statement
-		for (LIRStatement stmt : this.mfv.getStatements()) {
-			if (stmt.getClass().equals(EnterStmt.class)) {
-				((EnterStmt) stmt).setStackSize(stackSize);
-			}
-		}
 	}
 
 	private void processFieldDecl(FieldDecl fd) {

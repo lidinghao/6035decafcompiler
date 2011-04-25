@@ -22,4 +22,6 @@ public abstract class LIRStatement {
 	public boolean isAvailableExpression() {
 		return false;
 	}
+	
+	public abstract Object clone();
 }

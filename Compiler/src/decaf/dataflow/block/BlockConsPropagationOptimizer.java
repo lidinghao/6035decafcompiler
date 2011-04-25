@@ -16,7 +16,6 @@ import decaf.codegen.flatir.QuadrupletStmt;
 import decaf.codegen.flatir.Register;
 import decaf.codegen.flatir.RegisterName;
 import decaf.codegen.flatir.VarName;
-import decaf.codegen.flattener.ExpressionFlattenerVisitor;
 import decaf.codegen.flattener.ProgramFlattener;
 import decaf.dataflow.cfg.CFGBlock;
 
@@ -96,8 +95,8 @@ public class BlockConsPropagationOptimizer {
 
 	private void invalidateFunctionCall() {
 		// Invalidate arg registers
-		for (int i = 0; i < ExpressionFlattenerVisitor.argumentRegs.length; i++) {
-			this.constantMap.remove(new RegisterName(ExpressionFlattenerVisitor.argumentRegs[i]));
+		for (int i = 0; i < Register.argumentRegs.length; i++) {
+			this.constantMap.remove(new RegisterName(Register.argumentRegs[i]));
 		}
 		
 		// Reset symbolic value for %RAX

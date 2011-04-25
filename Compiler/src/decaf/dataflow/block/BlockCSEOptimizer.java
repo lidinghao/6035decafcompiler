@@ -13,7 +13,6 @@ import decaf.codegen.flatir.QuadrupletStmt;
 import decaf.codegen.flatir.Register;
 import decaf.codegen.flatir.RegisterName;
 import decaf.codegen.flatir.VarName;
-import decaf.codegen.flattener.ExpressionFlattenerVisitor;
 import decaf.codegen.flattener.ProgramFlattener;
 import decaf.dataflow.cfg.CFGBlock;
 
@@ -74,8 +73,8 @@ public class BlockCSEOptimizer {
 				// TODO: May have to change this after RegisterAllocator is implemented
 				if (stmt.getClass().equals(CallStmt.class)) {			
 					// Invalidate arg registers
-					for (int i = 0; i < ExpressionFlattenerVisitor.argumentRegs.length; i++) {
-						this.varToVal.put(new RegisterName(ExpressionFlattenerVisitor.argumentRegs[i]), new SymbolicValue());
+					for (int i = 0; i < Register.argumentRegs.length; i++) {
+						this.varToVal.put(new RegisterName(Register.argumentRegs[i]), new SymbolicValue());
 					}
 					
 					// Reset symbolic value for %RAX

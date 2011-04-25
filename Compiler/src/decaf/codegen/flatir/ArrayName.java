@@ -58,4 +58,11 @@ public class ArrayName extends Name {
 		
 		return this.hashString().equals(aName.hashString());
 	}
+	
+	@Override
+	public Object clone() {
+		ArrayName a = new ArrayName(this.id, (Name)this.index.clone());
+		a.setLocation(this.getLocation());
+		return a;
+	}
 }

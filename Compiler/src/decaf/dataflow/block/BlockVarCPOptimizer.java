@@ -70,8 +70,8 @@ public class BlockVarCPOptimizer {
 					
 					// TODO: May have to change this after RegisterAllocator is implemented
 					// Invalidate arg registers
-					for (int i = 0; i < ExpressionFlattenerVisitor.argumentRegs.length; i++) {
-						reg = new RegisterName(ExpressionFlattenerVisitor.argumentRegs[i]);
+					for (int i = 0; i < Register.argumentRegs.length; i++) {
+						reg = new RegisterName(Register.argumentRegs[i]);
 						resetVariable(reg);
 					}
 					
@@ -87,11 +87,6 @@ public class BlockVarCPOptimizer {
 							if (var.getBlockId() == -1) { // Global
 								resetName.add(name);
 							}
-						}
-						
-						// TODO: Might change this after Register Allocator
-						if (this.varToVar.get(name).getClass().equals(RegisterName.class)) {
-							resetName.add(name);
 						}
 					}
 					
@@ -132,7 +127,9 @@ public class BlockVarCPOptimizer {
 			qStmt.setArg1(newArg1);
 			
 			resetVariable(dest);
-			this.varToVar.put(dest, newArg1);
+			if (!newArg1.getClass().equals(RegisterName.class)) {
+				this.varToVar.put(dest, newArg1);
+			}
 		} else {
 			// Check the operands, if any of them are DynamicVarName, replace with Name from the tempToName map
 			Name newArg1 = processArgument(qStmt.getArg1());

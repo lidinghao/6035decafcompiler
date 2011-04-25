@@ -13,6 +13,8 @@ import decaf.codegen.flatir.LIRStatement;
 import decaf.codegen.flatir.LabelStmt;
 import decaf.codegen.flatir.LeaveStmt;
 import decaf.codegen.flatir.Name;
+import decaf.codegen.flatir.PopStmt;
+import decaf.codegen.flatir.PushStmt;
 import decaf.codegen.flatir.QuadrupletOp;
 import decaf.codegen.flatir.QuadrupletStmt;
 import decaf.codegen.flatir.Register;
@@ -278,7 +280,7 @@ public class MethodFlatennerVisitor implements ASTVisitor<Integer> {
 	@Override
 	public Integer visit(InvokeStmt stmt) {
 		stmt.getMethodCall().accept(this.exprFlatenner);
-		this.statements.remove(this.statements.size() - 1);
+		this.statements.remove(this.statements.size() - 2); // Remove temp = %rax
 
 		return 0;
 	}
@@ -297,7 +299,9 @@ public class MethodFlatennerVisitor implements ASTVisitor<Integer> {
 		this.statements.add(new EnterStmt());
 
 		// Save callee-saved registers
-		// TODO: Don't need it until we implement a register allocator
+		for (int i = 0; i < Register.calleeSaved.length; i++) {
+			this.statements.add(new PushStmt(new RegisterName(Register.calleeSaved[i])));
+		}
 
 		// Save params on stack (first 6)
 		VarName varName;
@@ -353,11 +357,11 @@ public class MethodFlatennerVisitor implements ASTVisitor<Integer> {
 		
 		// Move args to regs
 		this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE,
-				new RegisterName(ExpressionFlattenerVisitor.argumentRegs[0]), error, null));
+				new RegisterName(Register.argumentRegs[0]), error, null));
 		this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE,
-				new RegisterName(ExpressionFlattenerVisitor.argumentRegs[1]), new ConstantName(md.getLineNumber()), null));
+				new RegisterName(Register.argumentRegs[1]), new ConstantName(md.getLineNumber()), null));
 		this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE,
-				new RegisterName(ExpressionFlattenerVisitor.argumentRegs[2]), new ConstantName(md.getColumnNumber()), null));
+				new RegisterName(Register.argumentRegs[2]), new ConstantName(md.getColumnNumber()), null));
 		
 		// Call exception handler
 		this.statements.add(new CallStmt(ProgramFlattener.exceptionHandlerLabel));
@@ -380,9 +384,12 @@ public class MethodFlatennerVisitor implements ASTVisitor<Integer> {
 					new RegisterName(Register.RAX), rtn, null));
 		}
 		
+		// Restore callee-saved regs (reverse order as saved!)
+		for (int i = Register.calleeSaved.length - 1; i >= 0; i--) {
+			this.statements.add(new PopStmt(new RegisterName(Register.calleeSaved[i])));
+		}
+		
 		this.statements.add(new LeaveStmt());
-//		this.statements.add(new JumpStmt(JumpCondOp.NONE, new LabelStmt(
-//				getMethodEpilogue())));
 
 		return 0;
 	}

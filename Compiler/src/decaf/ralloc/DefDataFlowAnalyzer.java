@@ -69,7 +69,7 @@ public class DefDataFlowAnalyzer {
 				LIRStatement stmt = blockStmts.get(i);
 				if (stmt.getClass().equals(QuadrupletStmt.class)) {
 					QuadrupletStmt qStmt = (QuadrupletStmt)stmt;
-					if (!qStmt.getDestination().getClass().equals(RegisterName.class)) {
+					if (!qStmt.getDestination().getClass().equals(RegisterName.class)) { // Ignore assignments to regs
 						this.totalDefinitions++;
 						this.uniqueDefinitions.get(methodName).add(qStmt);
 						qStmt.setMyId();
@@ -161,5 +161,23 @@ public class DefDataFlowAnalyzer {
 		}
 		
 		gen.set(stmt.getMyId()); // Set gen bit on
+	}
+
+	public HashMap<CFGBlock, BlockDataFlowState> getCfgBlocksState() {
+		return cfgBlocksState;
+	}
+
+	public void setCfgBlocksState(
+			HashMap<CFGBlock, BlockDataFlowState> cfgBlocksState) {
+		this.cfgBlocksState = cfgBlocksState;
+	}
+
+	public HashMap<String, List<QuadrupletStmt>> getUniqueDefinitions() {
+		return uniqueDefinitions;
+	}
+
+	public void setUniqueDefinitions(
+			HashMap<String, List<QuadrupletStmt>> uniqueDefinitions) {
+		this.uniqueDefinitions = uniqueDefinitions;
 	}
 }

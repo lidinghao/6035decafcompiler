@@ -49,8 +49,6 @@ import decaf.ir.ast.VarDecl;
 import decaf.ir.ast.VarLocation;
 
 public class ExpressionFlattenerVisitor implements ASTVisitor<Name> {	
-	public static Register[] argumentRegs = { Register.RDI, Register.RSI,
-			Register.RDX, Register.RCX, Register.R8, Register.R9 };
 	private static int callCount = 0;
 	private List<LIRStatement> statements;
 	private String methodName;
@@ -219,14 +217,14 @@ public class ExpressionFlattenerVisitor implements ASTVisitor<Name> {
 		this.statements.add(new LabelStmt("mcall_" + expr.getMethodName() + "_" + myCC));
 		
 		// Save args in registers
-		for (int i = 0; i < expr.getArguments().size() && i < argumentRegs.length; i++) {
+		for (int i = 0; i < expr.getArguments().size() && i < Register.argumentRegs.length; i++) {
 			this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE,
-					new RegisterName(argumentRegs[i]), argNames.get(i), null));
+					new RegisterName(Register.argumentRegs[i]), argNames.get(i), null));
 		}
 		
 		// Push other args to stack
-		if (expr.getArguments().size() > argumentRegs.length) {
-			for (int i = expr.getArguments().size() - 1; i >= argumentRegs.length; i--) {
+		if (expr.getArguments().size() > Register.argumentRegs.length) {
+			for (int i = expr.getArguments().size() - 1; i >= Register.argumentRegs.length; i--) {
 				this.statements.add(new PushStmt(argNames.get(i)));
 			}
 		}
@@ -238,8 +236,8 @@ public class ExpressionFlattenerVisitor implements ASTVisitor<Name> {
 		this.statements.add(new CallStmt(expr.getMethodName()));
 		
 		// Pop args off stack
-		if (expr.getArguments().size() > argumentRegs.length) {
-			int sizeToDecrease = expr.getArguments().size() - argumentRegs.length;
+		if (expr.getArguments().size() > Register.argumentRegs.length) {
+			int sizeToDecrease = expr.getArguments().size() - Register.argumentRegs.length;
 			RegisterName rsp = new RegisterName(Register.RSP);
 			this.statements.add(new QuadrupletStmt(QuadrupletOp.SUB, rsp, rsp, new ConstantName(sizeToDecrease)));
 		}
@@ -315,14 +313,14 @@ public class ExpressionFlattenerVisitor implements ASTVisitor<Name> {
 		this.statements.add(new LabelStmt("mcall_" + expr.getName() + "_" + myCC));
 		
 		// Save args in registers
-		for (int i = 0; i < argNames.size() && i < argumentRegs.length; i++) {
+		for (int i = 0; i < argNames.size() && i < Register.argumentRegs.length; i++) {
 			this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE,
-					new RegisterName(argumentRegs[i]), argNames.get(i), null));
+					new RegisterName(Register.argumentRegs[i]), argNames.get(i), null));
 		}
 		
 		// Push other args to stack
-		if (expr.getArguments().size() > argumentRegs.length) {
-			for (int i = expr.getArguments().size() - 1; i >= argumentRegs.length; i--) {
+		if (expr.getArguments().size() > Register.argumentRegs.length) {
+			for (int i = expr.getArguments().size() - 1; i >= Register.argumentRegs.length; i--) {
 				this.statements.add(new PushStmt(argNames.get(i)));
 			}
 		}
@@ -331,8 +329,8 @@ public class ExpressionFlattenerVisitor implements ASTVisitor<Name> {
 		this.statements.add(new CallStmt(expr.getName()));
 		
 		// Pop args off stack
-		if (expr.getArguments().size() > argumentRegs.length) {
-			int sizeToDecrease = expr.getArguments().size() - argumentRegs.length;
+		if (expr.getArguments().size() > Register.argumentRegs.length) {
+			int sizeToDecrease = expr.getArguments().size() - Register.argumentRegs.length;
 			RegisterName rsp = new RegisterName(Register.RSP);
 			this.statements.add(new QuadrupletStmt(QuadrupletOp.SUB, rsp, rsp, new ConstantName(sizeToDecrease)));
 		}
@@ -505,11 +503,11 @@ public class ExpressionFlattenerVisitor implements ASTVisitor<Name> {
 		
 		// Move args to regs
 		this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE,
-				new RegisterName(argumentRegs[0]), error, null));
+				new RegisterName(Register.argumentRegs[0]), error, null));
 		this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE,
-				new RegisterName(argumentRegs[1]), new ConstantName(loc.getLineNumber()), null));
+				new RegisterName(Register.argumentRegs[1]), new ConstantName(loc.getLineNumber()), null));
 		this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE,
-				new RegisterName(argumentRegs[2]), new ConstantName(loc.getColumnNumber()), null));
+				new RegisterName(Register.argumentRegs[2]), new ConstantName(loc.getColumnNumber()), null));
 		
 		// Call exception handler
 		this.statements.add(new CallStmt(ProgramFlattener.exceptionHandlerLabel));
