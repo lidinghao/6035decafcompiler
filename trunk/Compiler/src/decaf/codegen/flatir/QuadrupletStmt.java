@@ -222,8 +222,9 @@ public class QuadrupletStmt extends LIRStatement {
 	private void moveToRegister(PrintStream out, Name name, Register register) {
 		if (name.isArray()) {
 			ArrayName arrayName = (ArrayName) name;
-			String indexLocation = arrayName.getIndex().getLocation().getASMRepresentation();
-			out.println("\tmov\t" + indexLocation + ", " + register);
+			moveToRegister(out, arrayName.getIndex(), register);
+//			String indexLocation = arrayName.getIndex().getLocation().getASMRepresentation();
+//			out.println("\tmov\t" + indexLocation + ", " + register);
 			arrayName.setOffsetRegister(register);
 		}
 		
@@ -233,8 +234,9 @@ public class QuadrupletStmt extends LIRStatement {
 	private void moveFromRegister(PrintStream out, Register from, Name name, Register temp) {
 		if (name.isArray()) {
 			ArrayName arrayName = (ArrayName) name;
-			String indexLocation = arrayName.getIndex().getLocation().getASMRepresentation();
-			out.println("\tmov\t" + indexLocation + ", " + temp);
+			moveToRegister(out, arrayName.getIndex(), temp);
+//			String indexLocation = arrayName.getIndex().getLocation().getASMRepresentation();
+//			out.println("\tmov\t" + indexLocation + ", " + temp);
 			arrayName.setOffsetRegister(temp);
 		}
 		
@@ -333,5 +335,9 @@ public class QuadrupletStmt extends LIRStatement {
 	@Override
 	public Object clone() {
 		return new QuadrupletStmt(this.operator, this.dest, this.arg1, this.arg2);
+	}
+	
+	public boolean hasTwoArgs() {
+		return this.operator != QuadrupletOp.MOVE && this.operator != QuadrupletOp.NOT && this.operator != QuadrupletOp.MINUS;
 	}
 }
