@@ -211,8 +211,12 @@ public class ExpressionFlattenerVisitor implements ASTVisitor<Name> {
 			argNames.add(argName);
 		}
 		
-		// Add method call label		
-		this.statements.add(new LabelStmt(getMethodCallStart(expr.getMethodName().substring(1, expr.getMethodName().length()-2))));
+		LabelStmt start = new LabelStmt(getMethodCallStart(expr.getMethodName().substring(1, expr.getMethodName().length()-2)));
+		LabelStmt end = new LabelStmt(getMethodCallEnd(expr.getMethodName().substring(1, expr.getMethodName().length()-2)));
+		callCount++;
+		
+		// Add method call label	
+		this.statements.add(start);
 		
 		// Save args in registers
 		for (int i = 0; i < expr.getArguments().size() && i < Register.argumentRegs.length; i++) {
@@ -243,7 +247,7 @@ public class ExpressionFlattenerVisitor implements ASTVisitor<Name> {
 		// Save return value
 		this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE, rtnValue, new RegisterName(Register.RAX), null));
 		
-		this.statements.add(new LabelStmt(getMethodCallEnd(expr.getMethodName().substring(1, expr.getMethodName().length()-2))));
+		this.statements.add(end);
 
 		return rtnValue;
 	}
@@ -306,8 +310,12 @@ public class ExpressionFlattenerVisitor implements ASTVisitor<Name> {
 			argNames.add(argName);
 		}
 		
+		LabelStmt start = new LabelStmt(getMethodCallStart(expr.getName()));
+		LabelStmt end = new LabelStmt(getMethodCallEnd(expr.getName()));
+		callCount++;
+		
 		// Add method call label		
-		this.statements.add(new LabelStmt(getMethodCallStart(expr.getName())));
+		this.statements.add(start);
 		
 		// Save args in registers
 		for (int i = 0; i < argNames.size() && i < Register.argumentRegs.length; i++) {
@@ -336,7 +344,7 @@ public class ExpressionFlattenerVisitor implements ASTVisitor<Name> {
 		this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE, rtnValue, new RegisterName(Register.RAX), null));
 		
 		// Add method call end label
-		this.statements.add(new LabelStmt(getMethodCallEnd(expr.getName())));
+		this.statements.add(end);
 
 		return rtnValue;
 	}
