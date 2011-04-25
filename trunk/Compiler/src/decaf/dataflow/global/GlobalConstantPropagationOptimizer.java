@@ -57,7 +57,7 @@ public class GlobalConstantPropagationOptimizer {
 				reachingDefGenerator.invalidateFunctionCall(bFlow);
 				// Update BlockDataFlowState in set by using updated kill set
 				bFlow.getIn().xor(bFlow.getKill());
-			} else if (stmt.getClass().equals(QuadrupletStmt.class)){
+			} else if (stmt.getClass().equals(QuadrupletStmt.class)) {
 				qStmt = (QuadrupletStmt)stmt;
 				// For each use of a Name, see all the reaching definitions for that Name
 				// If all reaching definitions assign the Name to the same constant, replace Name with that constant
