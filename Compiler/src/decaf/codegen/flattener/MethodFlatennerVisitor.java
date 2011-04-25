@@ -345,8 +345,13 @@ public class MethodFlatennerVisitor implements ASTVisitor<Integer> {
 					new RegisterName(Register.RAX), new ConstantName(0), null));
 		}
 		
-		// Void method return
+		// Void method return	
 		if (md.getReturnType() == Type.VOID) {
+			// Restore callee-saved regs (reverse order as saved!)
+			for (int i = Register.calleeSaved.length - 1; i >= 0; i--) {
+				this.statements.add(new PopStmt(new RegisterName(Register.calleeSaved[i])));
+			}
+			
 			this.statements.add(new LeaveStmt());
 		}
 		
