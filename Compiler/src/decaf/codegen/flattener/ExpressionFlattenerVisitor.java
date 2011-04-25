@@ -49,7 +49,6 @@ import decaf.ir.ast.VarDecl;
 import decaf.ir.ast.VarLocation;
 
 public class ExpressionFlattenerVisitor implements ASTVisitor<Name> {	
-	private static int callCount = 0;
 	private List<LIRStatement> statements;
 	private String methodName;
 	private int andCount;
@@ -59,6 +58,7 @@ public class ExpressionFlattenerVisitor implements ASTVisitor<Name> {
 	private int strCount;
 	private int inArrayLocation;
 	private int arrayBoundId;
+	private int callCount;
 
 	public ExpressionFlattenerVisitor(List<LIRStatement> statements,
 			String methodName) {
@@ -70,6 +70,7 @@ public class ExpressionFlattenerVisitor implements ASTVisitor<Name> {
 		this.currentOrId = 0;
 		this.strCount = 0;
 		this.inArrayLocation = 0;
+		this.callCount = 0;
 	}
 
 	@Override
@@ -82,7 +83,7 @@ public class ExpressionFlattenerVisitor implements ASTVisitor<Name> {
 		Name index = loc.getExpr().accept(this);
 		
 		// Add index out of bound check
-		addArrayBoundCheck(loc);
+		addArrayBoundCheck(loc, index);
 		
 		// Check for nested array accesses
 		if (inArrayLocation <= 1) {
@@ -210,11 +211,8 @@ public class ExpressionFlattenerVisitor implements ASTVisitor<Name> {
 			argNames.add(argName);
 		}
 		
-		// Add method call label
-		int myCC = ExpressionFlattenerVisitor.callCount;
-		ExpressionFlattenerVisitor.callCount++;
-		
-		this.statements.add(new LabelStmt("mcall_" + expr.getMethodName() + "_" + myCC));
+		// Add method call label		
+		this.statements.add(new LabelStmt(getMethodCallStart(expr.getMethodName())));
 		
 		// Save args in registers
 		for (int i = 0; i < expr.getArguments().size() && i < Register.argumentRegs.length; i++) {
@@ -244,6 +242,8 @@ public class ExpressionFlattenerVisitor implements ASTVisitor<Name> {
 		
 		// Save return value
 		this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE, rtnValue, new RegisterName(Register.RAX), null));
+		
+		this.statements.add(new LabelStmt(getMethodCallEnd(expr.getMethodName())));
 
 		return rtnValue;
 	}
@@ -306,11 +306,8 @@ public class ExpressionFlattenerVisitor implements ASTVisitor<Name> {
 			argNames.add(argName);
 		}
 		
-		// Add method call label
-		int myCC = ExpressionFlattenerVisitor.callCount;
-		ExpressionFlattenerVisitor.callCount++;
-		
-		this.statements.add(new LabelStmt("mcall_" + expr.getName() + "_" + myCC));
+		// Add method call label		
+		this.statements.add(new LabelStmt(getMethodCallStart(expr.getName())));
 		
 		// Save args in registers
 		for (int i = 0; i < argNames.size() && i < Register.argumentRegs.length; i++) {
@@ -339,7 +336,7 @@ public class ExpressionFlattenerVisitor implements ASTVisitor<Name> {
 		this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE, rtnValue, new RegisterName(Register.RAX), null));
 		
 		// Add method call end label
-		this.statements.add(new LabelStmt("mcall_" + expr.getName() + "_" + myCC + "_end"));
+		this.statements.add(new LabelStmt(getMethodCallEnd(expr.getName())));
 
 		return rtnValue;
 	}
@@ -479,7 +476,7 @@ public class ExpressionFlattenerVisitor implements ASTVisitor<Name> {
 		return methodName + "_or" + currentOrId + "_end";
 	}
 	
-	private void addArrayBoundCheck(ArrayLocation loc) {
+	private void addArrayBoundCheck(ArrayLocation loc, Name index) {
 		LabelStmt arrayCheckStart = new LabelStmt(getArrayBoundBegin(loc.getId()));
 		LabelStmt arrayCheckPass = new LabelStmt(getArrayBoundPass(loc.getId()));
 		LabelStmt arrayCheckFail = new LabelStmt(getArrayBoundFail(loc.getId()));
@@ -487,11 +484,11 @@ public class ExpressionFlattenerVisitor implements ASTVisitor<Name> {
 		
 		this.statements.add(arrayCheckStart);
 		
-		Name index = loc.getExpr().accept(this); // Re-eval expressions
+		//Name index = loc.getExpr().accept(this); // Re-eval expressions
 		this.statements.add(new CmpStmt(index, new ConstantName(loc.getSize())));
 		this.statements.add(new JumpStmt(JumpCondOp.GTE, arrayCheckFail)); // size >= length?
 		
-		index = loc.getExpr().accept(this); // Re-eval expressions
+		//index = loc.getExpr().accept(this); // Re-eval expressions
 		this.statements.add(new CmpStmt(index, new ConstantName(0)));
 		this.statements.add(new JumpStmt(JumpCondOp.LT, arrayCheckFail)); // size < 0?
 		this.statements.add(new JumpStmt(JumpCondOp.NONE, arrayCheckPass)); // passed
@@ -526,6 +523,14 @@ public class ExpressionFlattenerVisitor implements ASTVisitor<Name> {
 	
 	private String getArrayBoundPass(String name) {
 		return methodName + "_array_" + name + "_" + arrayBoundId + "_pass";
+	}
+	
+	private String getMethodCallStart(String name) {
+		return methodName + "_mcall_" + name + "_" + callCount;
+	}
+	
+	private String getMethodCallEnd(String name) {
+		return methodName + "_mcall_" + name + "_" + callCount + "_end";
 	}
 	
 	private Name optimizeOr(BinOpExpr expr) {
