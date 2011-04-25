@@ -1,0 +1,10 @@
+class Program {
+	int A[10];
+	void main() {
+		A[0] = 1;
+		A[1] = 2;
+		A[2] = 3;
+		A[3] = 99;
+		callout("printf","%d\n", A[A[A[A[0]]]]);
+	}
+}
