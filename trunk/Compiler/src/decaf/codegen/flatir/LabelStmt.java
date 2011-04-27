@@ -9,6 +9,7 @@ public class LabelStmt extends LIRStatement {
 	public LabelStmt(String label) {
 		this.label = label;
 		this.isLeader = false;
+		this.setDepth();
 	}
 
 	public String getLabelString() {

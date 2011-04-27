@@ -8,6 +8,7 @@ public class CallStmt extends LIRStatement {
 	public CallStmt(String methodLabel) {
 		this.setMethodLabel(methodLabel);
 		this.isLeader = false;
+		this.setDepth();
 	}
 
 	public void setMethodLabel(String methodLabel) {

@@ -79,7 +79,7 @@ public class WebGenerator {
 							}
 							
 							// Check for common *def* for non-defined vars (global, stack params)
-							if (w1.loadExplicitly() && w2.loadExplicitly()) {
+							if (w1.getLoadExplicitly() && w2.getLoadExplicitly()) {
 								a = w1;
 								b = w2;
 								break outter;
@@ -92,6 +92,7 @@ public class WebGenerator {
 					webs.remove(b);
 					a.getDefinitions().addAll(b.getDefinitions());
 					a.getUses().addAll(b.getUses());
+					a.setLoadExplicitly(a.getLoadExplicitly() || b.getLoadExplicitly()); // Must load explicitly if either requires
 				}
 			}
 		}
@@ -118,10 +119,6 @@ public class WebGenerator {
 					index = getStmtIndex(methodName, stmt);
 					if (index > max) max = index;
 					if (index < min) min = index;
-				}
-				
-				if (w.getDefinitions().isEmpty()) {
-					min = 0; // Already available in method when you enter it
 				}
 				
 				w.setFirstStmtIndex(min);

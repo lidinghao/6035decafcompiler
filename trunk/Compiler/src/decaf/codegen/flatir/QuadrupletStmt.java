@@ -15,6 +15,7 @@ public class QuadrupletStmt extends LIRStatement {
 		this.dest = dest;
 		this.arg1 = arg1;
 		this.arg2 = arg2;
+		this.setDepth();
 	}
 
 	public QuadrupletOp getOperator() {

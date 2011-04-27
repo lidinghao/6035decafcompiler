@@ -30,14 +30,14 @@ public class ProgramFlattener {
 	public static String exceptionHandlerLabel = "exception_handler";
 	
 	private ClassDecl classDecl;
-	private MethodFlatennerVisitor mfv;
+	private MethodFlattenerVisitor mfv;
 	private HashMap<String, List<LIRStatement>> lirMap;
 	private List<DataStmt> dataStmtList;
 	private TempNameIndexer tni;
 
 	public ProgramFlattener(ClassDecl cd) {
 		this.classDecl = cd;
-		this.mfv = new MethodFlatennerVisitor(null);
+		this.mfv = new MethodFlattenerVisitor(null);
 		this.lirMap = new HashMap<String, List<LIRStatement>>();
 		this.dataStmtList = new ArrayList<DataStmt>();
 		this.tni = new TempNameIndexer();

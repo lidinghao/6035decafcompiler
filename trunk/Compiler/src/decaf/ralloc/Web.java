@@ -14,6 +14,7 @@ public class Web {
 	private Register register;
 	private int firstStmtIndex;
 	private int lastStmtIndex;
+	private boolean loadExplicitly;
 	
 	public Web(Name variable) {
 		this.variable = (Name)variable.clone(); // important to clone
@@ -87,11 +88,23 @@ public class Web {
 		return firstStmtIndex;
 	}
 	
+	public void setLoadExplicitly() {
+		if (this.definitions.size() == 0) {
+			this.loadExplicitly = true;
+		}
+		
+		this.loadExplicitly = false;
+	}
+	
+	public void setLoadExplicitly(boolean b) {
+		this.loadExplicitly = b;
+	}
+	
 	/**
-	 * Param that are loaded off the stack or global vars. Require no explicit definition before use!
+	 * Param that are loaded off the stack or global vars. Require no explicit definition before first use!
 	 * @return
 	 */
-	public boolean loadExplicitly() {
-		return this.definitions.isEmpty();
+	public boolean getLoadExplicitly() {
+		return this.loadExplicitly;
 	}
 }

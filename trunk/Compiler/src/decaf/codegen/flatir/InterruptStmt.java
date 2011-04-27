@@ -8,6 +8,7 @@ public class InterruptStmt extends LIRStatement {
 	public InterruptStmt(String id) {
 		this.interruptId = id;
 		this.isLeader = false;
+		this.setDepth();
 	}
 	
 	public String getInterruptId() {

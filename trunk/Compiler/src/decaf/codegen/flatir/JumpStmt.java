@@ -10,6 +10,7 @@ public class JumpStmt extends LIRStatement {
 		this.setCondition(condition);
 		this.setLabel(label);
 		this.isLeader = false;
+		this.setDepth();
 	}
 
 	public void setLabel(LabelStmt label) {

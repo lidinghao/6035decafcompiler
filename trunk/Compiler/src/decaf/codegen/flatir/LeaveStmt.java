@@ -5,6 +5,7 @@ import java.io.PrintStream;
 public class LeaveStmt extends LIRStatement {
 	public LeaveStmt() { 
 		this.isLeader = false;
+		this.setDepth();
 	};
 	
 	@Override
