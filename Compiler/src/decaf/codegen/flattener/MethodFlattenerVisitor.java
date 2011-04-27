@@ -50,7 +50,9 @@ import decaf.ir.ast.UnaryOpExpr;
 import decaf.ir.ast.VarDecl;
 import decaf.ir.ast.VarLocation;
 
-public class MethodFlatennerVisitor implements ASTVisitor<Integer> {
+public class MethodFlattenerVisitor implements ASTVisitor<Integer> {
+	public static int DEPTH = 0;
+	
 	private List<LIRStatement> statements;
 	private ExpressionFlattenerVisitor exprFlatenner;
 	private String methodName;
@@ -60,7 +62,7 @@ public class MethodFlatennerVisitor implements ASTVisitor<Integer> {
 	private int currentForId;
 	private int totalLocalVars;
 
-	public MethodFlatennerVisitor(String methodName) {
+	public MethodFlattenerVisitor(String methodName) {
 		this.statements = new ArrayList<LIRStatement>();
 		this.exprFlatenner = new ExpressionFlattenerVisitor(statements,
 				methodName);
@@ -207,7 +209,9 @@ public class MethodFlatennerVisitor implements ASTVisitor<Integer> {
 		this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE, loopId,
 				initValue, null));
 
-		// Test block
+		MethodFlattenerVisitor.DEPTH++;
+		
+		// Test block		
 		this.statements.add(new LabelStmt(getForTest()));
 		Name finalValue = stmt.getFinalValue().accept(this.exprFlatenner);
 		TempName dest = new TempName();
@@ -233,6 +237,8 @@ public class MethodFlatennerVisitor implements ASTVisitor<Integer> {
 
 		// End block
 		this.statements.add(new LabelStmt(getForEnd()));
+		
+		MethodFlattenerVisitor.DEPTH--;
 
 		currentForId = oldForId; // Return to parent for loop (if any)
 
@@ -425,6 +431,7 @@ public class MethodFlatennerVisitor implements ASTVisitor<Integer> {
 		this.statements = new ArrayList<LIRStatement>();
 		this.exprFlatenner = new ExpressionFlattenerVisitor(statements,
 				methodName);
+		MethodFlattenerVisitor.DEPTH = 0;
 	}
 
 	private String getIfTest() {

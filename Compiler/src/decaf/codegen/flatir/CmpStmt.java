@@ -9,6 +9,7 @@ public class CmpStmt extends LIRStatement {
 	public CmpStmt(Name arg1, Name arg2) {
 		this.arg1 = arg1;
 		this.arg2 = arg2;
+		this.setDepth();
 	}
 	
 	public Name getArg1() {

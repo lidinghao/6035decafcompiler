@@ -7,6 +7,7 @@ public class EnterStmt extends LIRStatement {
 	
 	public EnterStmt(int stackSize) {
 		this.setStackSize(stackSize);
+		this.setDepth();
 	}
 	
 	public EnterStmt() {
