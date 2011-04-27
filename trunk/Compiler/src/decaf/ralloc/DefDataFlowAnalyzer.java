@@ -11,16 +11,17 @@ import decaf.codegen.flatir.QuadrupletStmt;
 import decaf.codegen.flatir.RegisterName;
 import decaf.codegen.flattener.ProgramFlattener;
 import decaf.dataflow.cfg.CFGBlock;
+import decaf.dataflow.cfg.MethodIR;
 import decaf.dataflow.global.BlockDataFlowState;
 
 public class DefDataFlowAnalyzer {
 	private HashSet<CFGBlock> cfgBlocksToProcess;
 	private HashMap<CFGBlock, BlockDataFlowState> cfgBlocksState;
-	private HashMap<String, List<CFGBlock>> cfgMap;
+	private HashMap<String, MethodIR> mMap;
 	private HashMap<String, List<QuadrupletStmt>> uniqueDefinitions;
 	
-	public DefDataFlowAnalyzer(HashMap<String, List<CFGBlock>> cfgMap) {
-		this.cfgMap = cfgMap;
+	public DefDataFlowAnalyzer(HashMap<String, MethodIR> mMap) {
+		this.mMap = mMap;
 		this.cfgBlocksToProcess = new HashSet<CFGBlock>();
 		this.cfgBlocksState = new HashMap<CFGBlock, BlockDataFlowState>();
 		this.uniqueDefinitions = new HashMap<String, List<QuadrupletStmt>>();
@@ -28,7 +29,7 @@ public class DefDataFlowAnalyzer {
 	
 	// Each QuadrupletStmt will have a unique ID
 	public void analyze() {
-		for (String methodName: this.cfgMap.keySet()) {
+		for (String methodName: this.mMap.keySet()) {
 			if (methodName.equals(ProgramFlattener.exceptionHandlerLabel)) continue;
 			
 			initialize(methodName);
@@ -40,7 +41,7 @@ public class DefDataFlowAnalyzer {
 		int totalDefs = this.uniqueDefinitions.get(methodName).size();
 		//if (totalDefs == 0) return;
 		
-		CFGBlock entry = cfgMap.get(methodName).get(0);
+		CFGBlock entry = this.getBlockById(methodName, 0);
 		BlockDataFlowState entryBlockFlow = new BlockDataFlowState(totalDefs); // OUT = GEN for entry block
 		calculateGenKillSets(entry, entryBlockFlow);
 		entryBlockFlow.setOut(entryBlockFlow.getGen());
@@ -54,6 +55,16 @@ public class DefDataFlowAnalyzer {
 			this.cfgBlocksState.put(block, bFlow);
 		}		
 	}
+	
+	private CFGBlock getBlockById(String name, int i) {
+		if (this.mMap.containsKey(name)) {
+			for (CFGBlock b: this.mMap.get(name).getCfgBlocks()) {
+				if (b.getIndex() == i) return b;
+			}
+		}
+		
+		return null;
+	}
 
 	// Each QuadrupletStmt will have unique ID, as it is a definition
 	private void initialize(String methodName) {
@@ -61,7 +72,7 @@ public class DefDataFlowAnalyzer {
 		this.uniqueDefinitions.put(methodName, new ArrayList<QuadrupletStmt>());
 		this.cfgBlocksToProcess.clear();
 		
-		for (CFGBlock block: this.cfgMap.get(methodName)) {
+		for (CFGBlock block: this.mMap.get(methodName).getCfgBlocks()) {
 			List<LIRStatement> blockStmts = block.getStatements();
 			for (int i = 0; i < blockStmts.size(); i++) {
 				LIRStatement stmt = blockStmts.get(i);

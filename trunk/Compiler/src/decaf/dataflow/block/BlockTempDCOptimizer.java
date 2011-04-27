@@ -11,48 +11,29 @@ import decaf.codegen.flatir.LIRStatement;
 import decaf.codegen.flatir.Name;
 import decaf.codegen.flatir.QuadrupletOp;
 import decaf.codegen.flatir.QuadrupletStmt;
-import decaf.codegen.flattener.ProgramFlattener;
 import decaf.dataflow.cfg.CFGBlock;
+import decaf.dataflow.cfg.MethodIR;
 
 public class BlockTempDCOptimizer {
 	private Set<Name> neededSet;
-	private HashMap<String, List<CFGBlock>> cfgMap;
-	private ProgramFlattener pf;
+	private HashMap<String, MethodIR> mMap;
 	
-	public BlockTempDCOptimizer(HashMap<String, List<CFGBlock>> cfgMap, ProgramFlattener pf) {
+	public BlockTempDCOptimizer(HashMap<String, MethodIR> mMap) {
 		this.neededSet = new HashSet<Name>();
-		this.cfgMap = cfgMap;
-		this.pf = pf;
+		this.mMap = mMap;
 	}
 
 	public void performDeadCodeElimination() {
 		reset();
 		
-		for (String s: this.cfgMap.keySet()) {
-			for (CFGBlock block: this.cfgMap.get(s)) {
+		for (String s: this.mMap.keySet()) {
+			for (CFGBlock block: this.mMap.get(s).getCfgBlocks()) {
 				optimize(block);
 				reset();
 			}
 			
-			// Update statements in program flattener
-			List<LIRStatement> stmts = new ArrayList<LIRStatement>();
-			
-			for (int i = 0; i < this.cfgMap.get(s).size(); i++) {
-				stmts.addAll(getBlockWithIndex(i, this.cfgMap.get(s)).getStatements());
-			}
-			
-			pf.getLirMap().put(s, stmts);
+			this.mMap.get(s).regenerateStmts();
 		}
-	}
-
-	private CFGBlock getBlockWithIndex(int i, List<CFGBlock> list) {
-		for (CFGBlock block: list) {
-			if (block.getIndex() == i) {
-				return block;
-			}
-		}
-		
-		return null;
 	}
 	
 	private void optimize(CFGBlock block) {

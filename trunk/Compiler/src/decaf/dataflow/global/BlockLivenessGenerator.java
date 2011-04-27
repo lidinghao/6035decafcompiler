@@ -16,9 +16,10 @@ import decaf.codegen.flatir.QuadrupletStmt;
 import decaf.codegen.flatir.VarName;
 import decaf.codegen.flattener.ProgramFlattener;
 import decaf.dataflow.cfg.CFGBlock;
+import decaf.dataflow.cfg.MethodIR;
 
 public class BlockLivenessGenerator {
-	private HashMap<String, List<CFGBlock>> cfgMap;
+	private HashMap<String, MethodIR> mMap;
 	private HashMap<CFGBlock, BlockDataFlowState> blockLiveVars;
 	private HashSet<CFGBlock> cfgBlocksToProcess;
 	// One Variable per Name
@@ -27,8 +28,8 @@ public class BlockLivenessGenerator {
 	private List<Integer> globalVarIDs;
 	private int totalVars;
 	
-	public BlockLivenessGenerator(HashMap<String, List<CFGBlock>> cMap) {
-		cfgMap = cMap;
+	public BlockLivenessGenerator(HashMap<String, MethodIR> mMap) {
+		this.mMap = mMap;
 		blockLiveVars = new HashMap<CFGBlock, BlockDataFlowState>();
 		cfgBlocksToProcess = new HashSet<CFGBlock>();
 		globalVarIDs = new ArrayList<Integer>();
@@ -55,10 +56,10 @@ public class BlockLivenessGenerator {
 	// Initialize the out BitSet for each CFG block that has no successors to the BitSet which
 	// has 1s in the locations which correspond to global names, 0s everywhere else
 	private void initializeOutSets() {
-		for (String s: this.cfgMap.keySet()) {
+		for (String s: this.mMap.keySet()) {
 			if (s.equals(ProgramFlattener.exceptionHandlerLabel)) continue;
 			
-			for (CFGBlock block: this.cfgMap.get(s)) {
+			for (CFGBlock block: this.mMap.get(s).getCfgBlocks()) {
 				if (!block.getSuccessors().isEmpty())
 					continue;
 				BlockDataFlowState bFlow = new BlockDataFlowState(totalVars);
@@ -95,10 +96,10 @@ public class BlockLivenessGenerator {
 		PopStmt popStmt;
 		PushStmt pushStmt;
 		CmpStmt cStmt;
-		for (String s: this.cfgMap.keySet()) {
+		for (String s: this.mMap.keySet()) {
 			if (s.equals(ProgramFlattener.exceptionHandlerLabel)) continue;
 			
-			for (CFGBlock block: this.cfgMap.get(s)) {
+			for (CFGBlock block: this.mMap.get(s).getCfgBlocks()) {
 				List<LIRStatement> blockStmts = block.getStatements();
 				for (int i = 0; i < blockStmts.size(); i++) {
 					LIRStatement stmt = blockStmts.get(i);

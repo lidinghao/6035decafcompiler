@@ -2,7 +2,6 @@ package decaf.dataflow.global;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
 import decaf.codegen.flatir.ArrayName;
 import decaf.codegen.flatir.CallStmt;
@@ -16,14 +15,15 @@ import decaf.codegen.flatir.QuadrupletStmt;
 import decaf.codegen.flatir.RegisterName;
 import decaf.codegen.flattener.ProgramFlattener;
 import decaf.dataflow.cfg.CFGBlock;
+import decaf.dataflow.cfg.MethodIR;
 
 public class GlobalConstantPropagationOptimizer {
-	private HashMap<String, List<CFGBlock>> cfgMap;
+	private HashMap<String, MethodIR> mMap;
 	private BlockReachingDefinitionGenerator reachingDefGenerator;
 	
-	public GlobalConstantPropagationOptimizer(HashMap<String, List<CFGBlock>> cfgMap) {
-		this.cfgMap = cfgMap;
-		this.reachingDefGenerator = new BlockReachingDefinitionGenerator(cfgMap);
+	public GlobalConstantPropagationOptimizer(HashMap<String, MethodIR> mMap) {
+		this.mMap = mMap;
+		this.reachingDefGenerator = new BlockReachingDefinitionGenerator(mMap);
 		this.reachingDefGenerator.generate();
 	}
 	
@@ -31,11 +31,11 @@ public class GlobalConstantPropagationOptimizer {
 		if (reachingDefGenerator.getTotalDefinitions() == 0)
 			return;
 		
-		for (String s: this.cfgMap.keySet()) {
+		for (String s: this.mMap.keySet()) {
 			if (s.equals(ProgramFlattener.exceptionHandlerLabel)) continue;
 			
 			// Optimize blocks
-			for (CFGBlock block: this.cfgMap.get(s)) {
+			for (CFGBlock block: this.mMap.get(s).getCfgBlocks()) {
 				optimize(block);
 			}
 		}
@@ -175,10 +175,6 @@ public class GlobalConstantPropagationOptimizer {
 			}
 		}
 		return cName;
-	}
-	
-	public HashMap<String, List<CFGBlock>> getCfgMap() {
-		return cfgMap;
 	}
 
 	public BlockReachingDefinitionGenerator getReachingDefGenerator() {

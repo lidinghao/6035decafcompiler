@@ -15,29 +15,28 @@ import decaf.codegen.flatir.RegisterName;
 import decaf.codegen.flatir.VarName;
 import decaf.codegen.flattener.ProgramFlattener;
 import decaf.dataflow.cfg.CFGBlock;
+import decaf.dataflow.cfg.MethodIR;
 import decaf.dataflow.global.BlockDataFlowState;
 
 public class WebGenerator {
-	private HashMap<String, List<CFGBlock>> cfgMap;
+	private HashMap<String, MethodIR> mMap;
 	private DefDataFlowAnalyzer defAnalyzer;
 	private HashMap<String, List<Web>> webMap;
 	private HashMap<Name, List<Web>> nameToWebs;
 	private HashMap<QuadrupletStmt, Web> defToWeb;
-	private HashMap<String, List<LIRStatement>> lirMap;
 	
-	public WebGenerator(HashMap<String, List<CFGBlock>> cfgMap, HashMap<String, List<LIRStatement>> lirMap) {
-		this.cfgMap = cfgMap;
-		this.defAnalyzer = new DefDataFlowAnalyzer(cfgMap);
+	public WebGenerator(HashMap<String, MethodIR> mMap) {
+		this.mMap = mMap;
+		this.defAnalyzer = new DefDataFlowAnalyzer(mMap);
 		this.webMap = new HashMap<String, List<Web>>();
 		this.nameToWebs = new HashMap<Name, List<Web>>();
 		this.defToWeb = new HashMap<QuadrupletStmt, Web>();
-		this.lirMap = lirMap;
 	}
 	
 	public void generateWebs() {
 		this.defAnalyzer.analyze();
 		
-		for (String methodName: this.cfgMap.keySet()) {
+		for (String methodName: this.mMap.keySet()) {
 			if (methodName.equals(ProgramFlattener.exceptionHandlerLabel)) continue;
 			
 			this.webMap.put(methodName, new ArrayList<Web>());
@@ -105,7 +104,7 @@ public class WebGenerator {
 			List<Web> webs = this.webMap.get(methodName);
 			
 			for (Web w: webs) {
-				int min = this.lirMap.get(methodName).size(); // Max index
+				int min = this.mMap.get(methodName).getStatements().size(); // Max index
 				int max = 0; // Min index
 				
 				int index;
@@ -165,7 +164,7 @@ public class WebGenerator {
 	private void generateWeb(String methodName) {
 		this.defToWeb.clear();
 		
-		for (CFGBlock block: this.cfgMap.get(methodName)) {
+		for (CFGBlock block: this.mMap.get(methodName).getCfgBlocks()) {
 			if (block == null) continue;
 			
 			this.nameToWebs.clear(); // Clear names to web map
@@ -309,8 +308,8 @@ public class WebGenerator {
 	}
 	
 	private int getStmtIndex(String methodName, LIRStatement stmt) {
-		for (int i = 0; i < this.lirMap.get(methodName).size(); i++) {
-			if (stmt == this.lirMap.get(methodName).get(i)) {
+		for (int i = 0; i < this.mMap.get(methodName).getStatements().size(); i++) {
+			if (stmt == this.mMap.get(methodName).getStatements().get(i)) {
 				return i;
 			}
 		}
