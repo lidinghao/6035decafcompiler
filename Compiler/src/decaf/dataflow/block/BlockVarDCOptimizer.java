@@ -6,21 +6,18 @@ import java.util.List;
 
 import decaf.codegen.flatir.LIRStatement;
 import decaf.codegen.flatir.Name;
-import decaf.codegen.flatir.QuadrupletOp;
 import decaf.codegen.flatir.QuadrupletStmt;
 import decaf.codegen.flatir.RegisterName;
-import decaf.codegen.flattener.ProgramFlattener;
 import decaf.dataflow.cfg.CFGBlock;
+import decaf.dataflow.cfg.MethodIR;
 
 public class BlockVarDCOptimizer {
 	private HashMap<Name, QuadrupletStmt> definitionMap;
 	private HashMap<Name, Boolean> lastDefUsed;
-	private HashMap<String, List<CFGBlock>> cfgMap;
-	private ProgramFlattener pf;
+	private HashMap<String, MethodIR> mMap;
 	
-	public BlockVarDCOptimizer(HashMap<String, List<CFGBlock>> cfgMap, ProgramFlattener pf) {
-		this.cfgMap = cfgMap;
-		this.pf = pf;
+	public BlockVarDCOptimizer(HashMap<String, MethodIR> mMap) {
+		this.mMap = mMap;
 		this.definitionMap = new HashMap<Name, QuadrupletStmt>();
 		this.lastDefUsed = new HashMap<Name, Boolean>();
 	}
@@ -28,20 +25,13 @@ public class BlockVarDCOptimizer {
 	public void performDeadCodeElimination() {
 		reset();
 		
-		for (String s: this.cfgMap.keySet()) {
-			for (CFGBlock block: this.cfgMap.get(s)) {
+		for (String s: this.mMap.keySet()) {
+			for (CFGBlock block: this.mMap.get(s).getCfgBlocks()) {
 				optimize(block);
 				reset();
 			}
 			
-			// Update statements in program flattener
-			List<LIRStatement> stmts = new ArrayList<LIRStatement>();
-			
-			for (int i = 0; i < this.cfgMap.get(s).size(); i++) {
-				stmts.addAll(getBlockWithIndex(i, this.cfgMap.get(s)).getStatements());
-			}
-			
-			pf.getLirMap().put(s, stmts);
+			this.mMap.get(s).regenerateStmts();
 		}
 	}
 	
@@ -82,16 +72,6 @@ public class BlockVarDCOptimizer {
 		}
 		
 		block.setStatements(newStmts);
-	}
-	
-	private CFGBlock getBlockWithIndex(int i, List<CFGBlock> list) {
-		for (CFGBlock block: list) {
-			if (block.getIndex() == i) {
-				return block;
-			}
-		}
-		
-		return null;
 	}
 	
 	private void reset() {

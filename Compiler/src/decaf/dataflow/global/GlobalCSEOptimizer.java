@@ -8,25 +8,23 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import decaf.codegen.flatir.DynamicVarName;
-import decaf.codegen.flatir.EnterStmt;
 import decaf.codegen.flatir.LIRStatement;
 import decaf.codegen.flatir.Name;
 import decaf.codegen.flatir.QuadrupletOp;
 import decaf.codegen.flatir.QuadrupletStmt;
 import decaf.codegen.flattener.ProgramFlattener;
 import decaf.dataflow.cfg.CFGBlock;
+import decaf.dataflow.cfg.MethodIR;
 
 public class GlobalCSEOptimizer {
-	private HashMap<String, List<CFGBlock>> cfgMap;
+	private HashMap<String, MethodIR> mMap;
 	private HashMap<AvailableExpression, DynamicVarName> exprToTemp;
 	private BlockAvailableExpressionGenerator availableGenerator;
 	private HashSet<Integer> exprsClobbered;
-	private ProgramFlattener pf;
 	
-	public GlobalCSEOptimizer(HashMap<String, List<CFGBlock>> cfgMap, ProgramFlattener pf) {
-		this.cfgMap = cfgMap;
-		this.pf = pf;
-		this.availableGenerator = new BlockAvailableExpressionGenerator(cfgMap);
+	public GlobalCSEOptimizer(HashMap<String, MethodIR> mMap) {
+		this.mMap = mMap;
+		this.availableGenerator = new BlockAvailableExpressionGenerator(mMap);
 		this.exprToTemp = new HashMap<AvailableExpression, DynamicVarName>();
 		this.exprsClobbered = new HashSet<Integer>();
 		// Generate Available Expressions for CFG
@@ -37,27 +35,20 @@ public class GlobalCSEOptimizer {
 		if (availableGenerator.getTotalExpressionStmts() == 0)
 			return;
 
-		for (String s: this.cfgMap.keySet()) {
+		for (String s: this.mMap.keySet()) {
 			if (s.equals(ProgramFlattener.exceptionHandlerLabel)) continue;
 			
 			// Create temporary variables for each unique AvailableExpression
 			initializeTemporaryMap(s);
 			
 			// Optimize blocks
-			for (CFGBlock block: this.cfgMap.get(s)) {
+			for (CFGBlock block: this.mMap.get(s).getCfgBlocks()) {
 				optimize(block);
 				resetBlock();
 			}
 		
-			// Change statements
-			List<LIRStatement> stmts = new ArrayList<LIRStatement>();
+			this.mMap.get(s).regenerateStmts();
 			
-			for (int i = 0; i < this.cfgMap.get(s).size(); i++) {
-				stmts.addAll(getBlockWithIndex(i, 
-						this.cfgMap.get(s)).getStatements());
-			}
-			
-			pf.getLirMap().put(s, stmts);
 			resetMethod();
 		}
 	}
@@ -68,16 +59,6 @@ public class GlobalCSEOptimizer {
 	
 	private void resetMethod() {
 		exprToTemp = new HashMap<AvailableExpression, DynamicVarName>();
-	}
-	
-	private CFGBlock getBlockWithIndex(int i, List<CFGBlock> list) {
-		for (CFGBlock block: list) {
-			if (block.getIndex() == i) {
-				return block;
-			}
-		}
-		
-		return null;
 	}
 	
 	private void initializeTemporaryMap(String method) {
@@ -153,7 +134,7 @@ public class GlobalCSEOptimizer {
 	
 	public void printExprToTemp(PrintStream out) {
 		out.println("EXPR TO GLOBAL TEMP MAPS: ");
-		for (String s: this.cfgMap.keySet()) {
+		for (String s: this.mMap.keySet()) {
 			exprToTemp = new HashMap<AvailableExpression, DynamicVarName>();
 			initializeTemporaryMap(s);
 			System.out.println("METHOD: " + s);

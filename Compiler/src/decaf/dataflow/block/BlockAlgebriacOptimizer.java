@@ -1,8 +1,6 @@
 package decaf.dataflow.block;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
 import decaf.codegen.flatir.ConstantName;
 import decaf.codegen.flatir.LIRStatement;
@@ -11,33 +9,25 @@ import decaf.codegen.flatir.QuadrupletOp;
 import decaf.codegen.flatir.QuadrupletStmt;
 import decaf.codegen.flattener.ProgramFlattener;
 import decaf.dataflow.cfg.CFGBlock;
+import decaf.dataflow.cfg.MethodIR;
 
 public class BlockAlgebriacOptimizer {
-	private HashMap<String, List<CFGBlock>> cfgMap;
-	private ProgramFlattener pf;
+	private HashMap<String, MethodIR> mMap;
 	
-	public BlockAlgebriacOptimizer(HashMap<String, List<CFGBlock>> cfgMap, ProgramFlattener pf) {
-		this.cfgMap = cfgMap;
-		this.pf = pf;
+	public BlockAlgebriacOptimizer(HashMap<String, MethodIR> mMap) {
+		this.mMap = mMap;
 	}
 
 	public void performAlgebriacSimplification() {
-		for (String s: this.cfgMap.keySet()) {
+		for (String s: this.mMap.keySet()) {
 			if (s.equals(ProgramFlattener.exceptionHandlerLabel)) continue;
 			
-			for (CFGBlock block: this.cfgMap.get(s)) {
+			for (CFGBlock block: this.mMap.get(s).getCfgBlocks()) {
 				optimize(block);
 				reset();
 			}
 			
-			// Change statements
-			List<LIRStatement> stmts = new ArrayList<LIRStatement>();
-			
-			for (int i = 0; i < this.cfgMap.get(s).size(); i++) {
-				stmts.addAll(getBlockWithIndex(i, this.cfgMap.get(s)).getStatements());
-			}
-			
-			pf.getLirMap().put(s, stmts);
+			this.mMap.get(s).regenerateStmts();
 		}
 		
 	}
@@ -176,15 +166,5 @@ public class BlockAlgebriacOptimizer {
 			case NEQ:
 				break;
 		}
-	}
-
-	private CFGBlock getBlockWithIndex(int i, List<CFGBlock> list) {
-		for (CFGBlock block: list) {
-			if (block.getIndex() == i) {
-				return block;
-			}
-		}
-		
-		return null;
 	}
 }

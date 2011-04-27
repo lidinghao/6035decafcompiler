@@ -1,36 +1,35 @@
 package decaf.dataflow.global;
 
-import decaf.codegen.flattener.ProgramFlattener;
-import decaf.dataflow.cfg.CFGBuilder;
+import java.util.HashMap;
+
+import decaf.dataflow.cfg.MethodIR;
 
 public class GlobalOptimizer {
 	private GlobalCSEOptimizer cse;
 	private GlobalConstantPropagationOptimizer constant;
 	private GlobalCopyPropagationOptimizer copy;
 	private GlobalDeadCodeOptimizer dc;
-	private CFGBuilder cb;
-	private ProgramFlattener pf;
+	private HashMap<String, MethodIR> mMap;
 
-	public GlobalOptimizer(CFGBuilder cb, ProgramFlattener pf) {
-		this.cb = cb;
-		this.pf = pf;
+	public GlobalOptimizer(HashMap<String, MethodIR> mMap) {
+		this.mMap = mMap;
 	}
 	
 	public void optimizeBlocks(boolean[] opts) {
 		if(opts[1]) { // CSE
-			cse = new GlobalCSEOptimizer(cb.getCfgMap(), pf);
+			cse = new GlobalCSEOptimizer(mMap);
 			cse.performGlobalCSE();
 		} 
 		if(opts[2]) { // COPY
-			copy = new GlobalCopyPropagationOptimizer(cb.getCfgMap());
+			copy = new GlobalCopyPropagationOptimizer(mMap);
 			copy.performGlobalCopyProp();
 		} 
 		if(opts[3]) { // CONST
-			constant = new GlobalConstantPropagationOptimizer(cb.getCfgMap());
+			constant = new GlobalConstantPropagationOptimizer(mMap);
 			constant.performGlobalConstantProp();
 		} 
 		if(opts[4]) { // DC
-			dc = new GlobalDeadCodeOptimizer(cb.getCfgMap(), pf);
+			dc = new GlobalDeadCodeOptimizer(mMap);
 			dc.performDeadCodeElimination();
 		}
 	}

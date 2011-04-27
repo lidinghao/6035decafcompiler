@@ -15,51 +15,33 @@ import decaf.codegen.flatir.RegisterName;
 import decaf.codegen.flatir.VarName;
 import decaf.codegen.flattener.ProgramFlattener;
 import decaf.dataflow.cfg.CFGBlock;
+import decaf.dataflow.cfg.MethodIR;
 
 public class BlockCSEOptimizer {
 	private HashMap<Name, SymbolicValue> varToVal;
 	private HashMap<ValueExpr, SymbolicValue> expToVal;
 	private HashMap<ValueExpr, DynamicVarName> expToTemp;
-	private HashMap<String, List<CFGBlock>> cfgMap;
-	private ProgramFlattener pf;
+	private HashMap<String, MethodIR> mMap;
 	
-	public BlockCSEOptimizer(HashMap<String, List<CFGBlock>> cfgMap, ProgramFlattener pf) {
+	public BlockCSEOptimizer(HashMap<String, MethodIR> mMap) {
 		this.varToVal = new HashMap<Name, SymbolicValue>();
 		this.expToVal = new HashMap<ValueExpr, SymbolicValue>();
 		this.expToTemp = new HashMap<ValueExpr, DynamicVarName>();
-		this.cfgMap = cfgMap;
-		this.pf = pf;
+		this.mMap = mMap;
 	}
 	
 	public void performCSE() {
-		for (String s: this.cfgMap.keySet()) {
+		for (String s: this.mMap.keySet()) {
 			if (s.equals(ProgramFlattener.exceptionHandlerLabel)) continue;
 			
 			DynamicVarName.reset();
-			for (CFGBlock block: this.cfgMap.get(s)) {
+			for (CFGBlock block: this.mMap.get(s).getCfgBlocks()) {
 				optimize(block);
 				reset();
 			}
 			
-			// Change statements
-			List<LIRStatement> stmts = new ArrayList<LIRStatement>();
-			
-			for (int i = 0; i < this.cfgMap.get(s).size(); i++) {
-				stmts.addAll(getBlockWithIndex(i, this.cfgMap.get(s)).getStatements());
-			}
-			
-			pf.getLirMap().put(s, stmts);
+			this.mMap.get(s).regenerateStmts();
 		}
-	}
-	
-	private CFGBlock getBlockWithIndex(int i, List<CFGBlock> list) {
-		for (CFGBlock block: list) {
-			if (block.getIndex() == i) {
-				return block;
-			}
-		}
-		
-		return null;
 	}
 	
 	public void optimize(CFGBlock block) {

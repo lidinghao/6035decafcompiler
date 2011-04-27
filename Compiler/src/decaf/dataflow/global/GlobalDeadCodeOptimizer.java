@@ -15,40 +15,31 @@ import decaf.codegen.flatir.QuadrupletStmt;
 import decaf.codegen.flatir.RegisterName;
 import decaf.codegen.flattener.ProgramFlattener;
 import decaf.dataflow.cfg.CFGBlock;
+import decaf.dataflow.cfg.MethodIR;
 
 public class GlobalDeadCodeOptimizer {
-	private HashMap<String, List<CFGBlock>> cfgMap;
+	private HashMap<String, MethodIR> mMap;
 	private BlockLivenessGenerator livenessGenerator;
-	private ProgramFlattener pf;
 	private HashMap<CFGBlock, BlockDataFlowState> blockLiveVars;
 	private HashMap<Name, Variable> nameToVar;
 	
-	public GlobalDeadCodeOptimizer(HashMap<String, List<CFGBlock>> cfgMap, ProgramFlattener pf) {
-		this.cfgMap = cfgMap;
-		this.pf = pf;
-		this.livenessGenerator = new BlockLivenessGenerator(cfgMap);
+	public GlobalDeadCodeOptimizer(HashMap<String, MethodIR> mMap) {
+		this.mMap = mMap;
+		this.livenessGenerator = new BlockLivenessGenerator(mMap);
 		this.livenessGenerator.generate();
 		this.blockLiveVars = livenessGenerator.getBlockLiveVars();
 		this.nameToVar = livenessGenerator.getNameToVar();
 	}
 	
 	public void performDeadCodeElimination(){
-		for (String s: this.cfgMap.keySet()) {
+		for (String s: this.mMap.keySet()) {
 			if (s.equals(ProgramFlattener.exceptionHandlerLabel)) continue;
 			
-			for (CFGBlock block: this.cfgMap.get(s)) {
+			for (CFGBlock block: this.mMap.get(s).getCfgBlocks()) {
 				optimize(block);
 			}
 			
-			// Change statements
-			List<LIRStatement> stmts = new ArrayList<LIRStatement>();
-			
-			for (int i = 0; i < this.cfgMap.get(s).size(); i++) {
-				stmts.addAll(getBlockWithIndex(i, 
-						this.cfgMap.get(s)).getStatements());
-			}
-			
-			pf.getLirMap().put(s, stmts);
+			this.mMap.get(s).regenerateStmts();
 		}
 	}
 	
@@ -165,14 +156,5 @@ public class GlobalDeadCodeOptimizer {
 		// If it is not live, then it is redefined (or not used) after this block, 
 		// so anything assigning the corresponding variable can be eliminated
 		return !out.get(varId);
-	}
-
-	private CFGBlock getBlockWithIndex(int i, List<CFGBlock> list) {
-		for (CFGBlock block: list) {
-			if (block.getIndex() == i) {
-				return block;
-			}
-		}
-		return null;
 	}
 }

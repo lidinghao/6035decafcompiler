@@ -12,9 +12,9 @@ import decaf.codegen.flatir.QuadrupletStmt;
 import decaf.codegen.flatir.Register;
 import decaf.codegen.flatir.RegisterName;
 import decaf.codegen.flatir.VarName;
-import decaf.codegen.flattener.ExpressionFlattenerVisitor;
 import decaf.codegen.flattener.ProgramFlattener;
 import decaf.dataflow.cfg.CFGBlock;
+import decaf.dataflow.cfg.MethodIR;
 
 // This keeps track of how many assignment definitions reach a given block
 // An assignment definition reaches a block if:
@@ -25,7 +25,7 @@ import decaf.dataflow.cfg.CFGBlock;
 // definition that assigns to 'a', replace 'a' with definition's LHS
 
 public class BlockAssignmentDefinitionGenerator {
-	private HashMap<String, List<CFGBlock>> cfgMap;
+	private HashMap<String, MethodIR> mMap;
 	private HashMap<CFGBlock, BlockDataFlowState> blockAssignReachingDefs;
 	private HashSet<CFGBlock> cfgBlocksToProcess;
 	private HashMap<QuadrupletStmt, Integer> uniqueAssignmentStmts;
@@ -35,8 +35,8 @@ public class BlockAssignmentDefinitionGenerator {
 	private HashMap<Name, HashSet<QuadrupletStmt>> nameToQStmtsWhichItAssigns;
 	private int totalAssignmentDefinitions;
 	
-	public BlockAssignmentDefinitionGenerator(HashMap<String, List<CFGBlock>> cMap) {
-		cfgMap = cMap;
+	public BlockAssignmentDefinitionGenerator(HashMap<String, MethodIR> mMap) {
+		this.mMap = mMap;
 		nameToQStmtsThatAssignIt = new HashMap<Name, HashSet<QuadrupletStmt>>();
 		nameToQStmtsWhichItAssigns = new HashMap<Name, HashSet<QuadrupletStmt>>();
 		uniqueAssignmentStmts = new HashMap<QuadrupletStmt, Integer>();
@@ -50,7 +50,7 @@ public class BlockAssignmentDefinitionGenerator {
 		if (totalAssignmentDefinitions == 0) 
 			return;
 		// Get the first block in the main function - TODO: is there a better way?
-		CFGBlock entry = cfgMap.get("main").get(0);
+		CFGBlock entry = this.getBlockById("main", 0);
 		BlockDataFlowState entryBlockFlow = new BlockDataFlowState(totalAssignmentDefinitions);
 		calculateGenKillSets(entry, entryBlockFlow);
 		entryBlockFlow.setOut(entryBlockFlow.getGen());
@@ -64,15 +64,25 @@ public class BlockAssignmentDefinitionGenerator {
 		}
 	}
 	
+	private CFGBlock getBlockById(String name, int i) {
+		if (this.mMap.containsKey(name)) {
+			for (CFGBlock b: this.mMap.get(name).getCfgBlocks()) {
+				if (b.getIndex() == i) return b;
+			}
+		}
+		
+		return null;
+	}
+	
 	// Each unique 'a = b' will have an id
 	private void initialize() {
 		// QuadrupletStmt IDs that we assign should start from 0, so they can
 		// correspond to the appropriate index in the BitSet
 		QuadrupletStmt.setID(0);
-		for (String s: this.cfgMap.keySet()) {
+		for (String s: this.mMap.keySet()) {
 			if (s.equals(ProgramFlattener.exceptionHandlerLabel)) continue;
 			
-			for (CFGBlock block: this.cfgMap.get(s)) {
+			for (CFGBlock block: this.mMap.get(s).getCfgBlocks()) {
 				List<LIRStatement> blockStmts = block.getStatements();
 				for (int i = 0; i < blockStmts.size(); i++) {
 					LIRStatement stmt = blockStmts.get(i);
@@ -239,10 +249,6 @@ public class BlockAssignmentDefinitionGenerator {
 				gen.set(qStmt.getMyId(), false);
 			}
 		}
-	}
-	
-	public HashMap<String, List<CFGBlock>> getCfgMap() {
-		return cfgMap;
 	}
 
 	public HashMap<CFGBlock, BlockDataFlowState> getBlockAssignReachingDefs() {

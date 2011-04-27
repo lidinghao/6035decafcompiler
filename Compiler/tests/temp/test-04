@@ -1,9 +1,27 @@
 class Program {
-  int x, A[10];
+  int x, z, A[10];
+  
+  void foo(int x, int y, boolean c) {
+  	int a, b;
+
+	a = x + y + z;
+	
+	if (c) {
+		a = y;
+	}
+	
+	b = a + y + z;
+  }
+  
+  int bar() {
+  	int a, b;
+  	b = -1000;
+  	a = -b;
+  	return a;
+  }
 
   void main() {
-  	int x, y;
-  	x = A[x];
-  	y = A[y];
+  	//x = A[A[A[1]]];
+  	//A[A[A[1]]] = 10;
   }
 }

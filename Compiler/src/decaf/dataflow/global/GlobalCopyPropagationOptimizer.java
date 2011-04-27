@@ -3,7 +3,6 @@ package decaf.dataflow.global;
 import java.util.BitSet;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 
 import decaf.codegen.flatir.ArrayName;
 import decaf.codegen.flatir.CallStmt;
@@ -15,14 +14,15 @@ import decaf.codegen.flatir.PushStmt;
 import decaf.codegen.flatir.QuadrupletStmt;
 import decaf.codegen.flattener.ProgramFlattener;
 import decaf.dataflow.cfg.CFGBlock;
+import decaf.dataflow.cfg.MethodIR;
 
 public class GlobalCopyPropagationOptimizer {
-	private HashMap<String, List<CFGBlock>> cfgMap;
+	private HashMap<String, MethodIR> mMap;
 	private BlockAssignmentDefinitionGenerator assignmentDefGenerator;
 	
-	public GlobalCopyPropagationOptimizer(HashMap<String, List<CFGBlock>> cfgMap) {
-		this.cfgMap = cfgMap;
-		this.assignmentDefGenerator = new BlockAssignmentDefinitionGenerator(cfgMap);
+	public GlobalCopyPropagationOptimizer(HashMap<String, MethodIR> mMap) {
+		this.mMap = mMap;
+		this.assignmentDefGenerator = new BlockAssignmentDefinitionGenerator(mMap);
 		this.assignmentDefGenerator.generate();
 	}
 	
@@ -30,11 +30,11 @@ public class GlobalCopyPropagationOptimizer {
 		if (assignmentDefGenerator.getTotalAssignmentDefinitions() == 0)
 			return;
 
-		for (String s: this.cfgMap.keySet()) {
+		for (String s: this.mMap.keySet()) {
 			if (s.equals(ProgramFlattener.exceptionHandlerLabel)) continue;
 			
 			// Optimize blocks
-			for (CFGBlock block: this.cfgMap.get(s)) {
+			for (CFGBlock block: this.mMap.get(s).getCfgBlocks()) {
 				optimize(block);
 			}
 		}
@@ -151,10 +151,6 @@ public class GlobalCopyPropagationOptimizer {
 			}
 		}
 		return null;
-	}
-	
-	public HashMap<String, List<CFGBlock>> getCfgMap() {
-		return cfgMap;
 	}
 
 	public BlockAssignmentDefinitionGenerator getAssignmentDefGenerator() {

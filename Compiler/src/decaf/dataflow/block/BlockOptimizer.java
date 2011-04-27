@@ -1,7 +1,10 @@
 package decaf.dataflow.block;
 
+import java.util.HashMap;
+
 import decaf.codegen.flattener.ProgramFlattener;
 import decaf.dataflow.cfg.CFGBuilder;
+import decaf.dataflow.cfg.MethodIR;
 
 public class BlockOptimizer {
 	private BlockCSEOptimizer cse;
@@ -12,17 +15,17 @@ public class BlockOptimizer {
 	private BlockVarCPOptimizer copyVar;
 	private BlockVarDCOptimizer dcVar;
 	
-	public BlockOptimizer(CFGBuilder cb, ProgramFlattener pf) {
-		cse = new BlockCSEOptimizer(cb.getCfgMap(), pf);	
+	public BlockOptimizer(HashMap<String, MethodIR> mMap) {
+		cse = new BlockCSEOptimizer(mMap);	
 		
-		copy = new BlockTempCPOptimizer(cb.getCfgMap(), pf);
-		copyVar = new BlockVarCPOptimizer(cb.getCfgMap(), pf);
+		copy = new BlockTempCPOptimizer(mMap);
+		copyVar = new BlockVarCPOptimizer(mMap);
 		
-		cons = new BlockConsPropagationOptimizer(cb.getCfgMap(), pf);
-		alg = new BlockAlgebriacOptimizer(cb.getCfgMap(), pf);
+		cons = new BlockConsPropagationOptimizer(mMap);
+		alg = new BlockAlgebriacOptimizer(mMap);
 		
-		dc = new BlockTempDCOptimizer(cb.getCfgMap(), pf);
-		dcVar = new BlockVarDCOptimizer(cb.getCfgMap(), pf);
+		dc = new BlockTempDCOptimizer(mMap);
+		dcVar = new BlockVarDCOptimizer(mMap);
 	}
 	
 	public void optimizeBlocks(boolean[] opts) {

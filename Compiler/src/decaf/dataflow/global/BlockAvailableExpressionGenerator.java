@@ -17,12 +17,12 @@ import decaf.codegen.flatir.QuadrupletStmt;
 import decaf.codegen.flatir.Register;
 import decaf.codegen.flatir.RegisterName;
 import decaf.codegen.flatir.VarName;
-import decaf.codegen.flattener.ExpressionFlattenerVisitor;
 import decaf.codegen.flattener.ProgramFlattener;
 import decaf.dataflow.cfg.CFGBlock;
+import decaf.dataflow.cfg.MethodIR;
 
 public class BlockAvailableExpressionGenerator {
-	private HashMap<String, List<CFGBlock>> cfgMap;
+	private HashMap<String, MethodIR> mMap;
 	private HashMap<CFGBlock, BlockDataFlowState> blockAvailableDefs;
 	private List<AvailableExpression> availableExpressions;
 	private HashMap<CFGBlock, List<AvailableExpression>> blockExpressions;
@@ -33,8 +33,8 @@ public class BlockAvailableExpressionGenerator {
 	private HashMap<Name, HashSet<Integer>> nameToExprIds;
 	private int totalExpressionStmts;
 
-	public BlockAvailableExpressionGenerator(HashMap<String, List<CFGBlock>> cMap) {
-		cfgMap = cMap;
+	public BlockAvailableExpressionGenerator(HashMap<String, MethodIR> mMap) {
+		this.mMap = mMap;
 		nameToExprIds = new HashMap<Name, HashSet<Integer>>();
 		blockAvailableDefs = new HashMap<CFGBlock, BlockDataFlowState>();
 		availableExpressions = new ArrayList<AvailableExpression>();
@@ -50,7 +50,7 @@ public class BlockAvailableExpressionGenerator {
 		if (totalExpressionStmts == 0)
 			return;
 		// Get the first block in the main function - TODO: is there a better way?
-		CFGBlock entry = cfgMap.get("main").get(0);
+		CFGBlock entry = this.getBlockById("main", 0);
 		BlockDataFlowState entryBlockFlow = new BlockDataFlowState(totalExpressionStmts);
 		calculateGenKillSets(entry, entryBlockFlow);
 		entryBlockFlow.setOut(entryBlockFlow.getGen());
@@ -65,14 +65,24 @@ public class BlockAvailableExpressionGenerator {
 		}
 	}
 	
+	private CFGBlock getBlockById(String name, int i) {
+		if (this.mMap.containsKey(name)) {
+			for (CFGBlock b: this.mMap.get(name).getCfgBlocks()) {
+				if (b.getIndex() == i) return b;
+			}
+		}
+		
+		return null;
+	}
+	
 	public void initialize() {
 		// AvailableExpression IDs that we assign should start from 0, so they can
 		// correspond to the appropriate index in the BitSet
 		AvailableExpression.setID(0);
-		for (String s: this.cfgMap.keySet()) {
+		for (String s: this.mMap.keySet()) {
 			if (s.equals(ProgramFlattener.exceptionHandlerLabel)) continue;
 			
-			for (CFGBlock block: this.cfgMap.get(s)) {
+			for (CFGBlock block: this.mMap.get(s).getCfgBlocks()) {
 				List<LIRStatement> blockStmts = block.getStatements();
 				for (int i = 0; i < blockStmts.size(); i++) {
 					LIRStatement stmt = blockStmts.get(i);

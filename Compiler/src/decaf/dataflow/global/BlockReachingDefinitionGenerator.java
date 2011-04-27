@@ -13,20 +13,20 @@ import decaf.codegen.flatir.QuadrupletStmt;
 import decaf.codegen.flatir.Register;
 import decaf.codegen.flatir.RegisterName;
 import decaf.codegen.flatir.VarName;
-import decaf.codegen.flattener.ExpressionFlattenerVisitor;
 import decaf.codegen.flattener.ProgramFlattener;
 import decaf.dataflow.cfg.CFGBlock;
+import decaf.dataflow.cfg.MethodIR;
 
 public class BlockReachingDefinitionGenerator {
-	private HashMap<String, List<CFGBlock>> cfgMap;
+	private HashMap<String, MethodIR> mMap;
 	private HashMap<CFGBlock, BlockDataFlowState> blockReachingDefs;
 	private HashSet<CFGBlock> cfgBlocksToProcess;
 	// Map from Name to QuadrupletStmt which assign to that Name
 	private HashMap<Name, ArrayList<QuadrupletStmt>> nameToQStmts;
 	private int totalDefinitions;
 
-	public BlockReachingDefinitionGenerator(HashMap<String, List<CFGBlock>> cMap) {
-		cfgMap = cMap;
+	public BlockReachingDefinitionGenerator(HashMap<String, MethodIR> mMap) {
+		this.mMap = mMap;
 		nameToQStmts = new HashMap<Name, ArrayList<QuadrupletStmt>>();
 		blockReachingDefs = new HashMap<CFGBlock, BlockDataFlowState>();
 		cfgBlocksToProcess = new HashSet<CFGBlock>();
@@ -38,7 +38,7 @@ public class BlockReachingDefinitionGenerator {
 		if (totalDefinitions == 0)
 			return;
 		// Get the first block in the main function - TODO: is there a better way?
-		CFGBlock entry = cfgMap.get("main").get(0);
+		CFGBlock entry = this.getBlockById("main", 0);
 		BlockDataFlowState entryBlockFlow = new BlockDataFlowState(totalDefinitions);
 		calculateGenKillSets(entry, entryBlockFlow);
 		entryBlockFlow.setOut(entryBlockFlow.getGen());
@@ -52,14 +52,24 @@ public class BlockReachingDefinitionGenerator {
 		}
 	}
 	
+	private CFGBlock getBlockById(String name, int i) {
+		if (this.mMap.containsKey(name)) {
+			for (CFGBlock b: this.mMap.get(name).getCfgBlocks()) {
+				if (b.getIndex() == i) return b;
+			}
+		}
+		
+		return null;
+	}
+	
 	private void initialize() {
 		// QuadrupletStmt IDs that we assign should start from 0, so they can
 		// correspond to the appropriate index in the BitSet
 		QuadrupletStmt.setID(0);
-		for (String s: this.cfgMap.keySet()) {
+		for (String s: this.mMap.keySet()) {
 			if (s.equals(ProgramFlattener.exceptionHandlerLabel)) continue;
 			
-			for (CFGBlock block: this.cfgMap.get(s)) {
+			for (CFGBlock block: this.mMap.get(s).getCfgBlocks()) {
 				List<LIRStatement> blockStmts = block.getStatements();
 				for (int i = 0; i < blockStmts.size(); i++) {
 					LIRStatement stmt = blockStmts.get(i);

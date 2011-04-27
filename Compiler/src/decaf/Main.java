@@ -1,17 +1,21 @@
 package decaf;
 
 import java.io.*;
+import java.util.HashMap;
 
+import decaf.codegen.flatir.Name;
 import decaf.codegen.flattener.CodeGenerator;
 import decaf.codegen.flattener.LocationResolver;
 import decaf.codegen.flattener.ProgramFlattener;
 import decaf.dataflow.block.BlockOptimizer;
 import decaf.dataflow.cfg.CFGBuilder;
 import decaf.dataflow.cfg.LeaderElector;
+import decaf.dataflow.cfg.MethodIR;
 import decaf.dataflow.global.GlobalCSEOptimizer;
 import decaf.dataflow.global.GlobalOptimizer;
 import decaf.ir.ast.ClassDecl;
 import decaf.ir.semcheck.*;
+import decaf.ralloc.Web;
 import decaf.ralloc.WebGenerator;
 import decaf.test.Error;
 import decaf.test.PrettyPrintVisitor;
@@ -137,13 +141,15 @@ class Main {
 				CFGBuilder cb = new CFGBuilder(pf.getLirMap());
 				cb.generateCFGs();
 				
+				HashMap<String, MethodIR> mMap = MethodIR.generateMethodIRs(pf, cb);
+				
 				if (CLI.opts[0] || CLI.opts[1] || CLI.opts[2] || CLI.opts[3] || CLI.opts[4]) {
 					if (CLI.debug) {
 						cb.printCFG(System.out);
 					}
 					
 					// Block optimizations
-					BlockOptimizer bo = new BlockOptimizer(cb, pf);
+					BlockOptimizer bo = new BlockOptimizer(mMap);
 					bo.optimizeBlocks(CLI.opts);
 					
 					if (CLI.debug) {
@@ -153,8 +159,8 @@ class Main {
 					}
 					
 					// Global optimizations
-					GlobalOptimizer go = new GlobalOptimizer(cb, pf);
-					//go.optimizeBlocks(CLI.opts);
+					GlobalOptimizer go = new GlobalOptimizer(mMap);
+					go.optimizeBlocks(CLI.opts);
 					
 					if (CLI.debug) {
 						System.out.println("\nAFTER GLOBAL OPTIMIZATIONS: \n");
@@ -176,11 +182,13 @@ class Main {
 				
 				pf.printLIR(System.out);
 				
-				cb.printCFG(System.out);
+				//cb.printCFG(System.out);
 				
-//				WebGenerator wg = new WebGenerator(cb.getCfgMap());
-//				wg.generateWebs();
-//				System.out.println(wg.getWebMap().get("foo"));
+				WebGenerator wg = new WebGenerator(mMap);
+				wg.generateWebs();
+				for (Web w: wg.getWebMap().get("foo")) {
+					System.out.println(w);
+				}
 				
 				if (CLI.debug) {
 					System.out.println("Name -> Locations Mapping:");
