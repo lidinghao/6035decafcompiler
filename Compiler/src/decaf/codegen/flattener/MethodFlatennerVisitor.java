@@ -355,21 +355,23 @@ public class MethodFlatennerVisitor implements ASTVisitor<Integer> {
 			this.statements.add(new LeaveStmt());
 		}
 		
-		// Method cf handler
-		this.statements.add(new LabelStmt(getMethodCfHandler()));
-		VarName error = new VarName(ProgramFlattener.methodExceptionErrorLabel);
-		error.setIsString(true);
-		
-		// Move args to regs
-		this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE,
-				new RegisterName(Register.argumentRegs[0]), error, null));
-		this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE,
-				new RegisterName(Register.argumentRegs[1]), new ConstantName(md.getLineNumber()), null));
-		this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE,
-				new RegisterName(Register.argumentRegs[2]), new ConstantName(md.getColumnNumber()), null));
-		
-		// Call exception handler
-		this.statements.add(new CallStmt(ProgramFlattener.exceptionHandlerLabel));
+		// Method cf handler (only for non-void return methods)
+		if (md.getReturnType() != Type.VOID) {
+			this.statements.add(new LabelStmt(getMethodCfHandler()));
+			VarName error = new VarName(ProgramFlattener.methodExceptionErrorLabel);
+			error.setIsString(true);
+			
+			// Move args to regs
+			this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE,
+					new RegisterName(Register.argumentRegs[0]), error, null));
+			this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE,
+					new RegisterName(Register.argumentRegs[1]), new ConstantName(md.getLineNumber()), null));
+			this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE,
+					new RegisterName(Register.argumentRegs[2]), new ConstantName(md.getColumnNumber()), null));
+			
+			// Call exception handler
+			this.statements.add(new CallStmt(ProgramFlattener.exceptionHandlerLabel));
+		}
 		
 		this.statements.add(new LabelStmt(getMethodEnd()));
 
