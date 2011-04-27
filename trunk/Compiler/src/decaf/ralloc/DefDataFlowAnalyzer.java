@@ -14,7 +14,6 @@ import decaf.dataflow.cfg.CFGBlock;
 import decaf.dataflow.global.BlockDataFlowState;
 
 public class DefDataFlowAnalyzer {
-	private int totalDefinitions;
 	private HashSet<CFGBlock> cfgBlocksToProcess;
 	private HashMap<CFGBlock, BlockDataFlowState> cfgBlocksState;
 	private HashMap<String, List<CFGBlock>> cfgMap;
@@ -22,7 +21,6 @@ public class DefDataFlowAnalyzer {
 	
 	public DefDataFlowAnalyzer(HashMap<String, List<CFGBlock>> cfgMap) {
 		this.cfgMap = cfgMap;
-		this.totalDefinitions = 0;
 		this.cfgBlocksToProcess = new HashSet<CFGBlock>();
 		this.cfgBlocksState = new HashMap<CFGBlock, BlockDataFlowState>();
 		this.uniqueDefinitions = new HashMap<String, List<QuadrupletStmt>>();
@@ -39,10 +37,11 @@ public class DefDataFlowAnalyzer {
 	}
 
 	private void runWorkList(String methodName) {
-		if (this.totalDefinitions == 0) return;
+		int totalDefs = this.uniqueDefinitions.get(methodName).size();
+		//if (totalDefs == 0) return;
 		
 		CFGBlock entry = cfgMap.get(methodName).get(0);
-		BlockDataFlowState entryBlockFlow = new BlockDataFlowState(this.totalDefinitions); // OUT = GEN for entry block
+		BlockDataFlowState entryBlockFlow = new BlockDataFlowState(totalDefs); // OUT = GEN for entry block
 		calculateGenKillSets(entry, entryBlockFlow);
 		entryBlockFlow.setOut(entryBlockFlow.getGen());
 		cfgBlocksToProcess.remove(entry);
@@ -60,7 +59,6 @@ public class DefDataFlowAnalyzer {
 	private void initialize(String methodName) {
 		QuadrupletStmt.setID(0);
 		this.uniqueDefinitions.put(methodName, new ArrayList<QuadrupletStmt>());
-		this.totalDefinitions = 0;
 		this.cfgBlocksToProcess.clear();
 		
 		for (CFGBlock block: this.cfgMap.get(methodName)) {
@@ -69,11 +67,13 @@ public class DefDataFlowAnalyzer {
 				LIRStatement stmt = blockStmts.get(i);
 				if (stmt.getClass().equals(QuadrupletStmt.class)) {
 					QuadrupletStmt qStmt = (QuadrupletStmt)stmt;
-					if (!qStmt.getDestination().getClass().equals(RegisterName.class)) { // Ignore assignments to regs
-						this.totalDefinitions++;
-						this.uniqueDefinitions.get(methodName).add(qStmt);
-						qStmt.setMyId();
-					}
+					
+					// Ignore register assignments (only for calls)
+					if (qStmt.getDestination().getClass().equals(RegisterName.class)) continue; // Ignore assignments to regs
+
+					this.uniqueDefinitions.get(methodName).add(qStmt);
+					qStmt.setMyId();
+
 				}
 			}
 			
@@ -82,16 +82,17 @@ public class DefDataFlowAnalyzer {
 	}
 	
 	private BlockDataFlowState generateDFState(CFGBlock block) {
+		int totalDefs = this.uniqueDefinitions.get(block.getMethodName()).size();
 		// Get the original out BitSet for this block
 		BitSet origOut;
 		if (this.cfgBlocksState.containsKey(block)) {
 			origOut = this.cfgBlocksState.get(block).getOut();
 		} else {
-			origOut = new BitSet(this.totalDefinitions);
+			origOut = new BitSet(totalDefs);
 		}
 		
 		// Calculate the in BitSet by taking union of predecessors
-		BlockDataFlowState bFlow = new BlockDataFlowState(this.totalDefinitions);
+		BlockDataFlowState bFlow = new BlockDataFlowState(totalDefs);
 		
 		// If there exists at least one predecessor, set In to all False
 		if (block.getPredecessors().size() > 0) {
