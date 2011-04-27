@@ -78,12 +78,41 @@ public class BlockAlgebriacOptimizer {
 			}
 			
 			if (arg1 != null && arg2 != null) {
-				simplifyExpression(qStmt, arg1, arg2, inOrder);
+				simplifyBinaryExpression(qStmt, arg1, arg2, inOrder);
 			}
+		}
+		else {
+			simplifyUnaryExpression(qStmt);
 		}
 	}
 
-	private void simplifyExpression(QuadrupletStmt qStmt, int arg1, Name arg2, boolean inOrder) {
+	private void simplifyUnaryExpression(QuadrupletStmt qStmt) {
+		switch (qStmt.getOperator()) {
+			case NOT:
+				if (qStmt.getArg1().getClass().equals(ConstantName.class)) {
+					qStmt.setOperator(QuadrupletOp.MOVE);
+					int val = Integer.parseInt(((ConstantName)qStmt.getArg1()).getValue());
+					if (val != 0) {
+						qStmt.setArg1(new ConstantName(0));
+					}
+					else {
+						qStmt.setArg1(new ConstantName(1));
+					}
+				}
+				break;
+			case MINUS:
+				if (qStmt.getArg1().getClass().equals(ConstantName.class)) {
+					qStmt.setOperator(QuadrupletOp.MOVE);
+					int val = Integer.parseInt(((ConstantName)qStmt.getArg1()).getValue());
+					if (val != 0) {
+						qStmt.setArg1(new ConstantName(-1 * val));
+					}
+				}
+				break;
+		}		
+	}
+
+	private void simplifyBinaryExpression(QuadrupletStmt qStmt, int arg1, Name arg2, boolean inOrder) {
 		switch (qStmt.getOperator()) {
 			case ADD:
 				if (arg1 == 0) {
