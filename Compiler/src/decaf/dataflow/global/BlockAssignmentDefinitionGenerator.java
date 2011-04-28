@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
+import decaf.codegen.flatir.ArrayName;
 import decaf.codegen.flatir.CallStmt;
 import decaf.codegen.flatir.LIRStatement;
 import decaf.codegen.flatir.Name;
@@ -109,6 +110,16 @@ public class BlockAssignmentDefinitionGenerator {
 								// We will not change the above to b = %reg since the register allocator will take care of this
 								if (arg1.getClass().equals(RegisterName.class))
 									continue;
+								// If argument is Array Name, ignore - this indirectly prevents copy propagation
+								// in the following scenario:
+								// a = b[i]
+								// b[0] = 5
+								// c = a
+								// The last line would be changed to c = b[i] if copy prop was turned on and in the event that
+								// i = 0 in some execution path, we would indirectly get c = b[0] which will break correctness
+								if (arg1.getClass().equals(ArrayName.class))
+									continue;
+								
 								if (!nameToQStmtsThatAssignIt.containsKey(dest)) {
 									nameToQStmtsThatAssignIt.put(dest, new HashSet<QuadrupletStmt>());
 								}
