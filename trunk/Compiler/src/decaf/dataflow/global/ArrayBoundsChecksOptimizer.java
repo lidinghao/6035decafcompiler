@@ -66,26 +66,26 @@ public class ArrayBoundsChecksOptimizer {
 				if (containsArrayReferences(stmt)) {
 					arrIDsToDelete.clear();
 				checkNextStmtForArrayRef = false;
+				}
 			}
 		}
 		if (!arrIDsToDelete.isEmpty()) {
 			List<LIRStatement> newStmts = new ArrayList<LIRStatement>();
 			boolean inArrDeleteZone = false;
-			for (LIRStatement stmt : method.getStatements()) {
+			for (LIRStatement aStmt : method.getStatements()) {
 				if (inArrDeleteZone) {
-					if (isArrayPassStmt(stmt)) {
+					if (isArrayPassStmt(aStmt)) {
 						inArrDeleteZone = false;
-						continue;
 					}
 					continue;
 				}
-				if (isArrayBeginStmt(stmt)) {
-					if (shouldDeleteArrBlock(((LabelStmt)stmt).getLabelString(), arrIDsToDelete)) {
+				if (isArrayBeginStmt(aStmt)) {
+					if (shouldDeleteArrBlock(((LabelStmt)aStmt).getLabelString(), arrIDsToDelete)) {
 						inArrDeleteZone = true;
 						continue;
 					}
 				}
-				newStmts.add(stmt);
+				newStmts.add(aStmt);
 			}
 			method.setStatements(newStmts);
 		}
