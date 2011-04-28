@@ -1,0 +1,19 @@
+class Program {
+
+  void main() {
+    int i, a, b, c, d, e;
+    c = a + b;
+    i = c + d;
+    e = a + d;
+    for i = 0, 10 {
+    	if (c > 0) {
+    		d = a + b; // cse optimization!
+    	} else {
+    		d = a + b + 1; // cse optimization!
+    	}
+    	i = c + d;
+    }
+    i = c + d; // cse optimization!
+    e = a + d; // no cse optimization!
+  }
+}
