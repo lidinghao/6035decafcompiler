@@ -5,12 +5,16 @@ class Program {
   	int a, b;
 
 	a = x + y + z;
+	z = 10;
+	A[x] = 0;
 	
 	if (c) {
 		a = y;
 	}
-	
+	x = y + x;
 	b = a + y + z;
+	z = 9;
+	A[x] = 9;
   }
   
   int bar() {
