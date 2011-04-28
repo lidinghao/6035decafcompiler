@@ -1,0 +1,15 @@
+class Program {
+
+  void main() {
+    int i, a, b, c;
+    i = a + b;
+    if (i > 0) {
+    	if (i < 10) {
+    		for i = 0, 10 {
+    			a = a + b; // no cse optimization!
+    		}
+    	}
+    }
+    i = a + b; // no cse optimization!
+  }
+}
