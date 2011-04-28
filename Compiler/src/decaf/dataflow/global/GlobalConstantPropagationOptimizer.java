@@ -121,23 +121,21 @@ public class GlobalConstantPropagationOptimizer {
 		if (arg.getClass().equals(RegisterName.class))
 			return null;
 		
-		// If the Name is ArrayName, we try to optimize the entire Name first, and if that does not work,
-		// we try to optimize the array index name
-		boolean isArrName = false;
-		if (arg.getClass().equals(ArrayName.class))
-			isArrName = true;
-		
+		// If the Name is ArrayName, we try to optimize the entire Name
+		// Then we return null, since we don't want to constant propagate ArrayName values
 		ConstantName arrIndex;
+		if (arg.getClass().equals(ArrayName.class)) {
+			// Try optimizing index if ArrayName
+			arrIndex = reachingDefsHaveSameConstant(((ArrayName)arg).getIndex(), bFlow);
+			if (arrIndex != null) {
+				((ArrayName)arg).setIndex(arrIndex);
+			}
+			return null;
+		}
+		
 		HashMap<Name, ArrayList<QuadrupletStmt>> nameToStmts = reachingDefGenerator.getNameToQStmts();
 		ArrayList<QuadrupletStmt> stmtsForName = nameToStmts.get(arg);
 		if (stmtsForName == null) {
-			if (isArrName) {
-				// Try optimizing index if ArrayName
-				arrIndex = reachingDefsHaveSameConstant(((ArrayName)arg).getIndex(), bFlow);
-				if (arrIndex != null) {
-					((ArrayName)arg).setIndex(arrIndex);
-				}
-			}
 			return null;
 		}
 		
@@ -151,25 +149,10 @@ public class GlobalConstantPropagationOptimizer {
 						cName = (ConstantName)arg1;
 					} else {
 						if (!((ConstantName)arg1).equals(cName)) {
-							if (isArrName) {
-								// Try optimizing index if ArrayName
-								arrIndex = reachingDefsHaveSameConstant(((ArrayName)arg).getIndex(), bFlow);
-								if (arrIndex != null) {
-									((ArrayName)arg).setIndex(arrIndex);
-								}
-							}
 							return null;
 						}
 					}
 				} else {
-					// Statement is not of type arg = constant
-					if (isArrName) {
-						// Try optimizing index if ArrayName
-						arrIndex = reachingDefsHaveSameConstant(((ArrayName)arg).getIndex(), bFlow);
-						if (arrIndex != null) {
-							((ArrayName)arg).setIndex(arrIndex);
-						}
-					}
 					return null;
 				}
 			}
