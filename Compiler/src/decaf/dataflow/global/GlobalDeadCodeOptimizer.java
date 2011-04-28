@@ -61,14 +61,16 @@ public class GlobalDeadCodeOptimizer {
 			if (stmt.getClass().equals(QuadrupletStmt.class)) {
 				qStmt = (QuadrupletStmt)stmt;
 				if (!assigningRegisters(qStmt)) {
-					// Only dead code eliminate statements that don't assign registers
-					dest = qStmt.getDestination();
-					if (nameToVar.containsKey(dest)) {
-						varId = nameToVar.get(dest).getMyId();
-						if (isDead(varId, bFlow.getOut())) {
-							// Don't add statement
-							System.out.println("Stmt REMOVED: " + stmt);
-							continue;
+					if (!assigningArray(qStmt)) {
+						// Only dead code eliminate statements that don't assign registers or Array names
+						dest = qStmt.getDestination();
+						if (nameToVar.containsKey(dest)) {
+							varId = nameToVar.get(dest).getMyId();
+							if (isDead(varId, bFlow.getOut())) {
+								// Don't add statement
+								System.out.println("Stmt REMOVED: " + stmt);
+								continue;
+							}
 						}
 					}
 				}
@@ -147,6 +149,14 @@ public class GlobalDeadCodeOptimizer {
 		Name dest = qStmt.getDestination();
 		if (dest != null) {
 			return dest.getClass().equals(RegisterName.class);
+		}
+		return false;
+	}
+	
+	private boolean assigningArray(QuadrupletStmt qStmt) {
+		Name dest = qStmt.getDestination();
+		if (dest != null) {
+			return dest.getClass().equals(ArrayName.class);
 		}
 		return false;
 	}
