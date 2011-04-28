@@ -9,6 +9,7 @@ public class GlobalOptimizer {
 	private GlobalConstantPropagationOptimizer constant;
 	private GlobalCopyPropagationOptimizer copy;
 	private GlobalDeadCodeOptimizer dc;
+	private ArrayBoundsChecksOptimizer ab;
 	private HashMap<String, MethodIR> mMap;
 
 	public GlobalOptimizer(HashMap<String, MethodIR> mMap) {
@@ -31,6 +32,8 @@ public class GlobalOptimizer {
 		if(opts[4]) { // DC
 			dc = new GlobalDeadCodeOptimizer(mMap);
 			dc.performDeadCodeElimination();
+			ab = new ArrayBoundsChecksOptimizer(mMap);
+			ab.performArrayOptimization();
 		}
 	}
 	
