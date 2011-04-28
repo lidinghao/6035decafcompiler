@@ -24,7 +24,11 @@ public class MethodIR {
 		List<LIRStatement> stmts = new ArrayList<LIRStatement>();
 		
 		for (int i = 0; i < this.cfgBlocks.size(); i++) {
-			stmts.addAll(getBlockWithIndex(i).getStatements());
+			for (LIRStatement stmt : getBlockWithIndex(i).getStatements()) {
+				if (stmt != null) {
+					stmts.add(stmt);
+				}
+			}
 		}
 		
 		this.statements = stmts;
@@ -51,6 +55,7 @@ public class MethodIR {
 
 	public void setStatements(List<LIRStatement> statements) {
 		this.statements = statements;
+		pf.getLirMap().put(id, this.statements);
 	}
 
 	public List<LIRStatement> getStatements() {
