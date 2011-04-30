@@ -1,0 +1,12 @@
+class Program {
+  int a[10];
+
+  void main() {
+    int b, c, d;
+    a[b] = a[c] + d;
+    if (b > 0) {
+    	c = 1;
+    }
+    d = a[c] + d; // no cse optimization!
+  }
+}
