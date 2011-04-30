@@ -1,0 +1,11 @@
+class Program {
+
+  void main() {
+    int a, b, c, d;
+    c = a + b;
+    if (c > 0) {
+    	a = a + b; // cse optimization!
+    }
+    d = a + b; // no cse optimization!
+  }
+}

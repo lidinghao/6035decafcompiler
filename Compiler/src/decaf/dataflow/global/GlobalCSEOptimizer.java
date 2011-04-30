@@ -88,10 +88,6 @@ public class GlobalCSEOptimizer {
 			QuadrupletStmt qStmt = (QuadrupletStmt)stmt;
 			Name dest = qStmt.getDestination();
 			
-			// Update the set of Names that have been assigned
-			if (nameToExprs.containsKey(dest))
-				exprsClobbered.addAll(nameToExprs.get(dest));
-			
 			if (!stmt.isAvailableExpression()) {
 				newStmts.add(stmt);
 				continue;
@@ -126,6 +122,10 @@ public class GlobalCSEOptimizer {
 					newStmts.add(newStmt);
 				}
 			}
+			
+			// Update the set of Names that have been assigned
+			if (nameToExprs.containsKey(dest))
+				exprsClobbered.addAll(nameToExprs.get(dest));
 			exprIndex++;
 		}
 		
