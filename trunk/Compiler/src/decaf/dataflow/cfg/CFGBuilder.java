@@ -31,7 +31,7 @@ public class CFGBuilder {
 		this.cfgMap = cfgMap;
 	}
 	
-	public HashMap<String, List<CFGBlock>> generateCFGs() {
+	public void generateCFGs() {
 		// Select leaders
 		le.electLeaders();
 		
@@ -42,8 +42,6 @@ public class CFGBuilder {
 			generateCFG(cfgList);
 			cfgMap.put(methodName, cfgList);
 		}
-		
-		return this.cfgMap;
 	}
 
 	private List<CFGBlock> generateCFGBlocks(String methodName) {
