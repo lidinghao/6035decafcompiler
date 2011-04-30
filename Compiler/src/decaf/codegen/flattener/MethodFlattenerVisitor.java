@@ -432,47 +432,47 @@ public class MethodFlattenerVisitor implements ASTVisitor<Integer> {
 	}
 
 	private String getIfTest() {
-		return methodName + "_if" + currentIfId + "_test";
+		return methodName + ".if" + currentIfId + ".test";
 	}
 
 	private String getIfTrue() {
-		return methodName + "_if" + currentIfId + "_true";
+		return methodName + ".if" + currentIfId + ".true";
 	}
 
 	private String getIfElse() {
-		return methodName + "_if" + currentIfId + "_else";
+		return methodName + ".if" + currentIfId + ".else";
 	}
 
 	private String getIfEnd() {
-		return methodName + "_if" + currentIfId + "_end";
+		return methodName + ".if" + currentIfId + ".end";
 	}
 
 	private String getForInit() {
-		return methodName + "_for" + currentForId + "_init";
+		return methodName + ".for" + currentForId + ".init";
 	}
 
 	private String getForTest() {
-		return methodName + "_for" + currentForId + "_test";
+		return methodName + ".for" + currentForId + ".test";
 	}
 
 	private String getForBody() {
-		return methodName + "_for" + currentForId + "_body";
+		return methodName + ".for" + currentForId + ".body";
 	}
 
 	private String getForIncrement() {
-		return methodName + "_for" + currentForId + "_incr";
+		return methodName + ".for" + currentForId + ".incr";
 	}
 
 	private String getForEnd() {
-		return methodName + "_for" + currentForId + "_end";
+		return methodName + ".for" + currentForId + ".end";
 	}
 
 	private String getMethodCfHandler() {
-		return methodName + "_cfendhandler";
+		return methodName + ".cfendhandler";
 	}
 
 	private String getMethodEnd() {
-		return methodName + "_end";
+		return methodName + ".end";
 	}
 
 	public void setMethodName(String methodName) {
