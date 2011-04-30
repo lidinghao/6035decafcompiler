@@ -12,6 +12,9 @@ import decaf.codegen.flatir.LabelStmt;
 public class LeaderElector {
 	private HashMap<String, List<LIRStatement>> lirMap;
 	private List<String> labelsToMakeLeaders;
+	private boolean mergeBoundChecks;
+	private static String ArrayPassLabelRegex = "[a-zA-z_]\\w*_array_[a-zA-z_]\\w*_\\d+_pass";
+	private static String ArrayBeginLabelRegex = "[a-zA-z_]\\w*_array_[a-zA-z_]\\w*_\\d+_begin";
 	
 	public LeaderElector(HashMap<String, List<LIRStatement>> lirMap) {
 		this.lirMap = lirMap;
@@ -28,7 +31,20 @@ public class LeaderElector {
 	private void processMethod(List<LIRStatement> list) {
 		boolean isFirst = true;
 		boolean justSawJump = false;
+		boolean inBoundCheck = false;
 		for (LIRStatement stmt: list) {
+			if (stmt.getClass().equals(LabelStmt.class)) {
+				LabelStmt label = (LabelStmt)stmt;
+				if (label.getLabelString().matches(LeaderElector.ArrayBeginLabelRegex)) {
+					inBoundCheck = true;
+				}
+				else if (label.getLabelString().matches(LeaderElector.ArrayPassLabelRegex)) {
+					inBoundCheck = false;
+				}
+			}
+			
+			if (inBoundCheck) continue;
+			
 			// First statement in method (entry statement)
 			if (isFirst) {
 				stmt.setIsLeader(true);
@@ -79,5 +95,13 @@ public class LeaderElector {
 			
 			out.println();
 		}
+	}
+
+	public void setMergeBoundChecks(boolean mergeBoundChecks) {
+		this.mergeBoundChecks = mergeBoundChecks;
+	}
+
+	public boolean isMergeBoundChecks() {
+		return mergeBoundChecks;
 	}
 }
