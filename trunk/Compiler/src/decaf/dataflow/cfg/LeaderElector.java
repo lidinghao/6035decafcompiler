@@ -13,8 +13,8 @@ public class LeaderElector {
 	private HashMap<String, List<LIRStatement>> lirMap;
 	private List<String> labelsToMakeLeaders;
 	private boolean mergeBoundChecks;
-	private static String ArrayPassLabelRegex = "[a-zA-z_]\\w*_array_[a-zA-z_]\\w*_\\d+_pass";
-	private static String ArrayBeginLabelRegex = "[a-zA-z_]\\w*_array_[a-zA-z_]\\w*_\\d+_begin";
+	private static String ArrayPassLabelRegex = "[a-zA-z_]\\w*.array.[a-zA-z_]\\w*.\\d+.pass";
+	private static String ArrayBeginLabelRegex = "[a-zA-z_]\\w*.array.[a-zA-z_]\\w*.\\d+.begin";
 	
 	public LeaderElector(HashMap<String, List<LIRStatement>> lirMap) {
 		this.lirMap = lirMap;
