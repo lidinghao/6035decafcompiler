@@ -49,6 +49,7 @@ import decaf.ir.ast.VarDecl;
 import decaf.ir.ast.VarLocation;
 
 public class ExpressionFlattenerVisitor implements ASTVisitor<Name> {	
+	public static int MAXBOUNDCHECKS = 0;
 	private List<LIRStatement> statements;
 	private String methodName;
 	private int andCount;
@@ -461,27 +462,27 @@ public class ExpressionFlattenerVisitor implements ASTVisitor<Name> {
 	}
 
 	private String getAndTestLHS() {
-		return methodName + "_and" + currentAndId + "_testLHS";
+		return methodName + ".and" + currentAndId + ".testLHS";
 	}
 
 	private String getAndTestRHS() {
-		return methodName + "_and" + currentAndId + "_testRHS";
+		return methodName + ".and" + currentAndId + ".testRHS";
 	}
 
 	private String getAndEnd() {
-		return methodName + "_and" + currentAndId + "_end";
+		return methodName + ".and" + currentAndId + ".end";
 	}
 
 	private String getOrTestLHS() {
-		return methodName + "_or" + currentOrId + "_testLHS";
+		return methodName + ".or" + currentOrId + ".testLHS";
 	}
 
 	private String getOrTestRHS() {
-		return methodName + "_or" + currentOrId + "_testRHS";
+		return methodName + ".or" + currentOrId + ".testRHS";
 	}
 
 	private String getOrEnd() {
-		return methodName + "_or" + currentOrId + "_end";
+		return methodName + ".or" + currentOrId + ".end";
 	}
 	
 	private void addArrayBoundCheck(ArrayLocation loc, Name index) {
@@ -489,6 +490,9 @@ public class ExpressionFlattenerVisitor implements ASTVisitor<Name> {
 		LabelStmt arrayCheckPass = new LabelStmt(getArrayBoundPass(loc.getId()));
 		LabelStmt arrayCheckFail = new LabelStmt(getArrayBoundFail(loc.getId()));
 		arrayBoundId++;
+		if (ExpressionFlattenerVisitor.MAXBOUNDCHECKS < arrayBoundId) {
+			ExpressionFlattenerVisitor.MAXBOUNDCHECKS = arrayBoundId;
+		}
 		
 		this.statements.add(arrayCheckStart);
 		
@@ -522,23 +526,23 @@ public class ExpressionFlattenerVisitor implements ASTVisitor<Name> {
 	}
 	
 	private String getArrayBoundBegin(String name) {
-		return methodName + "_array_" + name + "_" + arrayBoundId + "_begin";
+		return methodName + ".array." + name + "." + arrayBoundId + ".begin";
 	}
 	
 	private String getArrayBoundFail(String name) {
-		return methodName + "_array_" + name + "_" + arrayBoundId + "_fail";
+		return methodName + ".array." + name + "." + arrayBoundId + ".fail";
 	}
 	
 	private String getArrayBoundPass(String name) {
-		return methodName + "_array_" + name + "_" + arrayBoundId + "_pass";
+		return methodName + ".array." + name + "." + arrayBoundId + ".pass";
 	}
 	
 	private String getMethodCallStart(String name) {
-		return methodName + "_mcall_" + name + "_" + callCount;
+		return methodName + ".mcall." + name + "." + callCount + ".begin";
 	}
 	
 	private String getMethodCallEnd(String name) {
-		return methodName + "_mcall_" + name + "_" + callCount + "_end";
+		return methodName + ".mcall." + name + "." + callCount + ".end";
 	}
 	
 	private Name optimizeOr(BinOpExpr expr) {
