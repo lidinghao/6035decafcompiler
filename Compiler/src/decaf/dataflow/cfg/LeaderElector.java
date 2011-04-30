@@ -43,7 +43,7 @@ public class LeaderElector {
 				}
 			}
 			
-			if (inBoundCheck) continue;
+			if (this.mergeBoundChecks && inBoundCheck) continue;
 			
 			// First statement in method (entry statement)
 			if (isFirst) {
