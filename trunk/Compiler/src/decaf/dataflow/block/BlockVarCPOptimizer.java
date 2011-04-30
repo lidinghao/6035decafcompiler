@@ -116,7 +116,7 @@ public class BlockVarCPOptimizer {
 			qStmt.setArg1(newArg1);
 			
 			resetVariable(dest);
-			if (!newArg1.getClass().equals(RegisterName.class)) {
+			if (!newArg1.getClass().equals(RegisterName.class) && !newArg1.isArray()) { // Dont CP ArrayName
 				this.varToVar.put(dest, newArg1);
 			}
 		} else {
