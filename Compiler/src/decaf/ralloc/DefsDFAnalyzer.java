@@ -1,0 +1,224 @@
+package decaf.ralloc;
+
+import java.util.ArrayList;
+import java.util.BitSet;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+
+import decaf.codegen.flatir.ArrayName;
+import decaf.codegen.flatir.LIRStatement;
+import decaf.codegen.flatir.LoadStmt;
+import decaf.codegen.flatir.QuadrupletStmt;
+import decaf.codegen.flatir.RegisterName;
+import decaf.codegen.flattener.ProgramFlattener;
+import decaf.dataflow.cfg.CFGBlock;
+import decaf.dataflow.cfg.MethodIR;
+import decaf.dataflow.global.BlockDataFlowState;
+
+public class DefsDFAnalyzer {
+	private HashSet<CFGBlock> cfgBlocksToProcess;
+	private HashMap<CFGBlock, BlockDataFlowState> cfgBlocksState;
+	private HashMap<String, MethodIR> mMap;
+	private HashMap<String, List<LIRStatement>> uniqueDefinitions;
+	
+	public DefsDFAnalyzer(HashMap<String, MethodIR> mMap) {
+		this.mMap = mMap;
+		this.cfgBlocksToProcess = new HashSet<CFGBlock>();
+		this.cfgBlocksState = new HashMap<CFGBlock, BlockDataFlowState>();
+		this.uniqueDefinitions = new HashMap<String, List<LIRStatement>>();
+	}
+	
+	// Each QuadrupletStmt will have a unique ID
+	public void analyze() {
+		for (String methodName: this.mMap.keySet()) {
+			if (methodName.equals(ProgramFlattener.exceptionHandlerLabel)) continue;
+			
+			initialize(methodName);
+			runWorkList(methodName);
+		}
+	}
+
+	private void runWorkList(String methodName) {
+		int totalDefs = this.uniqueDefinitions.get(methodName).size();
+		//if (totalDefs == 0) return;
+		
+		CFGBlock entry = this.getBlockById(methodName, 0);
+		BlockDataFlowState entryBlockFlow = new BlockDataFlowState(totalDefs); // OUT = GEN for entry block
+		calculateGenKillSets(entry, entryBlockFlow);
+		entryBlockFlow.setOut(entryBlockFlow.getGen());
+		cfgBlocksToProcess.remove(entry);
+		
+		this.cfgBlocksState.put(entry, entryBlockFlow);
+		
+		while (cfgBlocksToProcess.size() != 0) {
+			CFGBlock block = (CFGBlock)(cfgBlocksToProcess.toArray())[0];
+			BlockDataFlowState bFlow = generateDFState(block);
+			this.cfgBlocksState.put(block, bFlow);
+		}		
+	}
+	
+	private CFGBlock getBlockById(String name, int i) {
+		if (this.mMap.containsKey(name)) {
+			for (CFGBlock b: this.mMap.get(name).getCfgBlocks()) {
+				if (b.getIndex() == i) return b;
+			}
+		}
+		
+		return null;
+	}
+
+	// Each QuadrupletStmt will have unique ID, as it is a definition
+	private void initialize(String methodName) {
+		QuadrupletStmt.setID(0);
+		this.uniqueDefinitions.put(methodName, new ArrayList<LIRStatement>());
+		this.cfgBlocksToProcess.clear();
+		
+		for (CFGBlock block: this.mMap.get(methodName).getCfgBlocks()) {
+			List<LIRStatement> blockStmts = block.getStatements();
+			for (int i = 0; i < blockStmts.size(); i++) {
+				LIRStatement stmt = blockStmts.get(i);
+				if (stmt.getClass().equals(QuadrupletStmt.class)) {
+					QuadrupletStmt qStmt = (QuadrupletStmt)stmt;
+					
+					// Ignore register assignments (only for calls)
+					if (qStmt.getDestination().getClass().equals(RegisterName.class)) continue; // Ignore assignments to regs
+
+					this.uniqueDefinitions.get(methodName).add(qStmt);
+					qStmt.setMyId();
+				}
+				else if (stmt.getClass().equals(LoadStmt.class)) {
+					LoadStmt lStmt = (LoadStmt)stmt;
+					this.uniqueDefinitions.get(methodName).add(lStmt);
+					lStmt.setMyId();
+					
+				}
+			}
+			
+			this.cfgBlocksToProcess.add(block);
+		}
+	}
+	
+	private BlockDataFlowState generateDFState(CFGBlock block) {
+		int totalDefs = this.uniqueDefinitions.get(block.getMethodName()).size();
+		// Get the original out BitSet for this block
+		BitSet origOut;
+		if (this.cfgBlocksState.containsKey(block)) {
+			origOut = this.cfgBlocksState.get(block).getOut();
+		} else {
+			origOut = new BitSet(totalDefs);
+		}
+		
+		// Calculate the in BitSet by taking union of predecessors
+		BlockDataFlowState bFlow = new BlockDataFlowState(totalDefs);
+		
+		// If there exists at least one predecessor, set In to all False
+		if (block.getPredecessors().size() > 0) {
+			bFlow.getIn().clear();
+		}
+		
+		BitSet in = bFlow.getIn();
+		for (CFGBlock pred : block.getPredecessors()) {
+			if (this.cfgBlocksState.containsKey(pred)) {
+				in.or(this.cfgBlocksState.get(pred).getOut());
+			}
+		}
+		
+		calculateGenKillSets(block, bFlow);
+		
+		// Calculate Out
+		BitSet out = bFlow.getOut(); // OUT = (IN - KILL) U GEN
+		out.or(in);
+		out.xor(bFlow.getKill());
+		out.or(bFlow.getGen());
+		
+		if (!out.equals(origOut)) {
+			// Add successors to cfgBlocks list
+			for (CFGBlock succ : block.getSuccessors()) {
+				if (!cfgBlocksToProcess.contains(succ)) {
+					cfgBlocksToProcess.add(succ);
+				}
+			}
+		}
+		
+		// Remove this block, since it has been processed
+		cfgBlocksToProcess.remove(block);
+		
+		return bFlow;
+	}
+	
+	private void calculateGenKillSets(CFGBlock block, BlockDataFlowState bFlow) {
+		List<LIRStatement> blockStmts = block.getStatements();
+		QuadrupletStmt qStmt;
+		
+		for (LIRStatement stmt : blockStmts) {
+			if (stmt.getClass().equals(QuadrupletStmt.class)) {
+				qStmt = (QuadrupletStmt)stmt;
+				if (!qStmt.getDestination().getClass().equals(RegisterName.class)) {
+					updateKillGenSet(block.getMethodName(), qStmt, bFlow);
+				}
+			}
+		}
+	}
+	
+	public void updateKillGenSet(String methodName, QuadrupletStmt stmt, BlockDataFlowState bFlow) {
+		if (stmt == null) return;
+		
+		BitSet in = bFlow.getIn();
+		BitSet gen = bFlow.getGen();
+		BitSet kill = bFlow.getKill();
+		
+		// Invalidate reaching definitions
+		for (LIRStatement s : this.uniqueDefinitions.get(methodName)) {
+			if (s.getClass().equals(QuadrupletStmt.class)) {
+				QuadrupletStmt qStmt = (QuadrupletStmt) stmt;
+				if (qStmt.getDestination().equals(stmt.getDestination())) { // Definitions to same var name
+					if (in.get(qStmt.getMyId())) {
+						kill.set(qStmt.getMyId(), true);
+					}
+					
+					gen.clear(qStmt.getMyId()); // Clear any previous gen bits for same dest var
+				}
+				
+				if (qStmt.getDestination().isArray()) { // Definition to index var of some array name!
+					ArrayName dest = (ArrayName) qStmt.getDestination();
+					if (dest.getIndex().equals(stmt.getDestination())) {
+						if (in.get(qStmt.getMyId())) {
+							kill.set(qStmt.getMyId(), true);
+						}
+						
+						gen.clear(qStmt.getMyId()); // Clear any previous gen bits for same dest var
+					}
+				}
+				
+				gen.set(stmt.getMyId()); // Set gen bit on
+			}
+			else if (s.getClass().equals(LoadStmt.class)) {
+				LoadStmt lStmt = (LoadStmt) s;
+				if (in.get(lStmt.getMyId())) {
+					kill.set(lStmt.getMyId(), true);
+				}
+				
+				gen.set(lStmt.getMyId()); // Clear any previous gen bits for same dest var
+			}
+		}
+	}
+
+	public HashMap<CFGBlock, BlockDataFlowState> getCfgBlocksState() {
+		return cfgBlocksState;
+	}
+
+	public void setCfgBlocksState(
+			HashMap<CFGBlock, BlockDataFlowState> cfgBlocksState) {
+		this.cfgBlocksState = cfgBlocksState;
+	}
+
+	public HashMap<String, List<LIRStatement>> getUniqueDefinitions() {
+		return uniqueDefinitions;
+	}
+
+	public void setUniqueDefinitions(
+			HashMap<String, List<LIRStatement>> uniqueDefinitions) {
+		this.uniqueDefinitions = uniqueDefinitions;
+	}
+}

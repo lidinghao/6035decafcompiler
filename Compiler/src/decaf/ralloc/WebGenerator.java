@@ -7,6 +7,7 @@ import java.util.List;
 import decaf.codegen.flatir.CmpStmt;
 import decaf.codegen.flatir.ConstantName;
 import decaf.codegen.flatir.LIRStatement;
+import decaf.codegen.flatir.LoadStmt;
 import decaf.codegen.flatir.Name;
 import decaf.codegen.flatir.PopStmt;
 import decaf.codegen.flatir.PushStmt;
@@ -18,19 +19,27 @@ import decaf.dataflow.cfg.CFGBlock;
 import decaf.dataflow.cfg.MethodIR;
 import decaf.dataflow.global.BlockDataFlowState;
 
+/**
+ * TODO: Single definition only or single use only can happen for globals,
+ * no need to assign registers to them
+ * 
+ * First *def* of array uses index variable (def can be load)
+ * @author usmanm
+ *
+ */
 public class WebGenerator {
 	private HashMap<String, MethodIR> mMap;
-	private DefDataFlowAnalyzer defAnalyzer;
+	private DefsDFAnalyzer defAnalyzer;
 	private HashMap<String, List<Web>> webMap;
-	private HashMap<Name, List<Web>> nameToWebs;
-	private HashMap<QuadrupletStmt, Web> defToWeb;
+	private HashMap<Name, List<Web>> nameToWebs; // Webs currently mapping to that name
+	private HashMap<LIRStatement, Web> defToWeb; // Web associated with definition
 	
 	public WebGenerator(HashMap<String, MethodIR> mMap) {
 		this.mMap = mMap;
-		this.defAnalyzer = new DefDataFlowAnalyzer(mMap);
+		this.defAnalyzer = new DefsDFAnalyzer(mMap);
 		this.webMap = new HashMap<String, List<Web>>();
 		this.nameToWebs = new HashMap<Name, List<Web>>();
-		this.defToWeb = new HashMap<QuadrupletStmt, Web>();
+		this.defToWeb = new HashMap<LIRStatement, Web>();
 	}
 	
 	public void generateWebs() {
@@ -77,22 +86,13 @@ public class WebGenerator {
 									}
 								}
 							}
-							
-							// Check for common *def* for non-defined vars (global, stack params)
-							if (w1.getLoadExplicitly() && w2.getLoadExplicitly()) {
-								a = w1;
-								b = w2;
-								break outter;
-							}
 						}
 					}
 				}
 				
 				if (a != null && b != null) { // Union
 					webs.remove(b);
-					a.getDefinitions().addAll(b.getDefinitions());
-					a.getUses().addAll(b.getUses());
-					a.setLoadExplicitly(a.getLoadExplicitly() || b.getLoadExplicitly()); // Must load explicitly if either requires
+					a.combineWeb(b);
 				}
 			}
 		}
@@ -164,18 +164,17 @@ public class WebGenerator {
 		for (CFGBlock block: this.mMap.get(methodName).getCfgBlocks()) {
 			if (block == null) continue;
 			
-			this.nameToWebs.clear(); // Clear names to web map
 			processBlock(block);
 		}
 	}
 
 	private void processBlock(CFGBlock block) {
+		this.nameToWebs.clear(); // Clear names to web map
+		
 		setReachingDefinitions(block);
 		String mName = block.getMethodName();
 		
 		for (LIRStatement stmt: block.getStatements()) {
-			if (!stmt.isUseStatement()) continue;
-			
 			if (stmt.getClass().equals(QuadrupletStmt.class)) {
 				QuadrupletStmt qStmt = (QuadrupletStmt) stmt;
 				Name arg1 = qStmt.getArg1();
@@ -244,6 +243,23 @@ public class WebGenerator {
 					}
 				}
 			}
+			else if (stmt.getClass().equals(LoadStmt.class)) {
+				LoadStmt lStmt = (LoadStmt) stmt;
+				Name dest = lStmt.getVariable();
+				
+				if (isValidWebName(mName, dest)) {
+					this.nameToWebs.get(dest).clear();
+					
+					if (!this.defToWeb.containsKey(lStmt)) {
+						Web w = new Web(dest);
+						w.addDefinition(lStmt);
+						this.defToWeb.put(lStmt, w);
+						this.webMap.get(mName).add(w); // Add to global web map for method
+					}
+					
+					this.nameToWebs.get(dest).add(this.defToWeb.get(lStmt));
+				}
+			}
 		}
 	}
 
@@ -252,29 +268,42 @@ public class WebGenerator {
 		
 		for (int i = 0; i < dfState.getIn().size(); i++) {
 			if (dfState.getIn().get(i)) {
-				QuadrupletStmt stmt = findStmtWithId(block.getMethodName(), i);
+				LIRStatement stmt = findStmtWithId(block.getMethodName(), i);
+				
+				Name dest = null;
+				if (stmt.getClass().equals(LoadStmt.class)) {
+					dest =  ((LoadStmt)stmt).getVariable();
+				}
+				else if (stmt.getClass().equals(QuadrupletStmt.class)) {
+					dest =  ((QuadrupletStmt)stmt).getDestination();
+				}
 				
 				// If definition has no Web currently associated to it
 				if (!this.defToWeb.containsKey(stmt)) {
-					Web w = new Web(stmt.getDestination());
+					Web w = new Web(dest);
 					w.addDefinition(stmt);
 					this.defToWeb.put(stmt, w);
 					this.webMap.get(block.getMethodName()).add(w); // Add to global web map for method
 				}
 
 				// Associate web to name
-				if (!this.nameToWebs.containsKey(stmt.getDestination())) {
-					this.nameToWebs.put(stmt.getDestination(), new ArrayList<Web>());
+				if (!this.nameToWebs.containsKey(dest)) {
+					this.nameToWebs.put(dest, new ArrayList<Web>());
 				}
 				
-				this.nameToWebs.get(stmt.getDestination()).add(this.defToWeb.get(stmt)); // All webs reaching for that name (will merge later)
+				this.nameToWebs.get(dest).add(this.defToWeb.get(stmt)); // All webs reaching for that name (will merge later)
 			}
 		}
 	}
 	
-	private QuadrupletStmt findStmtWithId(String methodName, int id) {
-		for (QuadrupletStmt stmt: this.defAnalyzer.getUniqueDefinitions().get(methodName)) {
-			if (stmt.getMyId() == id) return stmt;
+	private LIRStatement findStmtWithId(String methodName, int id) {
+		for (LIRStatement stmt: this.defAnalyzer.getUniqueDefinitions().get(methodName)) {
+			if (stmt.getClass().equals(LoadStmt.class)) {
+				if (((LoadStmt)stmt).getMyId() == id) return stmt;
+			}
+			else if (stmt.getClass().equals(QuadrupletStmt.class)) {
+				if (((QuadrupletStmt)stmt).getMyId() == id) return stmt;
+			}
 		}
 		
 		return null;
@@ -312,5 +341,13 @@ public class WebGenerator {
 		}
 		
 		return -1;
+	}
+
+	public DefsDFAnalyzer getDefAnalyzer() {
+		return defAnalyzer;
+	}
+
+	public void setDefAnalyzer(DefsDFAnalyzer defAnalyzer) {
+		this.defAnalyzer = defAnalyzer;
 	}
 }

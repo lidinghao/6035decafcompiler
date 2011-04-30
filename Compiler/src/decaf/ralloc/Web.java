@@ -1,7 +1,7 @@
 package decaf.ralloc;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 import decaf.codegen.flatir.LIRStatement;
 import decaf.codegen.flatir.Name;
@@ -9,17 +9,16 @@ import decaf.codegen.flatir.Register;
 
 public class Web {
 	private Name variable;
-	private Set<LIRStatement> definitions;
-	private Set<LIRStatement> uses;
+	private List<LIRStatement> definitions;
+	private List<LIRStatement> uses;
 	private Register register;
 	private int firstStmtIndex;
 	private int lastStmtIndex;
-	private boolean loadExplicitly;
 	
 	public Web(Name variable) {
 		this.variable = (Name)variable.clone(); // important to clone
-		this.definitions = new HashSet<LIRStatement>();
-		this.uses = new HashSet<LIRStatement>();
+		this.definitions = new ArrayList<LIRStatement>();
+		this.uses = new ArrayList<LIRStatement>();
 		this.register = null;
 	}
 
@@ -31,27 +30,33 @@ public class Web {
 		this.variable = variable;
 	}
 
-	public Set<LIRStatement> getDefinitions() {
+	public List<LIRStatement> getDefinitions() {
 		return definitions;
 	}
 
-	public void setDefinitions(Set<LIRStatement> definitions) {
+	public void setDefinitions(List<LIRStatement> definitions) {
 		this.definitions = definitions;
 	}
 	
 	public void addDefinition(LIRStatement definition) {
+		for (LIRStatement stmt: this.definitions) {
+			if (stmt == definition) return;
+		}
 		this.definitions.add(definition);
 	}
 
-	public Set<LIRStatement> getUses() {
+	public List<LIRStatement> getUses() {
 		return uses;
 	}
 
-	public void setUses(Set<LIRStatement> uses) {
+	public void setUses(List<LIRStatement> uses) {
 		this.uses = uses;
 	}
 	
 	public void addUse(LIRStatement use) {
+		for (LIRStatement stmt: this.uses) {
+			if (stmt == use) return;
+		}
 		this.uses.add(use);
 	}
 
@@ -65,7 +70,7 @@ public class Web {
 	
 	@Override
 	public String toString() {
-		String rtn = "VAR: " + this.variable.toString() + " (" + this.firstStmtIndex + ", " + this.lastStmtIndex + ")\n";
+		String rtn = "VAR: " + this.variable.toString() + " - (" + this.firstStmtIndex + ", " + this.lastStmtIndex + ")\n";
 		rtn += "DEF: " + this.definitions.toString() + "\n";
 		rtn += "USE: " + this.uses.toString();
 		
@@ -88,23 +93,29 @@ public class Web {
 		return firstStmtIndex;
 	}
 	
-	public void setLoadExplicitly() {
-		if (this.definitions.size() == 0) {
-			this.loadExplicitly = true;
+	public void combineWeb(Web w) {
+		List<LIRStatement> usesToAdd = new ArrayList<LIRStatement>();
+		List<LIRStatement> defsToAdd = new ArrayList<LIRStatement>();
+		
+		for (LIRStatement s1: w.getUses()) {
+			boolean add = true;
+			for (LIRStatement s2: this.uses) {
+				if (s1 == s2) add = false;
+			}
+			
+			if (add) usesToAdd.add(s1);
 		}
 		
-		this.loadExplicitly = false;
-	}
-	
-	public void setLoadExplicitly(boolean b) {
-		this.loadExplicitly = b;
-	}
-	
-	/**
-	 * Param that are loaded off the stack or global vars. Require no explicit definition before first use!
-	 * @return
-	 */
-	public boolean getLoadExplicitly() {
-		return this.loadExplicitly;
+		for (LIRStatement s1: w.getDefinitions()) {
+			boolean add = true;
+			for (LIRStatement s2: this.definitions) {
+				if (s1 == s2) add = false;
+			}
+			
+			if (add) defsToAdd.add(s1);
+		}
+		
+		this.uses.addAll(usesToAdd);
+		this.definitions.addAll(defsToAdd);
 	}
 }
