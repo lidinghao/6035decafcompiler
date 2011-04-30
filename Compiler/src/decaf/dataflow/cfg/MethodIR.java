@@ -70,12 +70,12 @@ public class MethodIR {
 		return id;
 	}
 	
-	public static HashMap<String, MethodIR> generateMethodIRs(ProgramFlattener pf, CFGBuilder cb) {
+	public static HashMap<String, MethodIR> generateMethodIRs(ProgramFlattener pf, HashMap<String, List<CFGBlock>> cfgMap) {
 		MethodIR.pf = pf;
 		HashMap<String, MethodIR> rtn = new HashMap<String, MethodIR>();
 		
 		for (String id: pf.getLirMap().keySet()) {
-			rtn.put(id, new MethodIR(id, pf.getLirMap().get(id), cb.getCfgMap().get(id)));
+			rtn.put(id, new MethodIR(id, pf.getLirMap().get(id), cfgMap.get(id)));
 		}
 		
 		return rtn;
