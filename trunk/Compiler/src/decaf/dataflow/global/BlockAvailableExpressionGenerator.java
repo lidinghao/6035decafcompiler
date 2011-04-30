@@ -214,6 +214,9 @@ public class BlockAvailableExpressionGenerator {
 								updateKillSet(name, bFlow);
 							}
 						}
+						if (name.getClass().equals(ArrayName.class)) {
+							updateKillSet(name, bFlow);
+						}
 					}
 				}
 				
@@ -228,11 +231,12 @@ public class BlockAvailableExpressionGenerator {
 			}
 			
 			qStmt = (QuadrupletStmt)stmt;
-			updateKillSet(qStmt.getDestination(), bFlow);
 			// Get corresponding AvailableExpression
 			AvailableExpression expr = blockExprs.get(exprIndex);
 			// Gen - add current expression id
 			gen.set(expr.getMyId(), true);
+			// Update kill set with destination
+			updateKillSet(qStmt.getDestination(), bFlow);
 			exprIndex++;
 		}
 	}

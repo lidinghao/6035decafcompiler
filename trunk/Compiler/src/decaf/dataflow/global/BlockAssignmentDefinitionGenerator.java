@@ -228,6 +228,9 @@ public class BlockAssignmentDefinitionGenerator {
 					updateKillGenSet(name, bFlow);
 				}
 			}
+			if (name.getClass().equals(ArrayName.class)) {
+				updateKillGenSet(name, bFlow);
+			}
 		}
 	}
 	

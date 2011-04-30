@@ -28,12 +28,12 @@ public class GlobalOptimizer {
 		if(opts[3]) { // CONST
 			constant = new GlobalConstantPropagationOptimizer(mMap);
 			constant.performGlobalConstantProp();
-		} 
+		}
 		if(opts[4]) { // DC
 			dc = new GlobalDeadCodeOptimizer(mMap);
 			dc.performDeadCodeElimination();
-			ab = new ArrayBoundsChecksOptimizer(mMap);
-			ab.performArrayOptimization();
+			//ab = new ArrayBoundsChecksOptimizer(mMap);
+			//ab.performArrayOptimization();
 		}
 	}
 	

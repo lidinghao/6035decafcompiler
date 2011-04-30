@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
+import decaf.codegen.flatir.ArrayName;
 import decaf.codegen.flatir.CallStmt;
 import decaf.codegen.flatir.LIRStatement;
 import decaf.codegen.flatir.Name;
@@ -166,6 +167,9 @@ public class BlockReachingDefinitionGenerator {
 				if (var.getBlockId() == -1) { // Global
 					updateKillSet(name, bFlow);
 				}
+			}
+			if (name.getClass().equals(ArrayName.class)) {
+				updateKillSet(name, bFlow);
 			}
 		}
 	}

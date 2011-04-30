@@ -1,6 +1,6 @@
 class Program {
 	int a[10];
-
+	
 	void main() {
 		int b, c;
 		c = b + 4; // no dead code!
