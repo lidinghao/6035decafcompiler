@@ -214,15 +214,12 @@ public class MethodFlattenerVisitor implements ASTVisitor<Integer> {
 		// Test block		
 		this.statements.add(new LabelStmt(getForTest()));
 		Name finalValue = stmt.getFinalValue().accept(this.exprFlatenner);
-		TempName dest = new TempName();
-		this.statements.add(new QuadrupletStmt(QuadrupletOp.LT, dest, loopId, finalValue));
-		this.statements.add(new CmpStmt(dest, new ConstantName(0)));
-		this.statements.add(new JumpStmt(JumpCondOp.EQ, new LabelStmt(
+		//TempName dest = new TempName();
+		//this.statements.add(new QuadrupletStmt(QuadrupletOp.LT, dest, loopId, finalValue));
+		//this.statements.add(new CmpStmt(dest, new ConstantName(0)));
+		this.statements.add(new CmpStmt(loopId, finalValue));
+		this.statements.add(new JumpStmt(JumpCondOp.GTE, new LabelStmt(
 				getForEnd())));
-//		this.statements.add(new QuadrupletStmt(QuadrupletOp.CMP, null, loopId,
-//				finalValue));
-//		this.statements.add(new JumpStmt(JumpCondOp.GTE, new LabelStmt(
-//				getForEnd())));
 
 		// Body block
 		this.statements.add(new LabelStmt(getForBody()));
@@ -258,8 +255,8 @@ public class MethodFlattenerVisitor implements ASTVisitor<Integer> {
 				getIfTrue())));
 
 		// Else block (if any)
-		this.statements.add(new LabelStmt(getIfElse()));
 		if (stmt.getElseBlock() != null) {
+			this.statements.add(new LabelStmt(getIfElse()));
 			stmt.getElseBlock().accept(this);
 		}
 
@@ -306,7 +303,7 @@ public class MethodFlattenerVisitor implements ASTVisitor<Integer> {
 
 		// Save callee-saved registers
 		for (int i = 0; i < Register.calleeSaved.length; i++) {
-			this.statements.add(new PushStmt(new RegisterName(Register.calleeSaved[i])));
+			//this.statements.add(new PushStmt(new RegisterName(Register.calleeSaved[i])));
 		}
 
 		// Save params on stack (first 6)
@@ -355,7 +352,7 @@ public class MethodFlattenerVisitor implements ASTVisitor<Integer> {
 		if (md.getReturnType() == Type.VOID) {
 			// Restore callee-saved regs (reverse order as saved!)
 			for (int i = Register.calleeSaved.length - 1; i >= 0; i--) {
-				this.statements.add(new PopStmt(new RegisterName(Register.calleeSaved[i])));
+				//this.statements.add(new PopStmt(new RegisterName(Register.calleeSaved[i])));
 			}
 			
 			this.statements.add(new LeaveStmt());
@@ -399,7 +396,7 @@ public class MethodFlattenerVisitor implements ASTVisitor<Integer> {
 		
 		// Restore callee-saved regs (reverse order as saved!)
 		for (int i = Register.calleeSaved.length - 1; i >= 0; i--) {
-			this.statements.add(new PopStmt(new RegisterName(Register.calleeSaved[i])));
+			//this.statements.add(new PopStmt(new RegisterName(Register.calleeSaved[i])));
 		}
 		
 		this.statements.add(new LeaveStmt());
