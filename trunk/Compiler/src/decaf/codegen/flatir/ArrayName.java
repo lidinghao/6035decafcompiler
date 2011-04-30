@@ -65,4 +65,9 @@ public class ArrayName extends Name {
 		a.setLocation(this.getLocation());
 		return a;
 	}
+	
+	@Override
+	public boolean isGlobal() {
+		return true;
+	}
 }

@@ -15,6 +15,7 @@ public class QuadrupletStmt extends LIRStatement {
 		this.dest = dest;
 		this.arg1 = arg1;
 		this.arg2 = arg2;
+		this.myId = -1;
 		this.setDepth();
 	}
 
@@ -246,7 +247,7 @@ public class QuadrupletStmt extends LIRStatement {
 	
 	@Override
 	public int hashCode() {
-		return toString().hashCode();
+		return toString().hashCode() + this.myId * 13;
 	}
 	
 	@Override
@@ -329,8 +330,8 @@ public class QuadrupletStmt extends LIRStatement {
 		return ID;
 	}
 
-	public static void setID(int iD) {
-		ID = iD;
+	public static void setID(int id) {
+		ID = id;
 	}
 	
 	@Override
