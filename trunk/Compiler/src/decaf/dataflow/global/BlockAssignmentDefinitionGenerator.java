@@ -154,7 +154,7 @@ public class BlockAssignmentDefinitionGenerator {
 		BlockDataFlowState bFlow = new BlockDataFlowState(totalAssignmentDefinitions);
 		// If there exists at least one predecessor, set In to all True
 		if (block.getPredecessors().size() > 0) {
-			bFlow.getIn().set(0, totalAssignmentDefinitions-1);
+			bFlow.getIn().set(0, totalAssignmentDefinitions);
 		}
 		BitSet in = bFlow.getIn();
 		for (CFGBlock pred : block.getPredecessors()) {

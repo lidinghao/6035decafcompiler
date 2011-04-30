@@ -151,20 +151,18 @@ public class BlockAvailableExpressionGenerator {
 			origOut = blockAvailableDefs.get(block).getOut();
 		} else {
 			origOut = new BitSet(totalExpressionStmts);
+			// Confluence operator is AND, so initialize out set to all 1s
+			origOut.set(0, totalExpressionStmts, true);
 		}
 		BlockDataFlowState bFlow = new BlockDataFlowState(totalExpressionStmts);
 		// If there exists at least one predecessor, set In to all True
 		if (block.getPredecessors().size() > 0) {
-			bFlow.getIn().set(0, totalExpressionStmts-1);
+			bFlow.getIn().set(0, totalExpressionStmts);
 		}
 		BitSet in = bFlow.getIn();
 		for (CFGBlock pred : block.getPredecessors()) {
 			if (blockAvailableDefs.containsKey(pred)) {
 				in.and(blockAvailableDefs.get(pred).getOut());
-			} else {
-				// If a predecessor hasn't been processed, assume In is empty set
-				in.clear();
-				break;
 			}
 		}
 		calculateGenKillSets(block, bFlow);
