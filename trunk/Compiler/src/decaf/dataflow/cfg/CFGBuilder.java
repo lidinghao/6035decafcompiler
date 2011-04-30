@@ -35,6 +35,8 @@ public class CFGBuilder {
 		// Select leaders
 		le.electLeaders();
 		
+		cfgMap.clear();
+		
 		for (String methodName: lirMap.keySet()) {
 			List<CFGBlock> cfgList = generateCFGBlocks(methodName);
 			generateCFG(cfgList);
