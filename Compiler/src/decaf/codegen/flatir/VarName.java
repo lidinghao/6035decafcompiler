@@ -91,4 +91,10 @@ public class VarName extends Name {
 		v.setLocation(this.getLocation());
 		return v;
 	}
+	
+	@Override
+	public boolean isGlobal() {
+		if (this.blockId == -1) return true;
+		return false;
+	}
 }

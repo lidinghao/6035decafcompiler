@@ -4,11 +4,11 @@ import java.io.PrintStream;
 
 public class LoadStmt extends LIRStatement {
 	private Name variable;
-	private Register register;
+	private int myId;
 
-	public LoadStmt(Name variable, Register register) {
+	public LoadStmt(Name variable) {
 		this.setVariable(variable);
-		this.setRegister(register);
+		this.myId = -1;
 	}
 
 	public void setVariable(Name variable) {
@@ -19,22 +19,18 @@ public class LoadStmt extends LIRStatement {
 		return variable;
 	}
 
-	public void setRegister(Register register) {
-		this.register = register;
-	}
-
 	public Register getRegister() {
-		return register;
+		return this.variable.getRegister();
 	}
 	
 	@Override
 	public String toString() {
-		return this.register + " = " + this.variable;
+		return "ld " + this.variable; //.getRegister() + " = " + this.variable;
 	}
 	
 	@Override
 	public int hashCode() {
-		return this.register.toString().hashCode() + 17 * this.variable.hashCode();
+		return  this.toString().hashCode() + 17 * this.variable.hashCode() + 13 * this.myId;//this.toString().hashCode();
 	}
 	
 	@Override
@@ -43,10 +39,7 @@ public class LoadStmt extends LIRStatement {
 		if (!o.getClass().equals(LoadStmt.class)) return false;
 		
 		LoadStmt stmt = (LoadStmt) o;
-		if (this.register != stmt.register) {
-			return false;
-		}
-		
+	
 		if (!this.variable.equals(stmt.variable)) {
 			return false;
 		}
@@ -56,18 +49,27 @@ public class LoadStmt extends LIRStatement {
 	
 	@Override
 	public void generateAssembly(PrintStream out) {
-		if (variable.isArray()) {
-			ArrayName arrayName = (ArrayName) variable;
-			String indexLocation = arrayName.getIndex().getLocation().getASMRepresentation();
-			out.println("\tmov\t" + indexLocation + ", " + register);
-			arrayName.setOffsetRegister(register);
-		}
-		
-		out.println("\tmov\t" + variable.getLocation().getASMRepresentation() + ", " + register);
+//		if (variable.isArray()) {
+//			ArrayName arrayName = (ArrayName) variable;
+//			String indexLocation = arrayName.getIndex().getLocation().getASMRepresentation();
+//			out.println("\tmov\t" + indexLocation + ", " + this.variable.getRegister());
+//			arrayName.setOffsetRegister(this.variable.getRegister());
+//		}
+//		
+//		out.println("\tmov\t" + variable.getLocation().getASMRepresentation() + ", " + this.variable.getRegister());
 	}
 
 	@Override
 	public Object clone() {
-		return new LoadStmt(this.variable, this.register);
+		return new LoadStmt(this.variable);
+	}
+	
+	public int getMyId() {
+		return myId;
+	}
+
+	public void setMyId() {
+		this.myId = QuadrupletStmt.getID();
+		QuadrupletStmt.setID(this.myId+1);
 	}
 }

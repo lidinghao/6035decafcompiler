@@ -2,7 +2,7 @@ package decaf.codegen.flatir;
 
 public abstract class Name {
 	private Location location;
-	private Register register;
+	private Register register = null;
 
 	public void setLocation(Location location) {
 		this.location = location;
@@ -22,5 +22,9 @@ public abstract class Name {
 
 	public Register getRegister() {
 		return register;
+	}
+	
+	public boolean isGlobal() {
+		return false;
 	}
 }
