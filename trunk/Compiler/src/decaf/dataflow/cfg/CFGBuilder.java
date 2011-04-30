@@ -13,7 +13,7 @@ import decaf.codegen.flatir.LabelStmt;
 public class CFGBuilder {
 	private HashMap<String, List<LIRStatement>> lirMap;
 	private HashMap<String, List<CFGBlock>> cfgMap;
-	LeaderElector le;
+	private LeaderElector le;
 	private boolean mergeBoundChecks;
 
 	public CFGBuilder(HashMap<String, List<LIRStatement>> lirMap) {
@@ -31,7 +31,7 @@ public class CFGBuilder {
 		this.cfgMap = cfgMap;
 	}
 	
-	public void generateCFGs() {
+	public HashMap<String, List<CFGBlock>> generateCFGs() {
 		// Select leaders
 		le.electLeaders();
 		
@@ -42,6 +42,8 @@ public class CFGBuilder {
 			generateCFG(cfgList);
 			cfgMap.put(methodName, cfgList);
 		}
+		
+		return this.cfgMap;
 	}
 
 	private List<CFGBlock> generateCFGBlocks(String methodName) {
