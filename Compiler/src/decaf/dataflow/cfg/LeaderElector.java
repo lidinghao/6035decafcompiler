@@ -33,6 +33,8 @@ public class LeaderElector {
 		boolean justSawJump = false;
 		boolean inBoundCheck = false;
 		for (LIRStatement stmt: list) {
+			stmt.setIsLeader(false);
+
 			if (stmt.getClass().equals(LabelStmt.class)) {
 				LabelStmt label = (LabelStmt)stmt;
 				if (label.getLabelString().matches(LeaderElector.ArrayBeginLabelRegex)) {
