@@ -66,13 +66,13 @@ public class GlobalDeadCodeOptimizer {
 			stmt = block.getStatements().get(i);
 			if (stmt.getClass().equals(CallStmt.class)) {
 				CallStmt callStmt = (CallStmt) stmt;
-				if (callStmt.getMethodLabel().equals(ProgramFlattener.exceptionHandlerLabel)) continue;
-				
-				// Set all global variable IDs to true in the out set, so
-				// above statements have a more accurate view of the out set
-				// because it includes things that happen within the block
-				for (int globalVarId : globalVarIDs) {
-					bFlow.getOut().set(globalVarId);
+				if (!callStmt.getMethodLabel().equals(ProgramFlattener.exceptionHandlerLabel)) {
+					// Set all global variable IDs to true in the out set, so
+					// above statements have a more accurate view of the out set
+					// because it includes things that happen within the block
+					for (int globalVarId : globalVarIDs) {
+						bFlow.getOut().set(globalVarId);
+					}
 				}
 			}
 			if (stmt.getClass().equals(QuadrupletStmt.class)) {
