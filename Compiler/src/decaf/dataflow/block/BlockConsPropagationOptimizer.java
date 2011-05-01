@@ -51,7 +51,10 @@ public class BlockConsPropagationOptimizer {
 		for (LIRStatement stmt: block.getStatements()) {
 			if (!stmt.isUseStatement()) {
 				// TODO: May have to change this after RegisterAllocator is implemented
-				if (stmt.getClass().equals(CallStmt.class)) {			
+				if (stmt.getClass().equals(CallStmt.class)) {		
+					CallStmt callStmt = (CallStmt) stmt;
+					if (callStmt.getMethodLabel().equals(ProgramFlattener.exceptionHandlerLabel)) continue;
+					
 					invalidateFunctionCall();
 				}
 				continue;

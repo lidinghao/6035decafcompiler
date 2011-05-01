@@ -49,6 +49,9 @@ public class BlockVarCPOptimizer {
 		for (LIRStatement stmt: block.getStatements()) {
 			if (!stmt.isUseStatement()) {
 				if (stmt.getClass().equals(CallStmt.class)) {
+					CallStmt callStmt = (CallStmt) stmt;
+					if (callStmt.getMethodLabel().equals(ProgramFlattener.exceptionHandlerLabel)) continue;
+					
 					RegisterName reg;
 					
 					// TODO: May have to change this after RegisterAllocator is implemented

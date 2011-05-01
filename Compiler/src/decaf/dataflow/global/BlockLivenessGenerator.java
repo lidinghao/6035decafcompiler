@@ -236,6 +236,9 @@ public class BlockLivenessGenerator {
 		for (int i = blockStmts.size()-1; i >= 0; i--) {
 			LIRStatement stmt = blockStmts.get(i);
 			if (stmt.getClass().equals(CallStmt.class)) {
+				CallStmt callStmt = (CallStmt) stmt;
+				if (callStmt.getMethodLabel().equals(ProgramFlattener.exceptionHandlerLabel)) continue;
+				
 				// Set all global variable IDs to true in the gen set
 				for (int globalVarId : globalVarIDs) {
 					bFlow.getGen().set(globalVarId);

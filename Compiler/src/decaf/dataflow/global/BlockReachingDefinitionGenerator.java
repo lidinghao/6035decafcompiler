@@ -147,6 +147,9 @@ public class BlockReachingDefinitionGenerator {
 		
 		for (LIRStatement stmt : blockStmts) {
 			if (stmt.getClass().equals(CallStmt.class)) {
+				CallStmt callStmt = (CallStmt) stmt;
+				if (callStmt.getMethodLabel().equals(ProgramFlattener.exceptionHandlerLabel)) continue;
+				
 				invalidateFunctionCall(bFlow);
 				continue;
 			}
