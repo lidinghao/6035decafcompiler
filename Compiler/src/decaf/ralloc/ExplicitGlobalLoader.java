@@ -42,6 +42,8 @@ public class ExplicitGlobalLoader {
 	}
 
 	public void execute() {
+		QuadrupletStmt.setID(0);
+		
 		this.df.analyze();
 
 		for (String methodName : this.mMap.keySet()) {
@@ -187,6 +189,7 @@ public class ExplicitGlobalLoader {
 			LoadStmt load = new LoadStmt(name);
 			load.setDepth(block.getStatements().get(index).getDepth()); // set depth
 			load.setBoundCheck(getBoundCheck(name, block, index)); // set bound checks
+			load.setMyId();
 			
 			block.getStatements().add(index, load);
 			
