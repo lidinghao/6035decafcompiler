@@ -8,6 +8,7 @@ import java.util.List;
 
 import decaf.codegen.flatir.ArrayName;
 import decaf.codegen.flatir.CallStmt;
+import decaf.codegen.flatir.ConstantName;
 import decaf.codegen.flatir.LIRStatement;
 import decaf.codegen.flatir.Name;
 import decaf.codegen.flatir.QuadrupletStmt;
@@ -24,11 +25,15 @@ public class BlockReachingDefinitionGenerator {
 	private HashSet<CFGBlock> cfgBlocksToProcess;
 	// Map from Name to QuadrupletStmt which assign to that Name
 	private HashMap<Name, ArrayList<QuadrupletStmt>> nameToQStmts;
+	// Unique set of QuadrupletStmts
+	private HashSet<QuadrupletStmt> uniqueQStmts;
+
 	private int totalDefinitions;
 
 	public BlockReachingDefinitionGenerator(HashMap<String, MethodIR> mMap) {
 		this.mMap = mMap;
 		nameToQStmts = new HashMap<Name, ArrayList<QuadrupletStmt>>();
+		uniqueQStmts = new HashSet<QuadrupletStmt>();
 		blockReachingDefs = new HashMap<CFGBlock, BlockDataFlowState>();
 		cfgBlocksToProcess = new HashSet<CFGBlock>();
 		totalDefinitions = 0;
@@ -50,6 +55,11 @@ public class BlockReachingDefinitionGenerator {
 			CFGBlock block = (CFGBlock)(cfgBlocksToProcess.toArray())[0];
 			BlockDataFlowState bFlow = generateForBlock(block);
 			blockReachingDefs.put(block, bFlow);
+		}
+		
+		for (CFGBlock cfgBlock : blockReachingDefs.keySet()) {
+			System.out.println(cfgBlock);
+			System.out.println(blockReachingDefs.get(cfgBlock));
 		}
 	}
 	
@@ -85,6 +95,8 @@ public class BlockReachingDefinitionGenerator {
 								nameToQStmts.put(dest, new ArrayList<QuadrupletStmt>());
 							}
 							nameToQStmts.get(dest).add(qStmt);
+							uniqueQStmts.add(qStmt);
+							System.out.println(qStmt + " ==>> " + qStmt.getMyId());
 							totalDefinitions++;
 						}
 					}
@@ -156,7 +168,7 @@ public class BlockReachingDefinitionGenerator {
 		for (int i = 0; i < Register.argumentRegs.length; i++) {
 			updateKillSet(new RegisterName(Register.argumentRegs[i]), bFlow);
 		}
-		
+	
 		// Reset symbolic value for %RAX
 		updateKillSet(new RegisterName(Register.RAX), bFlow);
 		
@@ -174,10 +186,10 @@ public class BlockReachingDefinitionGenerator {
 		}
 	}
 	
-	public void updateKillSet(Name newDest, BlockDataFlowState bFlow) {
+	public void updateKillSet(Name dest, BlockDataFlowState bFlow) {
 		BitSet kill = bFlow.getKill();
 		BitSet in = bFlow.getIn();
-		ArrayList<QuadrupletStmt> qStmtsForDest = nameToQStmts.get(newDest);
+		ArrayList<QuadrupletStmt> qStmtsForDest = nameToQStmts.get(dest);
 		if (qStmtsForDest != null) {
 			// Kill if it is part of In
 			for (QuadrupletStmt q : qStmtsForDest) {
@@ -187,6 +199,89 @@ public class BlockReachingDefinitionGenerator {
 				}
 			}
 		}
+		// If the dest is ArrayName of the form A[i], and if index is constant,
+		// invalidate all statements which assign A[k] where k is a non-constant
+		// and if index is not a constant, invalidate all statements which assign
+		// any index in A
+		if (dest.getClass().equals(ArrayName.class)) {
+			Name arrIndex = ((ArrayName)dest).getIndex();
+			String id = ((ArrayName)dest).getId();
+			if (arrIndex.getClass().equals(ConstantName.class)) {
+				for (QuadrupletStmt qStmt : uniqueQStmts) {
+					if (isArrayNameWithIdAndVariableIndex(qStmt.getDestination(), id)) {
+						int index = qStmt.getMyId();
+						if (in.get(index)) {
+							kill.set(index, true); // Ensures Kill is always a subset of In
+						}
+					}
+				}
+			} else {
+				for (QuadrupletStmt qStmt : uniqueQStmts) {
+					if (isArrayNameWithId(qStmt.getDestination(), id)) {
+						int index = qStmt.getMyId();
+						if (in.get(index)) {
+							kill.set(index, true); // Ensures Kill is always a subset of In
+						}
+					}
+				}
+			}
+		}
+		// dest may be an index, so invalidate all
+		// statements which use dest as an index in a statement's dest
+		for (QuadrupletStmt qStmt : uniqueQStmts) {
+			if (isQStmtUsingArrayIndexInDest(qStmt, dest)) {
+				int index = qStmt.getMyId();
+				if (in.get(index)) {
+					kill.set(index, true); // Ensures Kill is always a subset of In
+				}
+			}
+		}
+	}
+	
+	public boolean isArrayNameWithIdAndVariableIndex(Name name, String id) {
+		if (name == null)
+			return false;
+		if (name.getClass().equals(ArrayName.class)) {
+			if (isArrayNameWithId(name, id)) {	
+				Name arrIndex = ((ArrayName)name).getIndex();
+				if (!(arrIndex.getClass().equals(ConstantName.class))) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	
+	public boolean isArrayNameWithId(Name name, String id) {
+		if (name == null)
+			return false;
+		if (name.getClass().equals(ArrayName.class)) {
+			if (((ArrayName)name).getId().equals(id)) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	private boolean isQStmtUsingArrayIndexInDest(QuadrupletStmt stmt, Name index) {
+		Name dest = stmt.getDestination();
+		Name arrIndex;
+		if (dest != null) {
+			if (dest.getClass().equals(ArrayName.class)) {
+				arrIndex = ((ArrayName)dest).getIndex();
+				if (arrIndex.equals(index))
+					return true;
+			}
+		}
+		return false;
+	}
+	
+	public HashSet<QuadrupletStmt> getUniqueQStmts() {
+		return uniqueQStmts;
+	}
+
+	public void setUniqueQStmts(HashSet<QuadrupletStmt> uniqueQStmts) {
+		this.uniqueQStmts = uniqueQStmts;
 	}
 	
 	public HashMap<Name, ArrayList<QuadrupletStmt>> getNameToQStmts() {

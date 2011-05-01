@@ -6,7 +6,9 @@ import java.util.HashMap;
 import java.util.List;
 
 import decaf.codegen.flatir.ArrayName;
+import decaf.codegen.flatir.CallStmt;
 import decaf.codegen.flatir.CmpStmt;
+import decaf.codegen.flatir.ConstantName;
 import decaf.codegen.flatir.LIRStatement;
 import decaf.codegen.flatir.Name;
 import decaf.codegen.flatir.PopStmt;
@@ -22,6 +24,8 @@ public class GlobalDeadCodeOptimizer {
 	private BlockLivenessGenerator livenessGenerator;
 	private HashMap<CFGBlock, BlockDataFlowState> blockLiveVars;
 	private HashMap<Name, Variable> nameToVar;
+	private HashMap<Name, List<ArrayName>> nameToArrNames;
+	private List<Integer> globalVarIDs;
 	
 	public GlobalDeadCodeOptimizer(HashMap<String, MethodIR> mMap) {
 		this.mMap = mMap;
@@ -29,6 +33,8 @@ public class GlobalDeadCodeOptimizer {
 		this.livenessGenerator.generate();
 		this.blockLiveVars = livenessGenerator.getBlockLiveVars();
 		this.nameToVar = livenessGenerator.getNameToVar();
+		this.nameToArrNames = livenessGenerator.getNameToArrNames();
+		this.globalVarIDs = livenessGenerator.getGlobalVarIDs();
 	}
 	
 	public void performDeadCodeElimination(){
@@ -53,24 +59,30 @@ public class GlobalDeadCodeOptimizer {
 		CmpStmt cStmt;
 		QuadrupletStmt qStmt;
 		Name arg1 = null, arg2 = null, dest = null, arrIndex = null;
-		Variable arg1Var, arg2Var;
+		Variable arg1Var;
 		
 		// Only QuadrupletStmt is dead code eliminated
 		for (int i = block.getStatements().size()-1; i >= 0 ; i--) {
 			stmt = block.getStatements().get(i);
+			if (stmt.getClass().equals(CallStmt.class)) {
+				// Set all global variable IDs to true in the out set, so
+				// above statements have a more accurate view of the out set
+				// because it includes things that happen within the block
+				for (int globalVarId : globalVarIDs) {
+					bFlow.getOut().set(globalVarId);
+				}
+			}
 			if (stmt.getClass().equals(QuadrupletStmt.class)) {
 				qStmt = (QuadrupletStmt)stmt;
 				if (!assigningRegisters(qStmt)) {
-					if (!assigningArray(qStmt)) {
-						// Only dead code eliminate statements that don't assign registers or Array names
-						dest = qStmt.getDestination();
-						if (nameToVar.containsKey(dest)) {
-							varId = nameToVar.get(dest).getMyId();
-							if (isDead(varId, bFlow.getOut())) {
-								// Don't add statement
-								System.out.println("Stmt REMOVED: " + stmt);
-								continue;
-							}
+					// Only dead code eliminate statements that don't assign registers
+					dest = qStmt.getDestination();
+					if (nameToVar.containsKey(dest)) {
+						varId = nameToVar.get(dest).getMyId();
+						if (isDead(varId, bFlow.getOut())) {
+							// Don't add statement
+							System.out.println("Stmt REMOVED: " + stmt);
+							continue;
 						}
 					}
 				}
@@ -106,57 +118,75 @@ public class GlobalDeadCodeOptimizer {
 					if (arg1Var != null) {	
 						bFlow.getOut().set(arg1Var.getMyId());
 					}
-				}
-				// If dest is not ArrayName, we don't care about it
-			}
-			if (arg1 != null) {
-				// Set arg1 -> id to true in current use set
-				arg1Var = nameToVar.get(arg1);
-				if (arg1Var != null) {	
-					bFlow.getOut().set(arg1Var.getMyId());
-				}
-				// If arg1 is a ArrayName, process the index Name
-				if (arg1.getClass().equals(ArrayName.class)) {
-					arrIndex = ((ArrayName)arg1).getIndex();
-					arg1Var = nameToVar.get(arrIndex);
-					if (arg1Var != null) {	
-						bFlow.getOut().set(arg1Var.getMyId());
+				} else {
+					// If dest is not ArrayName, it might be used as some array index, so set those
+					// variable IDs to true in the out set
+					
+					// Get ArrayName that have dest as an id
+					List<ArrayName> arrNamesWithDestIndex = nameToArrNames.get(dest);
+					if (arrNamesWithDestIndex != null) {
+						for (ArrayName aName : arrNamesWithDestIndex) {
+							Variable aNameVar = nameToVar.get(aName);
+							if (aNameVar != null) {
+								bFlow.getOut().set(aNameVar.getMyId());
+							}
+						}
 					}
 				}
 			}
-			if (arg2 != null) {
-				// Set arg2 -> id to true in current use set
-				arg2Var = nameToVar.get(arg2);
-				if (arg2Var != null) {
-					bFlow.getOut().set(arg2Var.getMyId());
-				}
-				// If arg2 is a ArrayName, process the index Name
-				if (arg2.getClass().equals(ArrayName.class)) {
-					arrIndex = ((ArrayName)arg2).getIndex();
-					arg2Var = nameToVar.get(arrIndex);
-					if (arg2Var != null) {	
-						bFlow.getOut().set(arg2Var.getMyId());
-					}
-				}
-			}
+			processArgInBlockStatement(arg1, bFlow);
+			processArgInBlockStatement(arg2, bFlow);
 			// Add to beginning
 			newStmts.add(0, stmt);
 		}
 		block.setStatements(newStmts);
 	}
 	
+	private void processArgInBlockStatement(Name arg, BlockDataFlowState bFlow) {
+		Variable argVar;
+		Name arrIndex;
+		
+		if (arg != null) {
+			// Set arg2 -> id to true in current use set
+			argVar = nameToVar.get(arg);
+			if (argVar != null) {
+				bFlow.getOut().set(argVar.getMyId());
+			}
+			// If arg2 is a ArrayName, process the index Name, and set
+			// ALL Array names with the same ID to true in out set
+			if (arg.getClass().equals(ArrayName.class)) {
+				arrIndex = ((ArrayName)arg).getIndex();
+				argVar = nameToVar.get(arrIndex);
+				if (argVar != null) {	
+					bFlow.getOut().set(argVar.getMyId());
+				}
+				String arrId = ((ArrayName)arg).getId();
+				// Loop through all the names and find the ArrayNames with
+				// the same ID
+				for (Name n : nameToVar.keySet()) {
+					if (n.getClass().equals(ArrayName.class)) {
+						if (((ArrayName)n).getId().equals(arrId)) {
+							// Note: if the index is a constant, then only set the ArrayNames
+							// that have a non-constant index to true in the out set
+							if (arrIndex.getClass().equals(ConstantName.class)) {
+								// Index is not a constant
+								if (!((ArrayName)n).getIndex().getClass().equals(ConstantName.class)) {
+									bFlow.getOut().set(nameToVar.get(n).getMyId());
+								}
+							} else {
+								bFlow.getOut().set(nameToVar.get(n).getMyId());
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	
 	private boolean assigningRegisters(QuadrupletStmt qStmt) {
 		Name dest = qStmt.getDestination();
 		if (dest != null) {
 			return dest.getClass().equals(RegisterName.class);
-		}
-		return false;
-	}
-	
-	private boolean assigningArray(QuadrupletStmt qStmt) {
-		Name dest = qStmt.getDestination();
-		if (dest != null) {
-			return dest.getClass().equals(ArrayName.class);
 		}
 		return false;
 	}

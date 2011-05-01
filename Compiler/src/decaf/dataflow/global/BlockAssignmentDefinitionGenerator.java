@@ -4,9 +4,11 @@ import java.util.BitSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import decaf.codegen.flatir.ArrayName;
 import decaf.codegen.flatir.CallStmt;
+import decaf.codegen.flatir.ConstantName;
 import decaf.codegen.flatir.LIRStatement;
 import decaf.codegen.flatir.Name;
 import decaf.codegen.flatir.QuadrupletStmt;
@@ -110,15 +112,6 @@ public class BlockAssignmentDefinitionGenerator {
 								// We will not change the above to b = %reg since the register allocator will take care of this
 								if (arg1.getClass().equals(RegisterName.class))
 									continue;
-								// If argument is Array Name, ignore - this indirectly prevents copy propagation
-								// in the following scenario:
-								// a = b[i]
-								// b[0] = 5
-								// c = a
-								// The last line would be changed to c = b[i] if copy prop was turned on and in the event that
-								// i = 0 in some execution path, we would indirectly get c = b[0] which will break correctness
-								if (arg1.getClass().equals(ArrayName.class))
-									continue;
 								
 								if (!nameToQStmtsThatAssignIt.containsKey(dest)) {
 									nameToQStmtsThatAssignIt.put(dest, new HashSet<QuadrupletStmt>());
@@ -149,6 +142,8 @@ public class BlockAssignmentDefinitionGenerator {
 			origOut = blockAssignReachingDefs.get(block).getOut();
 		} else {
 			origOut = new BitSet(totalAssignmentDefinitions);
+			// Confluence operator is AND, so initialize out set to all 1s
+			origOut.set(0, totalAssignmentDefinitions, true);
 		}
 		// Calculate the in BitSet by taking union of predecessors
 		BlockDataFlowState bFlow = new BlockDataFlowState(totalAssignmentDefinitions);
@@ -219,6 +214,9 @@ public class BlockAssignmentDefinitionGenerator {
 					updateKillGenSet(name, bFlow);
 				}
 			}
+			if (name.getClass().equals(ArrayName.class)) {
+				updateKillGenSet(name, bFlow);
+			}
 		}
 		// Invalidate global vars
 		for (Name name: this.nameToQStmtsThatAssignIt.keySet()) {
@@ -243,6 +241,7 @@ public class BlockAssignmentDefinitionGenerator {
 		BitSet in = bFlow.getIn();
 		BitSet gen = bFlow.getGen();
 		BitSet kill = bFlow.getKill();
+		Set<QuadrupletStmt> allStmts = uniqueAssignmentStmts.keySet();
 		// Invalidate reaching or previous generated assign statements of form x = dest
 		HashSet<QuadrupletStmt> stmtsItAssigns = nameToQStmtsWhichItAssigns.get(dest);
 		if (stmtsItAssigns != null) {
@@ -254,17 +253,108 @@ public class BlockAssignmentDefinitionGenerator {
 			}
 		}
 		// Invalidate reaching or previous generated assign statements of form dest = x
-		stmtsItAssigns = nameToQStmtsThatAssignIt.get(dest);
-		if (stmtsItAssigns != null) {
-			for (QuadrupletStmt qStmt : stmtsItAssigns) {
+		HashSet<QuadrupletStmt> stmtsThatAssignIt = nameToQStmtsThatAssignIt.get(dest);
+		if (stmtsThatAssignIt != null) {
+			for (QuadrupletStmt qStmt : stmtsThatAssignIt) {
 				if (bFlow.getIn().get(qStmt.getMyId())) {
 					kill.set(qStmt.getMyId(), true);
 				}
 				gen.set(qStmt.getMyId(), false);
 			}
 		}
+		// The dest could be an index of some ArrayName used in an assignment statement
+		// (either as dest or arg1) so invalidate such statements
+		if (allStmts != null) {
+			for (QuadrupletStmt q : allStmts) {
+				if (isAssignStmtUsingArrayIndex(q, dest)) {
+					if (bFlow.getIn().get(q.getMyId())) {
+						kill.set(q.getMyId(), true);
+					}
+					gen.set(q.getMyId(), false);
+				}
+			}
+		}
+		// If dest is ArrayName, check index variable
+		// If index variable is not a ConstantName, invalidate all previous assignments
+		// which have arg1/dest as some ArrayName
+		// If index variable is a ConstantName, invalidate all previous assignments
+		// which have arg1/dest as some ArrayName with variable index variable
+		if (dest.getClass().equals(ArrayName.class)) {
+			String id = ((ArrayName)dest).getId();
+			Name arrIndex = ((ArrayName)dest).getIndex();
+			if (arrIndex.getClass().equals(ConstantName.class)) {
+				if (allStmts != null) {
+					for (QuadrupletStmt qStmt : allStmts) {
+						// Check id and non-constant index
+						if (isArrayNameWithIdAndVariableIndex(qStmt.getArg1(), id) || 
+								isArrayNameWithIdAndVariableIndex(qStmt.getDestination(), id)) {
+							if (bFlow.getIn().get(qStmt.getMyId())) {
+								kill.set(qStmt.getMyId(), true);
+							}
+							gen.set(qStmt.getMyId(), false);
+						}
+					}
+				}
+			} else {
+				if (allStmts != null) {
+					for (QuadrupletStmt qStmt : allStmts) {
+						// Just check id
+						if (isArrayNameWithId(qStmt.getArg1(), id) || 
+								isArrayNameWithId(qStmt.getDestination(), id)) {
+							if (bFlow.getIn().get(qStmt.getMyId())) {
+								kill.set(qStmt.getMyId(), true);
+							}
+							gen.set(qStmt.getMyId(), false);
+						}
+					}
+				}
+			}
+		}
 	}
-
+	
+	private boolean isArrayNameWithIdAndVariableIndex(Name name, String id) {
+		if (name == null)
+			return false;
+		if (name.getClass().equals(ArrayName.class)) {
+			if (isArrayNameWithId(name, id)) {	
+				Name arrIndex = ((ArrayName)name).getIndex();
+				if (!(arrIndex.getClass().equals(ConstantName.class))) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	
+	private boolean isArrayNameWithId(Name name, String id) {
+		if (name == null) 
+			return false;
+		if (name.getClass().equals(ArrayName.class)) {
+			if (((ArrayName)name).getId().equals(id)) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	// Assumes stmt is of the form a = b
+	private boolean isAssignStmtUsingArrayIndex(QuadrupletStmt stmt, Name index) {
+		Name dest = stmt.getDestination();
+		Name arg1 = stmt.getArg1();
+		Name arrIndex;
+		if (dest.getClass().equals(ArrayName.class)) {
+			arrIndex = ((ArrayName)dest).getIndex();
+			if (arrIndex.equals(index))
+				return true;
+		}
+		if (arg1.getClass().equals(ArrayName.class)) {
+			arrIndex = ((ArrayName)arg1).getIndex();
+			if (arrIndex.equals(index))
+				return true;
+		}
+		return false;
+	}
+	
 	public HashMap<CFGBlock, BlockDataFlowState> getBlockAssignReachingDefs() {
 		return blockAssignReachingDefs;
 	}

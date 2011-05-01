@@ -2,6 +2,7 @@ package decaf.dataflow.global;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import decaf.codegen.flatir.ArrayName;
 import decaf.codegen.flatir.CallStmt;
@@ -121,16 +122,34 @@ public class GlobalConstantPropagationOptimizer {
 		if (arg.getClass().equals(RegisterName.class))
 			return null;
 		
-		// If the Name is ArrayName, we try to optimize the entire Name
-		// Then we return null, since we don't want to constant propagate ArrayName values
-		ConstantName arrIndex;
+		// If the Name is ArrayName, we try to optimize its index as well
+		Name arrIndex;
+		List<QuadrupletStmt> additionalReachingDefs = null;
 		if (arg.getClass().equals(ArrayName.class)) {
 			// Try optimizing index if ArrayName
 			arrIndex = reachingDefsHaveSameConstant(((ArrayName)arg).getIndex(), bFlow);
 			if (arrIndex != null) {
 				((ArrayName)arg).setIndex(arrIndex);
 			}
-			return null;
+			additionalReachingDefs = new ArrayList<QuadrupletStmt>();
+			// Get the index, and if it is constant, get all qstmts which assign to 
+			// array id with variable index
+			arrIndex = ((ArrayName)arg).getIndex();
+			String id = ((ArrayName)arg).getId();
+			if (arrIndex.getClass().equals(ConstantName.class)) {
+				for (QuadrupletStmt qStmt : reachingDefGenerator.getUniqueQStmts()) {
+					if (reachingDefGenerator.isArrayNameWithIdAndVariableIndex(qStmt.getDestination(), id)) {
+						additionalReachingDefs.add(qStmt);
+					}
+				}
+			} else {
+				for (QuadrupletStmt qStmt : reachingDefGenerator.getUniqueQStmts()) {
+					// If index is not constant, get all qstmts which assign to array id	
+					if (reachingDefGenerator.isArrayNameWithId(qStmt.getDestination(), id)) {
+						additionalReachingDefs.add(qStmt);
+					}
+				}
+			}	
 		}
 		
 		HashMap<Name, ArrayList<QuadrupletStmt>> nameToStmts = reachingDefGenerator.getNameToQStmts();
@@ -149,11 +168,49 @@ public class GlobalConstantPropagationOptimizer {
 						cName = (ConstantName)arg1;
 					} else {
 						if (!((ConstantName)arg1).equals(cName)) {
-							return null;
+							cName = null; break;
 						}
 					}
 				} else {
-					return null;
+					cName = null; break;
+				}
+			}
+		}
+		if (additionalReachingDefs != null) {
+			if (cName != null) {
+				// Look at the additional reaching definitions
+				// First check if any of them reach, and if they don't, we don't care about them
+				boolean additionalReach = false;
+				for (QuadrupletStmt qStmt : additionalReachingDefs) {
+					if (bFlow.getIn().get(qStmt.getMyId())) {
+						additionalReach = true;
+						break;
+					}
+				}
+				if (additionalReach) {
+					// Get the ConstantName from these additional reaching defs
+					ConstantName additionalCName = null;
+					for (QuadrupletStmt qStmt : additionalReachingDefs) {
+						if (bFlow.getIn().get(qStmt.getMyId())) {
+							// Check if statement is of type : arg = constant
+							Name arg1 = qStmt.getArg1();
+							if (arg1.getClass().equals(ConstantName.class) && qStmt.getArg2() == null) {
+								if (additionalCName == null) {
+									additionalCName = (ConstantName)arg1;
+								} else {
+									if (!((ConstantName)arg1).equals(additionalCName)) {
+										return null;
+									}
+								}
+							} else {
+								return null;
+							}
+						}
+					}
+					// Additional cName and original cName should be equal, otherwise return null
+					if (!cName.equals(additionalCName)) {
+						return null;
+					}
 				}
 			}
 		}

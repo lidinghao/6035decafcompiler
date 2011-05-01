@@ -14,46 +14,45 @@ public class BlockOptimizer {
 	private BlockTempDCOptimizer dc;
 	private BlockVarCPOptimizer copyVar;
 	private BlockVarDCOptimizer dcVar;
+	private HashMap<String, MethodIR> mMap;
 	
 	public BlockOptimizer(HashMap<String, MethodIR> mMap) {
-		cse = new BlockCSEOptimizer(mMap);	
-		
-		copy = new BlockTempCPOptimizer(mMap);
-		copyVar = new BlockVarCPOptimizer(mMap);
-		
-		cons = new BlockConsPropagationOptimizer(mMap);
-		alg = new BlockAlgebriacOptimizer(mMap);
-		
-		dc = new BlockTempDCOptimizer(mMap);
-		dcVar = new BlockVarDCOptimizer(mMap);
+		this.mMap = mMap;
 	}
 	
 	public void optimizeBlocks(boolean[] opts) {
 		if(opts[1]) { // CSE
+			cse = new BlockCSEOptimizer(mMap);
 			cse.performCSE();
 		}
 		
 		if(opts[3]) { // CONST
 			// Do Const Propagation
+			cons = new BlockConsPropagationOptimizer(mMap);
 			cons.performConsPropagation();
 			
 			// Do algebriac simplification
+			alg = new BlockAlgebriacOptimizer(mMap);
 			alg.performAlgebriacSimplification();
 		} 
 		
 		if(opts[2]) { // COPY
 			// CP DynamicVarNames
+			copy = new BlockTempCPOptimizer(mMap);
 			copy.performCopyPropagation();
 			
 			// CP VarNames and TempNames
+			copyVar = new BlockVarCPOptimizer(mMap);
 			copyVar.performCopyPropagation();
 		} 
 		
 		if(opts[4]) { // DC
 			// DC VarNames and TempNames
+			dcVar = new BlockVarDCOptimizer(mMap);
 			dcVar.performDeadCodeElimination();
 			
 			// DC DynamicVarName
+			dc = new BlockTempDCOptimizer(mMap);
 			dc.performDeadCodeElimination();
 		}
 	}

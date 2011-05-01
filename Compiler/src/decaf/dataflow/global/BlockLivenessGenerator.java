@@ -7,7 +7,9 @@ import java.util.HashSet;
 import java.util.List;
 
 import decaf.codegen.flatir.ArrayName;
+import decaf.codegen.flatir.CallStmt;
 import decaf.codegen.flatir.CmpStmt;
+import decaf.codegen.flatir.ConstantName;
 import decaf.codegen.flatir.LIRStatement;
 import decaf.codegen.flatir.Name;
 import decaf.codegen.flatir.PopStmt;
@@ -24,6 +26,9 @@ public class BlockLivenessGenerator {
 	private HashSet<CFGBlock> cfgBlocksToProcess;
 	// One Variable per Name
 	private HashMap<Name, Variable> nameToVar;
+	// index to List<ArrayName> map where index is used
+	private HashMap<Name, List<ArrayName>> nameToArrNames;
+
 	// List of Variable IDs which correspond to global names
 	private List<Integer> globalVarIDs;
 	private int totalVars;
@@ -34,6 +39,7 @@ public class BlockLivenessGenerator {
 		cfgBlocksToProcess = new HashSet<CFGBlock>();
 		globalVarIDs = new ArrayList<Integer>();
 		nameToVar = new HashMap<Name, Variable>();
+		nameToArrNames = new HashMap<Name, List<ArrayName>>();
 		totalVars = 0;
 	}
 	
@@ -122,18 +128,33 @@ public class BlockLivenessGenerator {
 						arg1 = cStmt.getArg1();
 						arg2 = cStmt.getArg2();
 					}
-					// Update the Name to Variable map
-					if (!nameToVar.containsKey(dest)) {
-						nameToVar.put(dest, new Variable(dest));
-						updateGlobalVarIDs(dest);
+					if (dest != null) {
+						// Update the Name to Variable map
+						if (!nameToVar.containsKey(dest)) {
+							nameToVar.put(dest, new Variable(dest));
+							updateGlobalVarIDs(dest);
+							if (dest.getClass().equals(ArrayName.class)) {
+								// Update the index to ArrayName map
+								Name arrIndex = ((ArrayName)dest).getIndex();
+								if (!(nameToArrNames.containsKey(arrIndex))) {
+									nameToArrNames.put(arrIndex, new ArrayList<ArrayName>());
+								}
+								if (!(nameToArrNames.get(arrIndex).contains((ArrayName)dest)))
+									nameToArrNames.get(arrIndex).add((ArrayName)dest);
+							}
+						}
 					}
-					if (!nameToVar.containsKey(arg1)) {
-						nameToVar.put(arg1, new Variable(arg1));
-						updateGlobalVarIDs(arg1);
+					if (arg1 != null) {
+						if (!nameToVar.containsKey(arg1)) {
+							nameToVar.put(arg1, new Variable(arg1));
+							updateGlobalVarIDs(arg1);
+						}
 					}
-					if (!nameToVar.containsKey(arg2)) {
-						nameToVar.put(arg2, new Variable(arg2));
-						updateGlobalVarIDs(arg2);
+					if (arg2 != null) {
+						if (!nameToVar.containsKey(arg2)) {
+							nameToVar.put(arg2, new Variable(arg2));
+							updateGlobalVarIDs(arg2);
+						}
 					}
 				}
 				cfgBlocksToProcess.add(block);
@@ -209,12 +230,18 @@ public class BlockLivenessGenerator {
 		CmpStmt cStmt;
 		QuadrupletStmt qStmt;
 		Name arg1 = null, arg2 = null, dest = null, arrIndex = null;
-		Variable destVar, arg1Var, arg2Var;
+		Variable destVar, arg1Var;
 		
 		// Traverse statements in reverse order
 		for (int i = blockStmts.size()-1; i >= 0; i--) {
 			LIRStatement stmt = blockStmts.get(i);
-			
+			if (stmt.getClass().equals(CallStmt.class)) {
+				// Set all global variable IDs to true in the gen set
+				for (int globalVarId : globalVarIDs) {
+					bFlow.getGen().set(globalVarId);
+				}
+				continue;
+			}
 			if (stmt.getClass().equals(QuadrupletStmt.class)) {
 				qStmt = (QuadrupletStmt)stmt;
 				dest = qStmt.getDestination();
@@ -240,9 +267,20 @@ public class BlockLivenessGenerator {
 					bFlow.getKill().set(destVar.getMyId());
 					// Set dest -> id to false in current use set
 					bFlow.getGen().set(destVar.getMyId(), false);
+					// Any ArrayName that have dest as an id should update Gen bit to true
+					List<ArrayName> arrNamesWithDestIndex = nameToArrNames.get(dest);
+					if (arrNamesWithDestIndex != null) {
+						for (ArrayName aName : arrNamesWithDestIndex) {
+							Variable aNameVar = nameToVar.get(aName);
+							if (aNameVar != null) {
+								bFlow.getGen().set(aNameVar.getMyId());
+							}
+						}
+					}
 				}
 				// If dest is a ArrayName, process the index Name
 				if (dest.getClass().equals(ArrayName.class)) {
+					// the index Name was used so update Gen
 					arrIndex = ((ArrayName)dest).getIndex();
 					arg1Var = nameToVar.get(arrIndex);
 					if (arg1Var != null) {	
@@ -250,39 +288,52 @@ public class BlockLivenessGenerator {
 					}
 				}
 			}
-			if (arg1 != null) {
-				// Set arg1 -> id to true in current use set
-				arg1Var = nameToVar.get(arg1);
-				if (arg1Var != null) {	
-					bFlow.getGen().set(arg1Var.getMyId());
-				}
-				// If arg1 is a ArrayName, process the index Name
-				if (arg1.getClass().equals(ArrayName.class)) {
-					arrIndex = ((ArrayName)arg1).getIndex();
-					arg1Var = nameToVar.get(arrIndex);
-					if (arg1Var != null) {	
-						bFlow.getGen().set(arg1Var.getMyId());
-					}
-				}
+			processArgInMethodStatement(arg1, bFlow);	
+			processArgInMethodStatement(arg2, bFlow);
+		}
+	}
+	
+	private void processArgInMethodStatement(Name arg, BlockDataFlowState bFlow) {
+		Variable argVar;
+		Name arrIndex;
+		
+		if (arg != null) {
+			// Set arg2 -> id to true in current use set
+			argVar = nameToVar.get(arg);
+			if (argVar != null) {
+				bFlow.getGen().set(argVar.getMyId());
 			}
-			if (arg2 != null) {
-				// Set arg2 -> id to true in current use set
-				arg2Var = nameToVar.get(arg2);
-				if (arg2Var != null) {
-					bFlow.getGen().set(arg2Var.getMyId());
+			// If arg2 is a ArrayName, process the index Name, and set
+			// ALL Array names with the same ID to true in Gen set
+			if (arg.getClass().equals(ArrayName.class)) {
+				arrIndex = ((ArrayName)arg).getIndex();
+				argVar = nameToVar.get(arrIndex);
+				if (argVar != null) {	
+					bFlow.getGen().set(argVar.getMyId());
 				}
-				// If arg2 is a ArrayName, process the index Name
-				if (arg2.getClass().equals(ArrayName.class)) {
-					arrIndex = ((ArrayName)arg2).getIndex();
-					arg2Var = nameToVar.get(arrIndex);
-					if (arg2Var != null) {	
-						bFlow.getGen().set(arg2Var.getMyId());
+				String arrId = ((ArrayName)arg).getId();
+				// Loop through all the names and find the ArrayNames with
+				// the same ID
+				for (Name n : nameToVar.keySet()) {
+					if (n.getClass().equals(ArrayName.class)) {
+						if (((ArrayName)n).getId().equals(arrId)) {
+							// Note: if the index is a constant, then only set the ArrayNames
+							// that have a non-constant index to true in the Gen set
+							if (arrIndex.getClass().equals(ConstantName.class)) {
+								// Index is not a constant
+								if (!((ArrayName)n).getIndex().getClass().equals(ConstantName.class)) {
+									bFlow.getGen().set(nameToVar.get(n).getMyId());
+								}
+							} else {
+								bFlow.getGen().set(nameToVar.get(n).getMyId());
+							}
+						}
 					}
 				}
 			}
 		}
 	}
-
+	
 	private void printNameToVar() {
 		for (Name n : nameToVar.keySet()) {
 			System.out.println("NAME: " + n + " --> " + nameToVar.get(n).getMyId());
@@ -316,5 +367,21 @@ public class BlockLivenessGenerator {
 
 	public void setNameToVar(HashMap<Name, Variable> nameToVar) {
 		this.nameToVar = nameToVar;
+	}
+	
+	public HashMap<Name, List<ArrayName>> getNameToArrNames() {
+		return nameToArrNames;
+	}
+
+	public void setNameToArrNames(HashMap<Name, List<ArrayName>> nameToArrNames) {
+		this.nameToArrNames = nameToArrNames;
+	}
+
+	public List<Integer> getGlobalVarIDs() {
+		return globalVarIDs;
+	}
+
+	public void setGlobalVarIDs(List<Integer> globalVarIDs) {
+		this.globalVarIDs = globalVarIDs;
 	}
 }
