@@ -34,7 +34,7 @@ public class BlockCSEOptimizer {
 		for (String s: this.mMap.keySet()) {
 			if (s.equals(ProgramFlattener.exceptionHandlerLabel)) continue;
 			
-			DynamicVarName.reset();
+			//DynamicVarName.reset();
 			for (CFGBlock block: this.mMap.get(s).getCfgBlocks()) {
 				optimize(block);
 				reset();
