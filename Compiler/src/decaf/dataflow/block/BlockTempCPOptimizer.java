@@ -97,14 +97,17 @@ public class BlockTempCPOptimizer {
 		
 		// If the Name being assigned is a DynamicVarName
 		if (dest.getClass().equals(DynamicVarName.class) && qStmt.getOperator().equals(QuadrupletOp.MOVE)) {
-			// Invariant: This statement has to be of the form [DynamicVarName = Name]
-			Name arg1 = qStmt.getArg1();
-			this.tempToName.put(dest, arg1);
-			if (!this.varToTemps.containsKey(arg1)) {
-				this.varToTemps.put(arg1, new HashSet<Name>());
+			DynamicVarName dVar = (DynamicVarName) dest;
+			// Dont mess with DynamicVarNames that are gtmp
+			if (!dVar.isForGlobal()) {
+				// Invariant: This statement has to be of the form [DynamicVarName = Name]
+				Name arg1 = qStmt.getArg1();
+				this.tempToName.put(dest, arg1);
+				if (!this.varToTemps.containsKey(arg1)) {
+					this.varToTemps.put(arg1, new HashSet<Name>());
+				}
+				this.varToTemps.get(arg1).add(dest);
 			}
-			this.varToTemps.get(arg1).add(dest);
-			
 		} else {
 			// Check the operands, if any of them are DynamicVarName, replace with Name from the tempToName map
 			Name newArg1 = processArgument(qStmt.getArg1());
@@ -120,8 +123,13 @@ public class BlockTempCPOptimizer {
 	public Name processArgument(Name arg1) {
 		if (arg1 != null) {
 			if (arg1.getClass().equals(DynamicVarName.class)) {
-				if (this.tempToName.containsKey(arg1)) {
-					return this.tempToName.get(arg1);
+				DynamicVarName dVar = (DynamicVarName) arg1;
+				
+				// Dont mess with DynamicVarNames that are gtmp
+				if (!dVar.isForGlobal()) {
+					if (this.tempToName.containsKey(arg1)) {
+						return this.tempToName.get(arg1);
+					}
 				}
 			}
 		}
