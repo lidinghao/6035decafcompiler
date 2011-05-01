@@ -7,6 +7,7 @@ import java.util.List;
 import decaf.codegen.flatir.ArrayName;
 import decaf.codegen.flatir.CallStmt;
 import decaf.codegen.flatir.CmpStmt;
+import decaf.codegen.flatir.ConstantName;
 import decaf.codegen.flatir.LIRStatement;
 import decaf.codegen.flatir.Name;
 import decaf.codegen.flatir.PopStmt;
@@ -161,11 +162,20 @@ public class BlockVarCPOptimizer {
 		
 		if (name.isArray()) {
 			ArrayName arrName = (ArrayName) name;
+			boolean constIndex = arrName.getIndex().getClass().equals(ConstantName.class);
+			
 			for (Name var: this.varToVar.keySet()) {
 				if (this.varToVar.get(var).isArray()) { // For any index assignment, remove all associations like a = ArrayId[index]
 					ArrayName vArray = (ArrayName) this.varToVar.get(var);
 					if (arrName.getId().equals(vArray.getId())) {
-						varsToRemove.add(var);
+						if (constIndex) {
+							if (!vArray.getIndex().equals(ConstantName.class)) {
+								varsToRemove.add(var);
+							}
+						}
+						else {
+							varsToRemove.add(var);
+						}
 					}
 				}
 			}
