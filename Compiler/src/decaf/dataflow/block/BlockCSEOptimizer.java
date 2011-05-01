@@ -31,10 +31,11 @@ public class BlockCSEOptimizer {
 	}
 	
 	public void performCSE() {
+		DynamicVarName.reset();
+		
 		for (String s: this.mMap.keySet()) {
 			if (s.equals(ProgramFlattener.exceptionHandlerLabel)) continue;
 			
-			//DynamicVarName.reset();
 			for (CFGBlock block: this.mMap.get(s).getCfgBlocks()) {
 				optimize(block);
 				reset();
