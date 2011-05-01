@@ -55,6 +55,9 @@ public class BlockCSEOptimizer {
 				
 				// TODO: May have to change this after RegisterAllocator is implemented
 				if (stmt.getClass().equals(CallStmt.class)) {			
+					CallStmt callStmt = (CallStmt) stmt;
+					if (callStmt.getMethodLabel().equals(ProgramFlattener.exceptionHandlerLabel)) continue;
+					
 					// Invalidate arg registers
 					for (int i = 0; i < Register.argumentRegs.length; i++) {
 						this.varToVal.put(new RegisterName(Register.argumentRegs[i]), new SymbolicValue());

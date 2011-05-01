@@ -186,6 +186,9 @@ public class BlockAssignmentDefinitionGenerator {
 		
 		for (LIRStatement stmt : blockStmts) {
 			if (stmt.getClass().equals(CallStmt.class)) {
+				CallStmt callStmt = (CallStmt) stmt;
+				if (callStmt.getMethodLabel().equals(ProgramFlattener.exceptionHandlerLabel)) continue;
+				
 				invalidateFunctionCall(bFlow);
 			}
 			if (stmt.getClass().equals(QuadrupletStmt.class)) {

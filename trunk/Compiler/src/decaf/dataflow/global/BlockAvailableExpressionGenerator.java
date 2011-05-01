@@ -198,6 +198,9 @@ public class BlockAvailableExpressionGenerator {
 		for (LIRStatement stmt : blockStmts) {
 			if (!stmt.isAvailableExpression()) {
 				if (stmt.getClass().equals(CallStmt.class)) {
+					CallStmt callStmt = (CallStmt) stmt;
+					if (callStmt.getMethodLabel().equals(ProgramFlattener.exceptionHandlerLabel)) continue;
+					
 					// Invalidate arg registers
 					for (int i = 0; i < Register.argumentRegs.length; i++) {
 						updateKillSet(new RegisterName(Register.argumentRegs[i]), bFlow);
