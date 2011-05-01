@@ -10,27 +10,30 @@ import decaf.codegen.flatir.CallStmt;
 import decaf.codegen.flatir.CmpStmt;
 import decaf.codegen.flatir.JumpStmt;
 import decaf.codegen.flatir.LIRStatement;
+import decaf.codegen.flatir.LabelStmt;
 import decaf.codegen.flatir.LoadStmt;
 import decaf.codegen.flatir.Name;
 import decaf.codegen.flatir.PopStmt;
 import decaf.codegen.flatir.PushStmt;
 import decaf.codegen.flatir.QuadrupletStmt;
 import decaf.codegen.flatir.VarName;
+import decaf.codegen.flattener.ExpressionFlattenerVisitor;
 import decaf.codegen.flattener.ProgramFlattener;
 import decaf.dataflow.cfg.CFGBlock;
 import decaf.dataflow.cfg.MethodIR;
 import decaf.dataflow.global.BlockDataFlowState;
 
-public class GlobalExplicitLoader {
-	//private static String ForTestLabelRegex = "[a-zA-z_]\\w*_for\\d+_test";
-	private static String IfEndLabelRegex = "[a-zA-z_]\\w*_if\\d+_end";
+public class ExplicitGlobalLoader {
+	private static String ArrayPassLabelRegex = "[a-zA-z_]\\w*.array.[a-zA-z_]\\w*.\\d+.pass";
+   private static String ArrayBeginLabelRegex = "[a-zA-z_]\\w*.array.[a-zA-z_]\\w*.\\d+.begin";
+   private static String ArrayFailLabelRegex = "[a-zA-z_]\\w*.array.[a-zA-z_]\\w*.\\d+.fail";
 	private GlobalsDefDFAnalyzer df;
 	private HashMap<String, MethodIR> mMap;
 	private HashSet<Name> globalsInBlock;
 	private boolean seenCall;
 	private HashMap<CFGBlock, String> blockState;
 
-	public GlobalExplicitLoader(HashMap<String, MethodIR> mMap) {
+	public ExplicitGlobalLoader(HashMap<String, MethodIR> mMap) {
 		this.mMap = mMap;
 		this.df = new GlobalsDefDFAnalyzer(mMap);
 		this.blockState = new HashMap<CFGBlock, String>();
@@ -53,7 +56,7 @@ public class GlobalExplicitLoader {
 		this.blockState.clear();
 
 		int i = 100;
-		while (i > 0) {
+		while (true) {
 			for (CFGBlock block : this.mMap.get(methodName).getCfgBlocks()) {
 				this.blockState.put(block, block.toString());
 			}
@@ -95,12 +98,6 @@ public class GlobalExplicitLoader {
 			}
 			else if (stmt.getClass().equals(QuadrupletStmt.class)) {
 				QuadrupletStmt qStmt = (QuadrupletStmt) stmt;
-				
-				killLocalGlobals(qStmt);
-				
-				if (qStmt.getDestination().isGlobal()) {
-					this.globalsInBlock.add(qStmt.getDestination());
-				}
 
 				if (qStmt.getArg1().isGlobal()) {
 					if (processName(qStmt.getArg1(), block, i))
@@ -110,6 +107,12 @@ public class GlobalExplicitLoader {
 					if (processName(qStmt.getArg2(), block, i))
 						return true;
 				}
+				
+				killLocalGlobals(qStmt);
+				
+				if (qStmt.getDestination().isGlobal()) {
+					this.globalsInBlock.add(qStmt.getDestination());
+				}				
 			} else if (stmt.getClass().equals(CmpStmt.class)) {
 				CmpStmt cStmt = (CmpStmt) stmt;
 				if (cStmt.getArg1().isGlobal()) {
@@ -167,70 +170,118 @@ public class GlobalExplicitLoader {
 		
 		if (this.globalsInBlock.contains(name)) return false;
 		
-		if (this.seenCall) {
-			block.getStatements().add(index, new LoadStmt(name));
-			this.globalsInBlock.add(name);
-			
-			return true;
-		}
-		
 		List<Name> uniqueGlobals = this.df.getUniqueGlobals().get(block.getMethodName());
 		int i = uniqueGlobals.indexOf(name);
 		
 		int predCount = 0;
-		CFGBlock predToChange = null;
 		for (CFGBlock b: block.getPredecessors()) {
 			BlockDataFlowState state = this.df.getCfgBlocksState().get(b);
 			if (!state.getOut().get(i)) {
 				predCount++;
-				predToChange = b;
 			}
 		}
 		
-		if (predCount == block.getPredecessors().size()) { // If all predecessors dont have it
-			block.getStatements().add(index, new LoadStmt(name));
+		if (this.seenCall || 
+				block.getPredecessors().size() == 0 ||
+				predCount != 0) {
+			LoadStmt load = new LoadStmt(name);
+			load.setDepth(block.getStatements().get(index).getDepth()); // set depth
+			load.setBoundCheck(getBoundCheck(name, block, index)); // set bound checks
+			
+			block.getStatements().add(index, load);
+			
 			this.globalsInBlock.add(name);
 			
-			return true;
-		}
-		else if (predToChange != null) {
-			addLoadStmt(name, predToChange, block);
 			return true;
 		}
 		
 		return false;
 	}
 
-	private void addLoadStmt(Name name, CFGBlock block, CFGBlock self) {
-//		if (block.getStatements().get(0).getClass().equals(LabelStmt.class)) {
-//			LabelStmt label = (LabelStmt)block.getStatements().get(0);
-//			if (label.getLabelString().matches(GlobalExplicitLoader.ForTestLabelRegex)) {
-//				block = block.getPredecessors().get(0);
-//			}
-//		}
-		if (block.getStatements().get(0).getClass().equals(JumpStmt.class)) {
-			JumpStmt jmp = (JumpStmt)block.getStatements().get(0);
-			if (jmp.getLabel().getLabelString().matches(GlobalExplicitLoader.IfEndLabelRegex)) {
-				block = block.getPredecessors().get(0);
-			}
-		}
+	private List<LIRStatement> getBoundCheck(Name name, CFGBlock block, int stmtIndex) {
+		if (!name.isArray()) return null;
+				
+		ArrayName arrName = (ArrayName) name;
+		Name index = arrName.getIndex();
 		
-		ArrayList<LIRStatement> newStmts = new ArrayList<LIRStatement>();
+		boolean inBoundCheck = false;
+		boolean inRequiredBC = false;
+		int startIndex = -1;
 		
-		boolean added = false;
-		for (int i = block.getStatements().size()-1; i >=0; i--) {
+		for (int i = stmtIndex; i >= 0; i--) {
 			LIRStatement stmt = block.getStatements().get(i);
-			if (!stmt.getClass().equals(JumpStmt.class) && !stmt.getClass().equals(CmpStmt.class)) {
-				if (!added) {
-					newStmts.add(0, new LoadStmt(name));
-					added = true;
+			
+			if (stmt.getClass().equals(LabelStmt.class)) {
+				LabelStmt lStmt = (LabelStmt)stmt;
+				if (lStmt.getLabelString().matches(ExplicitGlobalLoader.ArrayPassLabelRegex) &&
+						getArrayIDFromArrayLabelStmt(lStmt, "pass").equals(arrName.getId())) {
+					inBoundCheck = true; // Bound check for right array
 				}
 			}
 			
-			newStmts.add(0, stmt);
+			if (!inBoundCheck) continue;
+			
+			if (stmt.getClass().equals(CmpStmt.class)) {
+				CmpStmt cStmt = (CmpStmt) stmt;
+				if (cStmt.getArg1().equals(index) && !inRequiredBC) {
+					inRequiredBC = true;
+				}
+			}
+			
+			if (stmt.getClass().equals(LabelStmt.class)) {
+				LabelStmt lStmt = (LabelStmt)stmt;
+				if (lStmt.getLabelString().matches(ExplicitGlobalLoader.ArrayBeginLabelRegex)) {
+					if (inRequiredBC) {
+						startIndex = i;
+						break;
+					}
+					
+					inBoundCheck = false;
+				}
+			}
 		}
 		
-		block.setStatements(newStmts);
+		List<LIRStatement> stmts = new ArrayList<LIRStatement>();
+		for (int i = startIndex; i < block.getStatements().size(); i++) {
+			LIRStatement stmt = block.getStatements().get(i);			
+			if (stmt.getClass().equals(LabelStmt.class)) {
+				LabelStmt lStmt = (LabelStmt) stmt;
+				
+				stmts.add(getAlternateLabel(lStmt, block.getMethodName()));
+				
+				if (lStmt.getLabelString().matches(ExplicitGlobalLoader.ArrayPassLabelRegex)) {
+					break;
+				}
+				
+				continue;
+			}
+			else if (stmt.getClass().equals(JumpStmt.class)) {
+				JumpStmt jStmt = (JumpStmt) stmt;
+				JumpStmt newJStmt = new JumpStmt(jStmt.getCondition(), getAlternateLabel(jStmt.getLabel(), block.getMethodName()));
+				stmts.add(newJStmt);
+				continue;
+			}
+			
+			stmts.add(block.getStatements().get(i));
+		}
+		
+		ExpressionFlattenerVisitor.MAXBOUNDCHECKS++;
+		
+		return stmts;
+	}
+	
+	private LabelStmt getAlternateLabel(LabelStmt lStmt, String methodName) {
+		if (lStmt.getLabelString().matches(ExplicitGlobalLoader.ArrayPassLabelRegex)) {
+			return new LabelStmt(getArrayBoundPass(getArrayIDFromArrayLabelStmt(lStmt, "pass"), methodName));
+		}
+		else if (lStmt.getLabelString().matches(ExplicitGlobalLoader.ArrayBeginLabelRegex)) {
+			return new LabelStmt(getArrayBoundBegin(getArrayIDFromArrayLabelStmt(lStmt, "begin"), methodName));
+		}
+		else if (lStmt.getLabelString().matches(ExplicitGlobalLoader.ArrayFailLabelRegex)) {
+			return new LabelStmt(getArrayBoundFail(getArrayIDFromArrayLabelStmt(lStmt, "fail"), methodName));
+		}
+		
+		return lStmt;
 	}
 
 	public void setGlobalDefAnalyzer(GlobalsDefDFAnalyzer df) {
@@ -239,5 +290,29 @@ public class GlobalExplicitLoader {
 
 	public GlobalsDefDFAnalyzer getDf() {
 		return df;
+	}
+	
+	private String getArrayIDFromArrayLabelStmt(LabelStmt stmt, String end) {
+		String name = stmt.getLabelString();
+      int i = name.indexOf(".array.");
+      name = name.substring(i + 7);
+      
+      name = name.substring(0, name.length() - end.length() - 1);
+      i = name.indexOf(".");
+      name = name.substring(0, i);
+      
+      return name;  
+	}
+	
+	private String getArrayBoundBegin(String name, String methodName) {
+		return methodName + ".array." + name + "." + ExpressionFlattenerVisitor.MAXBOUNDCHECKS + ".begin";
+	}
+	
+	private String getArrayBoundFail(String name, String methodName) {
+		return methodName + ".array." + name + "." + ExpressionFlattenerVisitor.MAXBOUNDCHECKS + ".fail";
+	}
+	
+	private String getArrayBoundPass(String name, String methodName) {
+		return methodName + ".array." + name + "." + ExpressionFlattenerVisitor.MAXBOUNDCHECKS + ".pass";
 	}
 }
