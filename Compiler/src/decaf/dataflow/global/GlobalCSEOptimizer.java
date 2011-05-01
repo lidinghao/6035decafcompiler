@@ -32,7 +32,7 @@ public class GlobalCSEOptimizer {
 	}
 	
 	public void performGlobalCSE() {
-		DynamicVarName.reset();
+		//DynamicVarName.reset();
 		
 		if (availableGenerator.getTotalExpressionStmts() == 0)
 			return;
