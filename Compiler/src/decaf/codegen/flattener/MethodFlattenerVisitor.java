@@ -13,8 +13,6 @@ import decaf.codegen.flatir.LIRStatement;
 import decaf.codegen.flatir.LabelStmt;
 import decaf.codegen.flatir.LeaveStmt;
 import decaf.codegen.flatir.Name;
-import decaf.codegen.flatir.PopStmt;
-import decaf.codegen.flatir.PushStmt;
 import decaf.codegen.flatir.QuadrupletOp;
 import decaf.codegen.flatir.QuadrupletStmt;
 import decaf.codegen.flatir.Register;
@@ -231,11 +229,11 @@ public class MethodFlattenerVisitor implements ASTVisitor<Integer> {
 				new ConstantName(1)));
 		this.statements.add(new JumpStmt(JumpCondOp.NONE, new LabelStmt(
 				getForTest())));
+		
+		MethodFlattenerVisitor.DEPTH--;
 
 		// End block
 		this.statements.add(new LabelStmt(getForEnd()));
-		
-		MethodFlattenerVisitor.DEPTH--;
 
 		currentForId = oldForId; // Return to parent for loop (if any)
 

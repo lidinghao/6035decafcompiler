@@ -1,14 +1,17 @@
 package decaf.codegen.flatir;
 
 import java.io.PrintStream;
+import java.util.List;
 
 public class LoadStmt extends LIRStatement {
 	private Name variable;
 	private int myId;
+	private List<LIRStatement> boundCheck;
 
 	public LoadStmt(Name variable) {
 		this.setVariable(variable);
 		this.myId = -1;
+		this.setBoundCheck(null);
 	}
 
 	public void setVariable(Name variable) {
@@ -30,7 +33,7 @@ public class LoadStmt extends LIRStatement {
 	
 	@Override
 	public int hashCode() {
-		return  this.toString().hashCode() + 17 * this.variable.hashCode() + 13 * this.myId;//this.toString().hashCode();
+		return  this.toString().hashCode() + 17 * this.variable.hashCode() + 13 * this.myId;
 	}
 	
 	@Override
@@ -71,5 +74,13 @@ public class LoadStmt extends LIRStatement {
 	public void setMyId() {
 		this.myId = QuadrupletStmt.getID();
 		QuadrupletStmt.setID(this.myId+1);
+	}
+
+	public void setBoundCheck(List<LIRStatement> boundCheck) {
+		this.boundCheck = boundCheck;
+	}
+
+	public List<LIRStatement> getBoundCheck() {
+		return boundCheck;
 	}
 }
