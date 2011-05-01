@@ -62,7 +62,7 @@ public class GlobalCSEOptimizer {
 	}
 	
 	private void initializeTemporaryMap(String method) {
-		DynamicVarName.reset();
+		//DynamicVarName.reset();
 		List<AvailableExpression> availExprs = 
 			availableGenerator.getMethodExpressions().get(method);
 		if (availExprs != null) {
