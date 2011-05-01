@@ -33,6 +33,7 @@ public class CFGBuilder {
 	
 	public void generateCFGs() {
 		// Select leaders
+		le.setMergeBoundChecks(this.mergeBoundChecks);
 		le.electLeaders();
 		
 		cfgMap.clear();
@@ -129,11 +130,14 @@ public class CFGBuilder {
 	}
 
 	public void setMergeBoundChecks(boolean mergeBoundChecks) {
-		this.le.setMergeBoundChecks(mergeBoundChecks);
 		this.mergeBoundChecks = mergeBoundChecks;
 	}
 
 	public boolean isMergeBoundChecks() {
 		return mergeBoundChecks;
+	}
+
+	public LeaderElector getLeaderElector() {
+		return le;
 	}
 }
