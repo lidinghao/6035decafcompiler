@@ -32,6 +32,8 @@ public class GlobalCSEOptimizer {
 	}
 	
 	public void performGlobalCSE() {
+		DynamicVarName.reset();
+		
 		if (availableGenerator.getTotalExpressionStmts() == 0)
 			return;
 
@@ -62,7 +64,6 @@ public class GlobalCSEOptimizer {
 	}
 	
 	private void initializeTemporaryMap(String method) {
-		//DynamicVarName.reset();
 		List<AvailableExpression> availExprs = 
 			availableGenerator.getMethodExpressions().get(method);
 		if (availExprs != null) {
