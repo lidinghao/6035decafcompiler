@@ -31,7 +31,7 @@ public class BlockCSEOptimizer {
 	}
 	
 	public void performCSE() {
-		DynamicVarName.reset();
+		//DynamicVarName.reset();
 		
 		for (String s: this.mMap.keySet()) {
 			if (s.equals(ProgramFlattener.exceptionHandlerLabel)) continue;
@@ -90,6 +90,8 @@ public class BlockCSEOptimizer {
 	}
 
 	private void processStatement(QuadrupletStmt qStmt, List<LIRStatement> newStmts) {
+		if (qStmt.getOperator() == QuadrupletOp.MOVE) return;
+		
 		ValueExpr expr = getValueExpression(qStmt);
 		SymbolicValue dest;
 		
