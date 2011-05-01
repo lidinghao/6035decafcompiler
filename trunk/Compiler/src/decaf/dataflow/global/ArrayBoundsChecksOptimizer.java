@@ -296,151 +296,151 @@ public class ArrayBoundsChecksOptimizer {
 		}
 	}
 	
-	// Assumes the block is an array pass block
-	private void optimize(CFGBlock block) {
-		// If the second statement is not a another array begin label, then we try to optimize
-		LIRStatement stmt = block.getStatements().get(1);
-		if (stmt != null) {
-			if (stmt.getClass().equals(LabelStmt.class)) {
-				// Get block's label
-				tempBlocksToCheck.add(block);
-				// The next block to look for
-				nextArrPassLabelStmt = getArrayIDFromArrayLabelStmt((LabelStmt)stmt);
-				cfgBlocksToProcess.remove(block);
-			}
-		} else {
-			// Remove this check, there is nothing after it
-			LabelStmt arrPassLabel = (LabelStmt)(block.getStatements().get(0));
-			arrLabelsToRemove.add(getArrayIDFromArrayLabelStmt(arrPassLabel));
-			cfgBlocksToProcess.remove(block);
-			tempBlocksToCheck.clear();
-			nextArrPassLabelStmt = null;
-		}
-		// Optimize push, pop, cmp, quadruplet statements
-		// If the statement contains multiple array bounds checks (e.g a[i] = a[j] + a[k]),
-		// 	we will see this statement after the a[k] array bounds check
-		// tempArrLabelsToRemove list will contain [ID label corresponding to 
-		// 	a[i] checks, ID label corresponding to a[j] checks]
-		// tempBlocksToCheck list will contain [array pass block for a[i] check, 
-		// 	array pass block for a[j] check]
-		
-		// Optimize
-		Name dest, arg1, arg2;
-		int numOptimizationsPossible = 0;
-		if (stmt.getClass().equals(PushStmt.class)) {
-			arg1 = ((PushStmt)stmt).getName();
-			// arg1 has to be ArrayName, so single optimization is possible
-			numOptimizationsPossible = 1;
-			tryToRemoveArrayCheck(block, arg1);
-		} else if (stmt.getClass().equals(PopStmt.class)) {
-			arg1 = ((PopStmt)stmt).getName();
-			// arg1 has to be ArrayName, so single optimization is possible
-			numOptimizationsPossible = 1;
-			tryToRemoveArrayCheck(block, arg1);
-		} else if (stmt.getClass().equals(CmpStmt.class)) {
-			arg1 = ((CmpStmt)stmt).getArg1();
-			arg2 = ((CmpStmt)stmt).getArg2();
-			if (arg1.getClass().equals(ArrayName.class)) {
-				if (arg2.getClass().equals(ArrayName.class)) {
-					// Both arg1 and arg2 are ArrayName, so double optimization possible
-					numOptimizationsPossible = 2;
-					tryToRemoveArrayCheck(tempBlocksToCheck.get(0), arg1);
-					tryToRemoveArrayCheck(block, arg2);
-				} else {
-					// Only arg1 is ArrayName, so single optimization is possible
-					numOptimizationsPossible = 1;
-					tryToRemoveArrayCheck(block, arg1);
-				}
-			} else {
-				// Only arg2 is ArrayName, so single optimization is possible
-				tryToRemoveArrayCheck(block, arg2);
-			}
-		} else if (stmt.getClass().equals(QuadrupletStmt.class)) {
-			dest = ((QuadrupletStmt)stmt).getDestination();
-			arg1 = ((QuadrupletStmt)stmt).getArg1();
-			arg2 = ((QuadrupletStmt)stmt).getArg2();
-			if (dest.getClass().equals(ArrayName.class)) {
-				if (arg1.getClass().equals(ArrayName.class)) {
-					if (arg2.getClass().equals(ArrayName.class)) {
-						// All dest, arg1, and arg2 are ArrayName, so triple optimization possible
-						numOptimizationsPossible = 3;
-						tryToRemoveArrayCheck(tempBlocksToCheck.get(0), dest);
-						tryToRemoveArrayCheck(tempBlocksToCheck.get(1), arg1);
-						tryToRemoveArrayCheck(block, arg2);
-					} else {
-						// Only dest, arg1 are ArrayName, so double optimization possible
-						numOptimizationsPossible = 2;
-						tryToRemoveArrayCheck(tempBlocksToCheck.get(0), dest);
-						tryToRemoveArrayCheck(block, arg1);
-					}
-				} else {
-					if (arg2.getClass().equals(ArrayName.class)) {
-						// Only dest, arg2 are ArrayName, so double optimization possible
-						numOptimizationsPossible = 2;
-						tryToRemoveArrayCheck(tempBlocksToCheck.get(0), dest);
-						tryToRemoveArrayCheck(block, arg2);
-					} else {
-						// Only dest is ArrayName, so single optimization  is possible
-						numOptimizationsPossible = 1;
-						tryToRemoveArrayCheck(block, dest);
-					}
-				}
-			} else {
-				if (arg1.getClass().equals(ArrayName.class)) {
-					if (arg2.getClass().equals(ArrayName.class)) {
-						// arg1, and arg2 are ArrayName, so double optimization possible
-						numOptimizationsPossible = 2;
-						tryToRemoveArrayCheck(tempBlocksToCheck.get(0), arg1);
-						tryToRemoveArrayCheck(block, arg2);
-					} else {
-						// Only arg1 is ArrayName, so single optimization is possible
-						numOptimizationsPossible = 1;
-						tryToRemoveArrayCheck(block, arg1);
-					}
-				} else {
-					// Only arg2 is ArrayName, so single optimization is possible
-					numOptimizationsPossible = 1;
-					tryToRemoveArrayCheck(block, arg2);
-				}
-			}
-		}
-		// If there are more tempBlocksToCheck than optimizations possible, then there
-		//		are extraneous blocks that can be removed starting from the earliest block
-		if (tempBlocksToCheck.size() > numOptimizationsPossible-1) {
-			for (int i = 0; i < tempBlocksToCheck.size() - numOptimizationsPossible + 1; i++) {
-				LabelStmt arrPassLabel = (LabelStmt)(tempBlocksToCheck.get(i).getStatements().get(0));
-				arrLabelsToRemove.add(getArrayIDFromArrayLabelStmt(arrPassLabel));
-			}
-		}
-		// Remove current block
-		cfgBlocksToProcess.remove(block);
-		tempBlocksToCheck.clear();
-		nextArrPassLabelStmt = null;
-	}
-	
-	private void tryToRemoveArrayCheck(CFGBlock block, Name arg) {
-		BlockDataFlowState bFlow = blockArrIndexDefs.get(block);
-		int bitId = arrNameToVar.get((ArrayName)arg).getMyId();
-		if (bFlow.getIn().get(bitId)) {
-			// Array bounds have been checked before
-			LabelStmt arrPassLabel = (LabelStmt)block.getStatements().get(0);
-			arrLabelsToRemove.add(getArrayIDFromArrayLabelStmt(arrPassLabel));
-		}
-	}
-	
-	// Returns true if this block's first statement is an array pass label
-	// Returns false otherwise
-	private boolean isArrayPassBlock(CFGBlock block) {
-		LIRStatement stmt = block.getStatements().get(0);
-		if (stmt != null) {
-			if (stmt.getClass().equals(LabelStmt.class)) {
-				if (((LabelStmt)stmt).getLabelString().matches(ArrayPassLabelRegex)) {
-					return true;
-				}
-			}
-		}
-		return false;
-	}
+//	// Assumes the block is an array pass block
+//	private void optimize(CFGBlock block) {
+//		// If the second statement is not a another array begin label, then we try to optimize
+//		LIRStatement stmt = block.getStatements().get(1);
+//		if (stmt != null) {
+//			if (stmt.getClass().equals(LabelStmt.class)) {
+//				// Get block's label
+//				tempBlocksToCheck.add(block);
+//				// The next block to look for
+//				nextArrPassLabelStmt = getArrayIDFromArrayLabelStmt((LabelStmt)stmt);
+//				cfgBlocksToProcess.remove(block);
+//			}
+//		} else {
+//			// Remove this check, there is nothing after it
+//			LabelStmt arrPassLabel = (LabelStmt)(block.getStatements().get(0));
+//			arrLabelsToRemove.add(getArrayIDFromArrayLabelStmt(arrPassLabel));
+//			cfgBlocksToProcess.remove(block);
+//			tempBlocksToCheck.clear();
+//			nextArrPassLabelStmt = null;
+//		}
+//		// Optimize push, pop, cmp, quadruplet statements
+//		// If the statement contains multiple array bounds checks (e.g a[i] = a[j] + a[k]),
+//		// 	we will see this statement after the a[k] array bounds check
+//		// tempArrLabelsToRemove list will contain [ID label corresponding to 
+//		// 	a[i] checks, ID label corresponding to a[j] checks]
+//		// tempBlocksToCheck list will contain [array pass block for a[i] check, 
+//		// 	array pass block for a[j] check]
+//		
+//		// Optimize
+//		Name dest, arg1, arg2;
+//		int numOptimizationsPossible = 0;
+//		if (stmt.getClass().equals(PushStmt.class)) {
+//			arg1 = ((PushStmt)stmt).getName();
+//			// arg1 has to be ArrayName, so single optimization is possible
+//			numOptimizationsPossible = 1;
+//			tryToRemoveArrayCheck(block, arg1);
+//		} else if (stmt.getClass().equals(PopStmt.class)) {
+//			arg1 = ((PopStmt)stmt).getName();
+//			// arg1 has to be ArrayName, so single optimization is possible
+//			numOptimizationsPossible = 1;
+//			tryToRemoveArrayCheck(block, arg1);
+//		} else if (stmt.getClass().equals(CmpStmt.class)) {
+//			arg1 = ((CmpStmt)stmt).getArg1();
+//			arg2 = ((CmpStmt)stmt).getArg2();
+//			if (arg1.getClass().equals(ArrayName.class)) {
+//				if (arg2.getClass().equals(ArrayName.class)) {
+//					// Both arg1 and arg2 are ArrayName, so double optimization possible
+//					numOptimizationsPossible = 2;
+//					tryToRemoveArrayCheck(tempBlocksToCheck.get(0), arg1);
+//					tryToRemoveArrayCheck(block, arg2);
+//				} else {
+//					// Only arg1 is ArrayName, so single optimization is possible
+//					numOptimizationsPossible = 1;
+//					tryToRemoveArrayCheck(block, arg1);
+//				}
+//			} else {
+//				// Only arg2 is ArrayName, so single optimization is possible
+//				tryToRemoveArrayCheck(block, arg2);
+//			}
+//		} else if (stmt.getClass().equals(QuadrupletStmt.class)) {
+//			dest = ((QuadrupletStmt)stmt).getDestination();
+//			arg1 = ((QuadrupletStmt)stmt).getArg1();
+//			arg2 = ((QuadrupletStmt)stmt).getArg2();
+//			if (dest.getClass().equals(ArrayName.class)) {
+//				if (arg1.getClass().equals(ArrayName.class)) {
+//					if (arg2.getClass().equals(ArrayName.class)) {
+//						// All dest, arg1, and arg2 are ArrayName, so triple optimization possible
+//						numOptimizationsPossible = 3;
+//						tryToRemoveArrayCheck(tempBlocksToCheck.get(0), dest);
+//						tryToRemoveArrayCheck(tempBlocksToCheck.get(1), arg1);
+//						tryToRemoveArrayCheck(block, arg2);
+//					} else {
+//						// Only dest, arg1 are ArrayName, so double optimization possible
+//						numOptimizationsPossible = 2;
+//						tryToRemoveArrayCheck(tempBlocksToCheck.get(0), dest);
+//						tryToRemoveArrayCheck(block, arg1);
+//					}
+//				} else {
+//					if (arg2.getClass().equals(ArrayName.class)) {
+//						// Only dest, arg2 are ArrayName, so double optimization possible
+//						numOptimizationsPossible = 2;
+//						tryToRemoveArrayCheck(tempBlocksToCheck.get(0), dest);
+//						tryToRemoveArrayCheck(block, arg2);
+//					} else {
+//						// Only dest is ArrayName, so single optimization  is possible
+//						numOptimizationsPossible = 1;
+//						tryToRemoveArrayCheck(block, dest);
+//					}
+//				}
+//			} else {
+//				if (arg1.getClass().equals(ArrayName.class)) {
+//					if (arg2.getClass().equals(ArrayName.class)) {
+//						// arg1, and arg2 are ArrayName, so double optimization possible
+//						numOptimizationsPossible = 2;
+//						tryToRemoveArrayCheck(tempBlocksToCheck.get(0), arg1);
+//						tryToRemoveArrayCheck(block, arg2);
+//					} else {
+//						// Only arg1 is ArrayName, so single optimization is possible
+//						numOptimizationsPossible = 1;
+//						tryToRemoveArrayCheck(block, arg1);
+//					}
+//				} else {
+//					// Only arg2 is ArrayName, so single optimization is possible
+//					numOptimizationsPossible = 1;
+//					tryToRemoveArrayCheck(block, arg2);
+//				}
+//			}
+//		}
+//		// If there are more tempBlocksToCheck than optimizations possible, then there
+//		//		are extraneous blocks that can be removed starting from the earliest block
+//		if (tempBlocksToCheck.size() > numOptimizationsPossible-1) {
+//			for (int i = 0; i < tempBlocksToCheck.size() - numOptimizationsPossible + 1; i++) {
+//				LabelStmt arrPassLabel = (LabelStmt)(tempBlocksToCheck.get(i).getStatements().get(0));
+//				arrLabelsToRemove.add(getArrayIDFromArrayLabelStmt(arrPassLabel));
+//			}
+//		}
+//		// Remove current block
+//		cfgBlocksToProcess.remove(block);
+//		tempBlocksToCheck.clear();
+//		nextArrPassLabelStmt = null;
+//	}
+//	
+//	private void tryToRemoveArrayCheck(CFGBlock block, Name arg) {
+//		BlockDataFlowState bFlow = blockArrIndexDefs.get(block);
+//		int bitId = arrNameToVar.get((ArrayName)arg).getMyId();
+//		if (bFlow.getIn().get(bitId)) {
+//			// Array bounds have been checked before
+//			LabelStmt arrPassLabel = (LabelStmt)block.getStatements().get(0);
+//			arrLabelsToRemove.add(getArrayIDFromArrayLabelStmt(arrPassLabel));
+//		}
+//	}
+//	
+//	// Returns true if this block's first statement is an array pass label
+//	// Returns false otherwise
+//	private boolean isArrayPassBlock(CFGBlock block) {
+//		LIRStatement stmt = block.getStatements().get(0);
+//		if (stmt != null) {
+//			if (stmt.getClass().equals(LabelStmt.class)) {
+//				if (((LabelStmt)stmt).getLabelString().matches(ArrayPassLabelRegex)) {
+//					return true;
+//				}
+//			}
+//		}
+//		return false;
+//	}
 	
 	// ARRAY BOUNDS CHECKS DEAD CODE REMOVAL
 	
