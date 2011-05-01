@@ -90,8 +90,6 @@ public class BlockCSEOptimizer {
 	}
 
 	private void processStatement(QuadrupletStmt qStmt, List<LIRStatement> newStmts) {
-		if (qStmt.getOperator() == QuadrupletOp.MOVE) return;
-		
 		ValueExpr expr = getValueExpression(qStmt);
 		SymbolicValue dest;
 		
