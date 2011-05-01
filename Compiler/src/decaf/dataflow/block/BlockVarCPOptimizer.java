@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import decaf.codegen.flatir.ArrayName;
 import decaf.codegen.flatir.CallStmt;
 import decaf.codegen.flatir.CmpStmt;
 import decaf.codegen.flatir.LIRStatement;
@@ -116,7 +117,7 @@ public class BlockVarCPOptimizer {
 			qStmt.setArg1(newArg1);
 			
 			resetVariable(dest);
-			if (!newArg1.getClass().equals(RegisterName.class) && !newArg1.isArray()) { // Dont CP ArrayName
+			if (!newArg1.getClass().equals(RegisterName.class)) { // Dont CP RegisterName!
 				this.varToVar.put(dest, newArg1);
 			}
 		} else {
@@ -143,12 +144,30 @@ public class BlockVarCPOptimizer {
 	private void resetVariable(Name name) {
 		if (name == null) return;
 		
-		this.varToVar.remove(name);	
+		this.varToVar.remove(name);
 		
 		List<Name> varsToRemove = new ArrayList<Name>();
 		for (Name key: this.varToVar.keySet()) {
 			if (this.varToVar.get(key).equals(name)) {
 				varsToRemove.add(key);
+			}
+		}
+		
+		for (Name n: varsToRemove) {
+			this.varToVar.remove(n);
+		}
+		
+		varsToRemove.clear();
+		
+		if (name.isArray()) {
+			ArrayName arrName = (ArrayName) name;
+			for (Name var: this.varToVar.keySet()) {
+				if (this.varToVar.get(var).isArray()) { // For any index assignment, remove all associations like a = ArrayId[index]
+					ArrayName vArray = (ArrayName) this.varToVar.get(var);
+					if (arrName.getId().equals(vArray.getId())) {
+						varsToRemove.add(var);
+					}
+				}
 			}
 		}
 		
