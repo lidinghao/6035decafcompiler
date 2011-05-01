@@ -59,8 +59,13 @@ public class BlockTempDCOptimizer {
 			
 			// If assigning to a required Name
 			if (dest.getClass().equals(DynamicVarName.class)) {
-				if (!neededSet.contains(dest)) {
-					continue;
+				DynamicVarName dVar = (DynamicVarName) dest;
+				
+				// Dont mess with DynamicVarNames that are gtmp
+				if (!dVar.isForGlobal()) {
+					if (!neededSet.contains(dest)) {
+						continue;
+					}
 				}
 			}
 
