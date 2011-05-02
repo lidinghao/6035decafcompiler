@@ -4,9 +4,11 @@ import java.io.PrintStream;
 
 public class StoreStmt extends LIRStatement {
 	private Name variable;
+	private int myId;
 
 	public StoreStmt(Name variable) {
 		this.setVariable(variable);
+		this.myId = -1;
 	}
 
 	public void setVariable(Name variable) {
@@ -28,7 +30,7 @@ public class StoreStmt extends LIRStatement {
 	
 	@Override
 	public int hashCode() {
-		return this.toString().hashCode() + 17 * this.variable.hashCode();
+		return this.toString().hashCode() + 17 * this.variable.hashCode() + 13 * this.myId;
 	}
 	
 	@Override
@@ -59,5 +61,14 @@ public class StoreStmt extends LIRStatement {
 	@Override
 	public Object clone() {
 		return new StoreStmt(this.variable);
+	}
+
+	public void setMyId() {
+		this.myId = QuadrupletStmt.getID();
+		QuadrupletStmt.setID(this.myId+1);
+	}
+
+	public int getMyId() {
+		return myId;
 	}
 }
