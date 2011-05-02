@@ -4,8 +4,8 @@ class Program {
 	void main() {
 		int b, c;
 		c = b + 4; // no dead code!
-		a[c] = b + 5; // dead code!
-		b = 3; // no dead code!
+		a[c] = b + 5; // no dead code! (c could equal b)
+ 		b = 3; // no dead code!
 		a[c] = a[b] + c; // no dead code!
 	}
 }
