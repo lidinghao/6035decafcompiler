@@ -15,6 +15,7 @@ import decaf.dataflow.global.BoundCheckCSEOptimizer;
 import decaf.dataflow.global.BoundCheckDFAnalyzer;
 import decaf.dataflow.global.GlobalCSEOptimizer;
 import decaf.dataflow.global.GlobalOptimizer;
+import decaf.dataflow.global.LoopOptimizer;
 import decaf.ir.ast.ClassDecl;
 import decaf.ir.semcheck.*;
 import decaf.ralloc.ExplicitGlobalLoadOptimizer;
@@ -140,6 +141,7 @@ class Main {
 				// Generate CFGs for methods
 				CFGBuilder cb = new CFGBuilder(pf.getLirMap());
 				cb.generateCFGs();
+
 				
 				HashMap<String, MethodIR> mMap = MethodIR.generateMethodIRs(pf, cb);
 				
@@ -191,6 +193,7 @@ class Main {
 					}
 				}
 				
+				
 				BoundCheckCSEOptimizer bc = new BoundCheckCSEOptimizer(mMap);
 				bc.performCSE();
 				System.out.println(bc.getBCAnalyzer().getUniqueIndices().get("main"));
@@ -201,6 +204,12 @@ class Main {
 						System.out.println();
 					}
 				}
+				
+				
+				System.out.println();
+				LoopOptimizer loopOptimizer = new LoopOptimizer(mMap);
+				loopOptimizer.performLoopOptimization();
+				System.out.println();
 				
 				//cb.printCFG(System.out);
 				

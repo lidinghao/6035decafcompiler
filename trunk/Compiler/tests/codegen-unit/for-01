@@ -1,8 +1,15 @@
 class Program {
 	void main() {
-		int i;
+		int j;
+		int k;
 		for i = 0, 10 {
-			callout("printf","%d\n",i);
+			k = 5;	
+			j = 1;
+			j = j + i;
+			
 		}
+		callout("printf","%d\n",k);		
+		
 	}
+	
 }	
