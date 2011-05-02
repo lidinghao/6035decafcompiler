@@ -32,6 +32,8 @@ public class BlockLivenessGenerator {
 	// List of Variable IDs which correspond to global names
 	private List<Integer> globalVarIDs;
 	private int totalVars;
+	private HashMap<Integer, Variable> intToVar;
+	
 	
 	public BlockLivenessGenerator(HashMap<String, MethodIR> mMap) {
 		this.mMap = mMap;
@@ -41,6 +43,7 @@ public class BlockLivenessGenerator {
 		nameToVar = new HashMap<Name, Variable>();
 		nameToArrNames = new HashMap<Name, List<ArrayName>>();
 		totalVars = 0;
+		setIntToVar(new HashMap<Integer, Variable>());
 	}
 	
 	public void generate() {
@@ -131,7 +134,9 @@ public class BlockLivenessGenerator {
 					if (dest != null) {
 						// Update the Name to Variable map
 						if (!nameToVar.containsKey(dest)) {
-							nameToVar.put(dest, new Variable(dest));
+							Variable destVar = new Variable(dest);
+							getIntToVar().put(destVar.getMyId(), destVar);
+							nameToVar.put(dest, destVar);
 							updateGlobalVarIDs(dest);
 							if (dest.getClass().equals(ArrayName.class)) {
 								// Update the index to ArrayName map
@@ -146,13 +151,17 @@ public class BlockLivenessGenerator {
 					}
 					if (arg1 != null) {
 						if (!nameToVar.containsKey(arg1)) {
-							nameToVar.put(arg1, new Variable(arg1));
+							Variable arg1Var = new Variable(arg1);
+							getIntToVar().put(arg1Var.getMyId(), arg1Var);
+							nameToVar.put(arg1, arg1Var);
 							updateGlobalVarIDs(arg1);
 						}
 					}
 					if (arg2 != null) {
 						if (!nameToVar.containsKey(arg2)) {
-							nameToVar.put(arg2, new Variable(arg2));
+							Variable arg2Var = new Variable(arg2);
+							getIntToVar().put(arg2Var.getMyId(), arg2Var);
+							nameToVar.put(arg2, arg2Var);
 							updateGlobalVarIDs(arg2);
 						}
 					}
@@ -386,5 +395,13 @@ public class BlockLivenessGenerator {
 
 	public void setGlobalVarIDs(List<Integer> globalVarIDs) {
 		this.globalVarIDs = globalVarIDs;
+	}
+
+	public void setIntToVar(HashMap<Integer, Variable> intToVar) {
+		this.intToVar = intToVar;
+	}
+
+	public HashMap<Integer, Variable> getIntToVar() {
+		return intToVar;
 	}
 }

@@ -1,0 +1,53 @@
+// $ANTLR 2.7.7 (2006-11-01): Lexer.g -> DecafScannerTokenTypes.txt$
+DecafScanner    // output token vocab name
+TK_class="class"=4
+TK_if="if"=5
+TK_else="else"=6
+TK_for="for"=7
+TK_return="return"=8
+TK_break="break"=9
+TK_continue="continue"=10
+TK_callout="callout"=11
+TK_true="true"=12
+TK_false="false"=13
+TK_int="int"=14
+TK_boolean="boolean"=15
+TK_void="void"=16
+LCURLY("{")=17
+RCURLY("}")=18
+LPAREN("(")=19
+RPAREN(")")=20
+LSQUARE("[")=21
+RSQUARE("]")=22
+WS_("whitespace")=23
+SL_COMMENT("comment")=24
+STRING("string literal")=25
+CHAR("char literal")=26
+COMMA("comma")=27
+SEMI("semicolon")=28
+PLUS("plus sign")=29
+MINUS("minus sign")=30
+MULDIV("mul or div operation")=31
+MOD("modulus operation")=32
+ASSIGNPLUSEQ=33
+ASSIGNMINUSEQ=34
+ASSIGNEQ=35
+LESS=36
+MORE=37
+LEQ=38
+GEQ=39
+CEQ=40
+NEQ=41
+AND=42
+OR=43
+NOT=44
+ID("identifier")=45
+INTLIT("integer literal")=46
+ESC=47
+VALIDCHARS=48
+ALPHA=49
+DIGIT=50
+HEX_DIGIT=51
+ALPHA_NUM=52
+DECIMAL=53
+HEX=54
