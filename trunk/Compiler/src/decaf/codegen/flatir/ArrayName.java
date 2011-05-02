@@ -51,12 +51,16 @@ public class ArrayName extends Name {
 	
 	@Override 
 	public boolean equals(Object name) {
+		if (name == null) return false;
 		if (this == name) return true;
 		if (!name.getClass().equals(ArrayName.class)) return false;
 		
 		ArrayName aName = (ArrayName)name;
 		
-		return this.hashString().equals(aName.hashString());
+		if (!this.id.equals(aName.id)) return false;
+		if (!this.index.equals(aName.index)) return false;
+		
+		return true;
 	}
 	
 	@Override
