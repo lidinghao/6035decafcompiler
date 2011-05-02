@@ -2,7 +2,6 @@ package decaf;
 
 import java.io.*;
 import java.util.HashMap;
-import java.util.List;
 
 import decaf.codegen.flattener.CodeGenerator;
 import decaf.codegen.flattener.LocationResolver;
@@ -10,12 +9,16 @@ import decaf.codegen.flattener.ProgramFlattener;
 import decaf.dataflow.block.BlockOptimizer;
 import decaf.dataflow.cfg.CFGBlock;
 import decaf.dataflow.cfg.CFGBuilder;
+import decaf.dataflow.cfg.CFGDataflowOptimizer;
 import decaf.dataflow.cfg.MethodIR;
+import decaf.dataflow.global.BoundCheckCSEOptimizer;
+import decaf.dataflow.global.BoundCheckDFAnalyzer;
 import decaf.dataflow.global.GlobalCSEOptimizer;
 import decaf.dataflow.global.GlobalOptimizer;
 import decaf.ir.ast.ClassDecl;
 import decaf.ir.semcheck.*;
-import decaf.ralloc.GlobalExplicitLoader;
+import decaf.ralloc.ExplicitGlobalLoadOptimizer;
+import decaf.ralloc.ExplicitGlobalLoader;
 import decaf.ralloc.GlobalsDefDFAnalyzer;
 import decaf.ralloc.Web;
 import decaf.ralloc.WebGenerator;
@@ -136,59 +139,48 @@ class Main {
 				
 				// Generate CFGs for methods
 				CFGBuilder cb = new CFGBuilder(pf.getLirMap());
-				HashMap<String, List<CFGBlock>> cfgMap = cb.generateCFGs();
+				cb.generateCFGs();
 				
-				HashMap<String, MethodIR> mMap = MethodIR.generateMethodIRs(pf, cfgMap);
+				HashMap<String, MethodIR> mMap = MethodIR.generateMethodIRs(pf, cb);
 				
 				if (CLI.opts[0] || CLI.opts[1] || CLI.opts[2] || CLI.opts[3] || CLI.opts[4]) {
 					if (CLI.debug) {
 						cb.printCFG(System.out);
 					}
 					
-					// Block optimizations
+					System.out.println("BEFORE CFG DATAFLOW OPTIMIZATIONS");
+					pf.printLIR(System.out);
+					System.out.println();
+					cb.printCFG(System.out);
+					System.out.println();
+					
 					BlockOptimizer bo = new BlockOptimizer(mMap);
-					bo.optimizeBlocks(CLI.opts);
-					
-					if (CLI.debug) {
-						System.out.println("\nAFTER LOCAL OPTIMIZATIONS: \n");
-						pf.printLIR(System.out);
-						System.out.println();
-					}
-					
-					// Global optimizations
 					GlobalOptimizer go = new GlobalOptimizer(mMap);
-					go.optimizeBlocks(CLI.opts);
+					CFGDataflowOptimizer cfgdo = new CFGDataflowOptimizer(mMap, pf, bo, go, CLI.opts);
+					cfgdo.optimizeCFGDataflow();
 					
-					if (CLI.debug) {
-						System.out.println("\nAFTER GLOBAL OPTIMIZATIONS: \n");
-						GlobalCSEOptimizer globalCSE = go.getCse();
-						globalCSE.getAvailableGenerator().printBlocksAvailableExpressions(System.out);
-						System.out.println();
-						globalCSE.printExprToTemp(System.out);
-						System.out.println();
-						pf.printLIR(System.out);
-						System.out.println();
-						cb.printCFG(System.out);
-						System.out.println();
-					}
+					System.out.println("AFTER CFG DATAFLOW OPTIMIZATIONS");
+					pf.printLIR(System.out);
+					System.out.println();
+					cb.printCFG(System.out);
 				} 
 				
 				// Resolve names to locations (and sets stack size)
 				LocationResolver lr = new LocationResolver(pf, cd);
 				lr.resolveLocations();
 				
-				pf.printLIR(System.out);
-				
 				// Merge bound checks in CFG
 				cb.setMergeBoundChecks(true);
-				cfgMap = cb.generateCFGs();
-				mMap = MethodIR.generateMethodIRs(pf, cfgMap);
+				cb.generateCFGs();
+				mMap = MethodIR.generateMethodIRs(pf, cb);
 				
-				GlobalExplicitLoader gl = new GlobalExplicitLoader(mMap);
+				ExplicitGlobalLoader gl = new ExplicitGlobalLoader(mMap);
 				gl.execute();
 				
-				GlobalsDefDFAnalyzer gDef = gl.getDf();
-//				GlobalsDefDFAnalyzer gDef = new GlobalsDefDFAnalyzer(mMap);
+				ExplicitGlobalLoadOptimizer glo = new ExplicitGlobalLoadOptimizer(mMap);
+				glo.execute();
+				
+				GlobalsDefDFAnalyzer gDef = glo.getDf();
 				gDef.analyze();
 				System.out.println(gDef.getUniqueGlobals().get("main"));
 				for (CFGBlock blk: cb.getCfgMap().get("main")) {
@@ -199,11 +191,24 @@ class Main {
 					}
 				}
 				
-				WebGenerator wg = new WebGenerator(mMap);
-				wg.generateWebs();
-				for (Web w: wg.getWebMap().get("main")) {
-					//System.out.println(w + "\n");
+				BoundCheckCSEOptimizer bc = new BoundCheckCSEOptimizer(mMap);
+				bc.performCSE();
+				System.out.println(bc.getBCAnalyzer().getUniqueIndices().get("main"));
+				for (CFGBlock blk: cb.getCfgMap().get("main")) {
+					if (bc.getBCAnalyzer().getCfgBlocksState().containsKey(blk)) {
+						System.out.println(blk);
+						System.out.println(bc.getBCAnalyzer().getCfgBlocksState().get(blk));
+						System.out.println();
+					}
 				}
+				
+				//cb.printCFG(System.out);
+				
+//				WebGenerator wg = new WebGenerator(mMap);
+//				wg.generateWebs();
+//				for (Web w: wg.getWebMap().get("main")) {
+//					System.out.println(w + "\n");
+//				}
 				
 				if (CLI.debug) {
 					System.out.println("Name -> Locations Mapping:");
