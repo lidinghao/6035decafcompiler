@@ -139,7 +139,7 @@ public class BoundCheckDFAnalyzer {
 						temp.add(new BoundCheckDef(arrName));
 					}
 					if (qStmt.getArg2() != null && qStmt.getArg2().isArray()) {
-						ArrayName arrName = (ArrayName) qStmt.getArg1();
+						ArrayName arrName = (ArrayName) qStmt.getArg2();
 						temp.add(new BoundCheckDef(arrName));
 					}
 				}

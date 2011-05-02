@@ -8,8 +8,7 @@ public class GlobalOptimizer {
 	private GlobalCSEOptimizer cse;
 	private GlobalConstantPropagationOptimizer constant;
 	private GlobalCopyPropagationOptimizer copy;
-	private GlobalDeadCodeOptimizer dc;
-	private ArrayBoundsChecksOptimizer ab;
+	private GlobalDeadCodeOptimizer dc;\
 	private HashMap<String, MethodIR> mMap;
 
 	public GlobalOptimizer(HashMap<String, MethodIR> mMap) {

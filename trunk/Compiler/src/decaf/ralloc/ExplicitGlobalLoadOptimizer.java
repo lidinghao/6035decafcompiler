@@ -365,6 +365,8 @@ public class ExplicitGlobalLoadOptimizer {
 		boolean found = false;
 		
 		while (!found) {
+			if (parent.getPredecessors().isEmpty())
+				break;
 			parent = parent.getPredecessors().get(0);
 			LIRStatement stmt = parent.getStatements().get(0);
 			
