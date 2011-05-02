@@ -42,7 +42,7 @@ public class ArrayName extends Name {
 	
 	@Override
 	public int hashCode() {
-		return hashString().hashCode(); // Using forbidden chars
+		return hashString().hashCode() + 13 * this.index.hashCode(); // Using forbidden chars
 	}
 	
 	public String hashString() {
