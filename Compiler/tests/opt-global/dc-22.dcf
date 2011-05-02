@@ -1,0 +1,15 @@
+class Program {
+	int a;
+	
+	void foo() {
+	
+	}
+	
+	void main() {
+		a = 5; // no dead code
+		if (a < 0) {
+			foo();
+		}
+		a = 6; // no dead code
+	}
+}

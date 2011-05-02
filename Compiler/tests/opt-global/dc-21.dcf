@@ -1,0 +1,9 @@
+class Program {
+	int a[10];
+	
+	void main() {
+		int b;
+		a[4] = 5; // no dead code! (the next statement may not execute since the 4 may be out of bounds)
+		a[4] = a[3] + 4; // no dead code!
+	}
+}
