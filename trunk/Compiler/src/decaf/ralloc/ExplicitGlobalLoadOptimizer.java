@@ -8,6 +8,7 @@ import java.util.List;
 import decaf.codegen.flatir.ArrayName;
 import decaf.codegen.flatir.CallStmt;
 import decaf.codegen.flatir.CmpStmt;
+import decaf.codegen.flatir.ConstantName;
 import decaf.codegen.flatir.LIRStatement;
 import decaf.codegen.flatir.LabelStmt;
 import decaf.codegen.flatir.LoadStmt;
@@ -22,6 +23,7 @@ import decaf.dataflow.cfg.MethodIR;
 import decaf.dataflow.global.BlockDataFlowState;
 
 public class ExplicitGlobalLoadOptimizer {
+	private static String ArrayPassLabelRegex = "[a-zA-z_]\\w*.array.[a-zA-z_]\\w*.\\d+.pass";
 	private static String ForTestLabelRegex = "[a-zA-z_]\\w*.for\\d+.test";
 	private static String ForInitLabelRegex = "[a-zA-z_]\\w*.for\\d+.init";
 	private HashMap<String, MethodIR> mMap;
@@ -86,6 +88,34 @@ public class ExplicitGlobalLoadOptimizer {
 			}
 			
 		}
+		
+		addBoundChecksToLoads(methodName);
+	}
+
+	private void addBoundChecksToLoads(String methodName) {
+		for (CFGBlock block: this.mMap.get(methodName).getCfgBlocks()) {
+			for (int i = 0; i < block.getStatements().size(); i++) {
+				LIRStatement stmt = block.getStatements().get(i);
+				
+				if (stmt.getClass().equals(LoadStmt.class)) { // Found load
+					LoadStmt load = (LoadStmt) stmt;
+					if (!load.getVariable().isArray()) continue;
+					
+					boolean addBC = true;
+					LIRStatement prev = block.getStatements().get(i - 1);
+					if (prev.getClass().equals(LabelStmt.class)) {
+						LabelStmt lStmt = (LabelStmt) prev;
+						if (lStmt.getLabelString().matches(ExplicitGlobalLoadOptimizer.ArrayPassLabelRegex)) {
+							addBC = false;
+						}
+					}
+					
+					if (addBC) {
+						block.getStatements().addAll(i, load.getBoundCheck());
+					}
+				}
+			}
+		}
 	}
 
 	private void optimizeLoads(String methodName) {	
@@ -128,7 +158,8 @@ public class ExplicitGlobalLoadOptimizer {
 //					System.out.println();
 //				}
 //			}
-//			System.out.println("+******************************************+");}
+//			System.out.println("+******************************************+");
+//		}
 			
 			if (isGlobalDefStateConsistent(methodName)) {
 				depth--;
@@ -212,6 +243,9 @@ public class ExplicitGlobalLoadOptimizer {
 						return false;
 				}
 			}
+			else if (stmt.getClass().equals(LoadStmt.class)) {
+				this.globalsInBlock.add(((LoadStmt)stmt).getVariable());
+			}
 			else if (stmt.getClass().equals(CallStmt.class)) {
 				if (((CallStmt)stmt).getMethodLabel().equals(ProgramFlattener.exceptionHandlerLabel)) continue;
 				this.globalsInBlock.clear();
@@ -256,9 +290,34 @@ public class ExplicitGlobalLoadOptimizer {
 		HashSet<Name> remove = new HashSet<Name>();
 		for (Name name: this.globalsInBlock) {
 			if (name.isArray()) {
-				ArrayName array = (ArrayName) name;
-				if (array.getIndex().equals(qStmt.getDestination())) {
-					remove.add(array);
+				boolean resetName = false;
+				
+				if (name.isArray()) {
+					Name myName = name;
+					
+					do {
+						ArrayName array = (ArrayName) myName;
+						if (array.getIndex().equals(qStmt.getDestination())) { // Index being reassigned, KILL!
+							resetName = true;
+						}
+						
+						myName = array.getIndex();
+						
+					} while (myName.isArray());
+					
+					if (qStmt.getDestination().isArray()) {
+						ArrayName dest = (ArrayName) qStmt.getDestination();
+						ArrayName arrName = (ArrayName) name;
+						if (!arrName.getIndex().getClass().equals(ConstantName.class)) {
+							if (arrName.getId().equals(dest.getId())) {
+								resetName = true;
+							}
+						}
+					}
+				}
+				
+				if (resetName) {
+					remove.add(name);
 				}
 			}
 		}

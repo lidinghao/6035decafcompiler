@@ -9,6 +9,7 @@ import java.util.List;
 import decaf.codegen.flatir.ArrayName;
 import decaf.codegen.flatir.CallStmt;
 import decaf.codegen.flatir.CmpStmt;
+import decaf.codegen.flatir.ConstantName;
 import decaf.codegen.flatir.LIRStatement;
 import decaf.codegen.flatir.LoadStmt;
 import decaf.codegen.flatir.Name;
@@ -201,7 +202,8 @@ public class GlobalsDefDFAnalyzer {
 		if (stmt == null) return;
 		
 		BitSet gen = bFlow.getGen();
-		gen.set(this.uniqueGlobals.get(methodName).indexOf(stmt.getVariable()));		
+		
+		gen.set(this.uniqueGlobals.get(methodName).indexOf(stmt.getVariable()));	
 	}
 
 	public void updateKillGenSet(String methodName, QuadrupletStmt stmt, BlockDataFlowState bFlow) {
@@ -210,25 +212,54 @@ public class GlobalsDefDFAnalyzer {
 		BitSet in = bFlow.getIn();
 		BitSet gen = bFlow.getGen();
 		BitSet kill = bFlow.getKill();
-
+		
 		for (Name name : this.uniqueGlobals.get(methodName)) {
 			int i = this.uniqueGlobals.get(methodName).indexOf(name);
 			
+			boolean resetName = false;
+			
 			if (name.isArray()) {
-				ArrayName array = (ArrayName) name;
-				if (array.getIndex().equals(stmt.getDestination())) { // Index being reassigned, KILL!
-					if (in.get(i)) {
-						kill.set(i);
+				Name myName = name;
+				
+				do {
+					ArrayName array = (ArrayName) myName;
+					if (array.getIndex().equals(stmt.getDestination())) { // Index being reassigned, KILL!
+						resetName = true;
 					}
 					
-					gen.clear(i);
+					myName = array.getIndex();
+					
+				} while (myName.isArray());
+				
+				if (stmt.getDestination().isArray()) {
+					ArrayName dest = (ArrayName) stmt.getDestination();
+					ArrayName arrName = (ArrayName) name;
+					if (!arrName.getIndex().getClass().equals(ConstantName.class)) {
+						if (arrName.getId().equals(dest.getId())) {
+							resetName = true;
+						}
+					}
 				}
+			}
+			
+			if (resetName) {
+				if (in.get(i)) {
+					kill.set(i);
+				}
+				
+				gen.clear(i);
 			}
 			
 			if (name.equals(stmt.getDestination())) {
 				gen.set(i);
 			}
 		}
+		
+		System.out.println("IN: " + in);
+		System.out.println("KILL: " + kill);
+		System.out.println("GEN: " + gen);
+		System.out.println("ENDING");
+		
 	}
 
 	public HashMap<CFGBlock, BlockDataFlowState> getCfgBlocksState() {
