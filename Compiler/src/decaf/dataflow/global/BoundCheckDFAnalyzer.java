@@ -23,7 +23,7 @@ import decaf.dataflow.cfg.CFGBlock;
 import decaf.dataflow.cfg.MethodIR;
 
 public class BoundCheckDFAnalyzer {
-	private class BoundCheckDef {
+	public class BoundCheckDef {
 		private Name index;
 		
 		public Name getIndex() {
@@ -252,7 +252,7 @@ public class BoundCheckDFAnalyzer {
 		String currentArrayBC = null;
 		
 		for (LIRStatement stmt : blockStmts) {
-			if (stmt.getClass().equals(LoadStmt.class)) {
+			if (stmt.getClass().equals(LabelStmt.class)) {
 				LabelStmt lStmt = (LabelStmt) stmt;
 				if (lStmt.getLabelString().matches(BoundCheckDFAnalyzer.ArrayBeginLabelRegex)) {
 					currentArrayBC = getArrayIDFromArrayLabelStmt(lStmt, "begin");
@@ -267,8 +267,10 @@ public class BoundCheckDFAnalyzer {
 				if (currentArrayBC != null && !bcAdded) { // in bc block and bc not added to map
 					BoundCheckDef bcDef = new BoundCheckDef(currentArrayBC, cStmt.getArg1());
 					int index = this.indicesMap.get(block.getMethodName()).indexOf(bcDef);
-					bFlow.getGen().set(index);
-					bcAdded = true;
+					if (index >= 0) { // In case only BC left, will DC it
+						bFlow.getGen().set(index);
+						bcAdded = true;
+					}
 				}
 			}
 			else if (stmt.getClass().equals(QuadrupletStmt.class)) {
