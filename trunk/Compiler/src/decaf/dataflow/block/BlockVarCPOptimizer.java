@@ -114,7 +114,9 @@ public class BlockVarCPOptimizer {
 	private void processStatement(QuadrupletStmt qStmt) {
 		Name dest = qStmt.getDestination();
 		
+		// If the Name being assigned is a not a DynamicVarName
 		if (qStmt.getOperator().equals(QuadrupletOp.MOVE)) {
+			// Invariant: This statement has to be of the form [DynamicVarName = Name]
 			Name newArg1 = processArgument(qStmt.getArg1());
 			qStmt.setArg1(newArg1);
 			
