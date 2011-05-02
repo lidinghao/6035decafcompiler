@@ -1,0 +1,8 @@
+class Program {
+  int y, z, A[10];
+  
+  void main() {
+  	y = A[1] + 1;
+  	z = A[1] + 2; // Remove bc for A[1]
+  }
+}

@@ -1,0 +1,28 @@
+class Program {
+  int v, w, x, y, z, A[10];
+  boolean c;
+  
+  void foo() { }
+  
+  void main() {
+  	y = A[1] + 1;
+  	v = A[x] + 6;
+  	
+  	foo();
+  	
+  	y = A[1] + 6; // Remove
+  	v = A[x] + 9; // Dont remove
+  	
+  	// Add ld A[2] here w/ bc
+  	
+  	for i = 0, 10 {
+  		y = A[1] + 5; // Remove 
+  		v = A[2] + 6; // Remove
+  	}
+  	
+  	x = 90 + z;
+  	
+  	z = A[1] + 2; // Remove 
+  	w = A[x] + 5; // Dont Remove
+  }
+}

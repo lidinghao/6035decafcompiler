@@ -1,0 +1,14 @@
+class Program {
+  int y, z, A[10];
+  boolean c;
+  
+  void main() {
+  	y = A[1] + 1;
+  	
+  	if (c) {
+  		//
+  	}
+  	
+  	z = A[1] + 2; // Remove bc for A[1]
+  }
+}

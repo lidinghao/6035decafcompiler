@@ -1,0 +1,16 @@
+class Program {
+  int w, x, y, z, A[10];
+  boolean c;
+  
+  void main() {
+  	y = A[1] + 1;
+  	
+  	if (c) {
+  		y = A[1] + 5; // Remove bc for A[1]
+  		x = A[2] + 6;
+  	}
+  	
+  	z = A[1] + 2; // Remove bc for A[1]
+  	w = A[2] + 5; // Do nothing
+  }
+}
