@@ -127,7 +127,8 @@ public class BlockModifiedReachingDefinitionGenerator {
 		if (!out.equals(origOut)) {
 			// Add successors to cfgBlocks list
 			for (CFGBlock succ : block.getSuccessors()) {
-				if (!cfgBlocksToProcess.contains(succ) && succ.getIndex() <= loopBlock.getEndBlockID() && succ.getIndex() != loopBlock.getStartBlockID()+1) {
+				if (!cfgBlocksToProcess.contains(succ) && succ.getIndex() < loopBlock.getEndBlockID() && succ.getIndex() != loopBlock.getStartBlockID()+1) {
+					//System.out.println("Successor ID: " +  succ.getIndex() + " parent ID : " + block.getIndex() + " endBlockID: " + loopBlock.getEndBlockID());
 					cfgBlocksToProcess.add(succ);
 				}
 			}
