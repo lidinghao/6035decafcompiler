@@ -11,6 +11,7 @@ import decaf.codegen.flatir.LIRStatement;
 import decaf.codegen.flatir.LabelStmt;
 import decaf.codegen.flatir.Name;
 import decaf.codegen.flatir.QuadrupletStmt;
+import decaf.codegen.flatir.RegisterName;
 import decaf.dataflow.cfg.CFGBlock;
 import decaf.dataflow.cfg.MethodIR;
 
@@ -27,7 +28,6 @@ public class LoopOptimizer {
 	
 	public LoopOptimizer(HashMap<String, MethodIR> mMap){
 		this.mMap = mMap;
-		loopBlocks = new ArrayList<LoopBlock>();
 		this.livenessGenerator = new BlockLivenessGenerator(mMap);
 		reachingDefinitionsGenerator = new BlockModifiedReachingDefinitionGenerator();
 	}
@@ -43,7 +43,9 @@ public class LoopOptimizer {
 	}
 	
 	private void optimizeMethod(String methodName){
+		
 		this.cfgBlocks = this.mMap.get(methodName).getCfgBlocks();
+		loopBlocks = new ArrayList<LoopBlock>();
 		
 		//create a list of LoopBlocks. each LoopBlock represents blocks that contain a particular loop
 		//loopBlocks are in ordered manner. First loops come before later loops, inner loops though come before outer loops
@@ -65,7 +67,7 @@ public class LoopOptimizer {
 					if(this.loopBlocks.size() == 0){
 						this.loopBlocks.add(loopBlock);
 					}else{
-						System.out.println(this.loopBlocks.size());
+						
 						for(int i = 0; i < this.loopBlocks.size(); i++){
 							if(this.loopBlocks.get(i).getEndBlockID() > endBlockID){
 								this.loopBlocks.add(i, loopBlock);
@@ -80,6 +82,7 @@ public class LoopOptimizer {
 				}
 			}
 		}
+		
 		
 		for(LoopBlock loopBlock : this.loopBlocks){
 			optimizeLoopBlock(loopBlock, methodName);
@@ -102,9 +105,12 @@ public class LoopOptimizer {
 		HashMap<Name, Integer> nameToDefinedTimes; //number of tiems a name was defined in a loop
 
 		
+		
 		startBlockID = loopBlock.getStartBlockID()+1; 
 		endBlockID = loopBlock.getEndBlockID() -1 ;
 		loopCFGBlocks = cfgBlocks.subList(startBlockID, endBlockID+1); 
+
+		
 		
 		//find reaching definitions
 		System.out.println("start block: " + startBlockID + " end block: "+ endBlockID);
@@ -123,7 +129,6 @@ public class LoopOptimizer {
 				//add olny qStmts that were defined only once!
 				
 				qStmtPotential = intToQStmt.get(i);
-				System.out.println("QSTMT Potential: " + qStmtPotential.toString());
 				if(!nameToQStmt.containsKey(qStmtPotential.getDestination())){
 					nameToQStmt.put(qStmtPotential.getDestination(), qStmtPotential);
 				}
@@ -140,7 +145,7 @@ public class LoopOptimizer {
 		initBlockBitSet = blockLiveVars.get(this.mMap.get(methodName).getCfgBlocks().get(startBlockID-1)).getOut();
 		HashSet<Name> liveVars = new HashSet<Name>();
 		for(int i = 0; i < initBlockBitSet.length(); i++){
-			if(!initBlockBitSet.get(i)){
+			if(initBlockBitSet.get(i)){
 				System.out.println(initBlockBitSet.get(i));
 				System.out.println("VAR: " + intToVar.get(i).getVar() + " ADDED");
 				liveVars.add(intToVar.get(i).getVar());
@@ -157,7 +162,8 @@ public class LoopOptimizer {
 					dest = qStmt.getDestination();
 					arg1 = qStmt.getArg1();
 					arg2 = qStmt.getArg2();
-					if((arg1 != null && nameToDefinedTimes.containsKey(arg1)) ||(arg2 != null && nameToDefinedTimes.containsKey(arg2)) || !nameToQStmt.containsKey(dest)){
+					if((arg1 != null && nameToDefinedTimes.containsKey(arg1)) ||(arg2 != null && nameToDefinedTimes.containsKey(arg2)) || !nameToQStmt.containsKey(dest) 
+								|| dest.getClass().equals(RegisterName.class)){
 						newBlockStmts.add(stmt);
 					}
 					else if(liveVars.contains(dest)){
@@ -169,7 +175,11 @@ public class LoopOptimizer {
 						}*/
 						newBlockStmts.add(stmt);
 					}else{
-						movedQStmts.add(stmt); 
+						if(nameToDefinedTimes.get(dest) != 1)
+							newBlockStmts.add(stmt);
+						else{
+							movedQStmts.add(stmt);
+						}
 					}
 				}else{
 					newBlockStmts.add(stmt);
