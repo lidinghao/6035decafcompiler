@@ -42,7 +42,7 @@ public class ExplicitLoadAdder {
 		this.seenCall = false;
 	}
 
-	public void execute() {
+	public void addLoads() {
 		QuadrupletStmt.setID(0);
 		
 		this.df.analyze();

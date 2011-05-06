@@ -52,7 +52,7 @@ public class ExplicitLoadOptimizer {
 		this.df = df;
 	}
 
-	public void execute() {
+	public void optimizeLoads() {
 		this.df.analyze();
 		
 		for (String methodName : this.mMap.keySet()) {
