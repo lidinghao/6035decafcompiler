@@ -96,16 +96,16 @@ public class NaiveStoreOptimizer {
 	}
 
 	private void optimizeStores(String methodName) {	
-//		for (LoadStmt lStmt: this.storeGlobals) {
-//			optimizeStore(methodName, lStmt);
-//		}
-//		
-//		for (LoadStmt lStmt: this.storeArrays) {
-//			optimizeStore(methodName, lStmt);
-//		}
+		for (StoreStmt lStmt: this.storeGlobals) {
+			optimizeStore(methodName, lStmt);
+		}
+		
+		for (StoreStmt lStmt: this.storeArrays) {
+			optimizeStore(methodName, lStmt);
+		}
 	}
 
-	private void optimizeStore(String methodName, LoadStmt lStmt) {
+	private void optimizeStore(String methodName, StoreStmt lStmt) {
 		List<LIRStatement> prevStmts;
 		List<LIRStatement> nextStmts;
 		
