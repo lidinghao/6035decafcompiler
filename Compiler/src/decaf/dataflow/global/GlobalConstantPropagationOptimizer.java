@@ -78,13 +78,14 @@ public class GlobalConstantPropagationOptimizer {
 					if (arrIndex != null)
 						((ArrayName)qDest).setIndex(arrIndex);
 				}
-				if (arg1 != null)
+				if (arg1 != null) {
 					// Set arg1 to Constant
-					System.out.println(qStmt + " has been constant propagated in arg1 to " + arg1);
 					qStmt.setArg1(arg1);
-				if (arg2 != null)
+				}
+				if (arg2 != null) {
 					// Set arg2 to Constant
 					qStmt.setArg2(arg2);
+				}
 				
 				System.out.println("reaching defs for qstmt: " + qStmt + " -> " + bFlow.getIn());
 
