@@ -1,0 +1,16 @@
+class Program {
+  int y, z, A[10];
+  boolean c;
+  
+  void foo() {}
+
+  void main() {
+  	if (c) {
+  		z = z + 7;
+  	}
+  	
+  	y = z + 1;
+  	z = 90;
+  	// Store z
+  }
+}
