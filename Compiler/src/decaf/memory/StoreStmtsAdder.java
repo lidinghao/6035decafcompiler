@@ -18,4 +18,19 @@ public class StoreStmtsAdder {
 		this.so.optimizeStores();
 	}
 
+	public NaiveStoreAdder getSa() {
+		return sa;
+	}
+
+	public void setSa(NaiveStoreAdder sa) {
+		this.sa = sa;
+	}
+
+	public NaiveStoreOptimizer getSo() {
+		return so;
+	}
+
+	public void setSo(NaiveStoreOptimizer so) {
+		this.so = so;
+	}
 }
