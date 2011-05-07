@@ -112,7 +112,7 @@ public class ExpressionFlattenerVisitor implements ASTVisitor<Name> {
 
 		if (op == BinOpType.AND) {
 			if (expr.getLeftOperand().getClass().equals(BooleanLiteral.class) ||
-					expr.getLeftOperand().getClass().equals(BooleanLiteral.class)) {
+					expr.getRightOperand().getClass().equals(BooleanLiteral.class)) {
 				return optimizeAnd(expr);
 			}
 			return shortCircuitAnd(expr);
@@ -120,7 +120,7 @@ public class ExpressionFlattenerVisitor implements ASTVisitor<Name> {
 
 		if (op == BinOpType.OR) {
 			if (expr.getLeftOperand().getClass().equals(BooleanLiteral.class) ||
-					expr.getLeftOperand().getClass().equals(BooleanLiteral.class)) {
+					expr.getRightOperand().getClass().equals(BooleanLiteral.class)) {
 				return optimizeOr(expr);
 			}
 			return shortCircuitOr(expr);
