@@ -201,7 +201,7 @@ public class NaiveLoadOptimizer {
 					}
 				}
 				
-				killLocalGlobals(qStmt, block);
+				killGlobals(qStmt, block);
 				
 				if (qStmt.getDestination().isGlobal()) {
 					this.globalsInBlock.add(qStmt.getDestination());
@@ -279,43 +279,41 @@ public class NaiveLoadOptimizer {
 		return true;
 	}
 	
-	private void killLocalGlobals(QuadrupletStmt qStmt, CFGBlock block) {
+	private void killGlobals(QuadrupletStmt qStmt, CFGBlock block) {
 		HashSet<Name> remove = new HashSet<Name>();
-		for (Name name: this.globalsInBlock) {
+		for (Name name: this.df.getUniqueGlobals().get(block.getMethodName())) {
+			boolean resetName = false;
+			
 			if (name.isArray()) {
-				boolean resetName = false;
+				Name myName = name;
 				
-				if (name.isArray()) {
-					Name myName = name;
+				do {
+					ArrayName array = (ArrayName) myName;
+					if (array.getIndex().equals(qStmt.getDestination())) { // Index being reassigned, KILL!
+						resetName = true;
+					}
 					
-					do {
-						ArrayName array = (ArrayName) myName;
-						if (array.getIndex().equals(qStmt.getDestination())) { // Index being reassigned, KILL!
+					myName = array.getIndex();
+					
+				} while (myName.isArray());
+				
+				if (qStmt.getDestination().isArray()) {
+					ArrayName dest = (ArrayName) qStmt.getDestination();
+					ArrayName arrName = (ArrayName) name;
+					if (dest.getIndex().getClass().equals(ConstantName.class) &&
+							!arrName.getIndex().getClass().equals(ConstantName.class)) {
+						if (arrName.getId().equals(dest.getId())) {
 							resetName = true;
-						}
-						
-						myName = array.getIndex();
-						
-					} while (myName.isArray());
-					
-					if (qStmt.getDestination().isArray()) {
-						ArrayName dest = (ArrayName) qStmt.getDestination();
-						ArrayName arrName = (ArrayName) name;
-						if (dest.getIndex().getClass().equals(ConstantName.class) &&
-								!arrName.getIndex().getClass().equals(ConstantName.class)) {
-							if (arrName.getId().equals(dest.getId())) {
-								resetName = true;
-							}
 						}
 					}
 				}
-				
-				if (resetName) {
-					List<Name> uniqueGlobals = this.df.getUniqueGlobals().get(block.getMethodName());
-					int i = uniqueGlobals.indexOf(name);
-					this.df.getCfgBlocksState().get(block).getIn().set(i, false);
-					remove.add(name);
-				}
+			}
+			
+			if (resetName) {
+				List<Name> uniqueGlobals = this.df.getUniqueGlobals().get(block.getMethodName());
+				int i = uniqueGlobals.indexOf(name);
+				this.df.getCfgBlocksState().get(block).getIn().set(i, false);
+				remove.add(name);
 			}
 		}
 		
