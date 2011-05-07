@@ -9,10 +9,12 @@ import decaf.codegen.flatir.CallStmt;
 import decaf.codegen.flatir.CmpStmt;
 import decaf.codegen.flatir.LIRStatement;
 import decaf.codegen.flatir.LabelStmt;
+import decaf.codegen.flatir.LoadStmt;
 import decaf.codegen.flatir.Name;
 import decaf.codegen.flatir.PopStmt;
 import decaf.codegen.flatir.PushStmt;
 import decaf.codegen.flatir.QuadrupletStmt;
+import decaf.codegen.flatir.StoreStmt;
 import decaf.codegen.flattener.ProgramFlattener;
 import decaf.dataflow.cfg.CFGBlock;
 import decaf.dataflow.cfg.MethodIR;
@@ -94,6 +96,14 @@ public class BoundCheckDCOptimizer {
 				if (!cStmt.getMethodLabel().equals(ProgramFlattener.exceptionHandlerLabel)) {
 					this.uncheckedArrayNames.clear(); // Invalidate all bound checks
 				}
+			}
+			else if (stmt.getClass().equals(LoadStmt.class)) {
+				LoadStmt lStmt = (LoadStmt) stmt;
+				markUnchecked(lStmt.getVariable());
+			}
+			else if (stmt.getClass().equals(StoreStmt.class)) {
+				StoreStmt sStmt = (StoreStmt) stmt;
+				markUnchecked(sStmt.getVariable());
 			}
 			
 			if (add) {

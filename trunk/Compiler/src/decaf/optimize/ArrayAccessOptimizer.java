@@ -3,8 +3,8 @@ package decaf.optimize;
 import java.util.HashMap;
 
 import decaf.dataflow.cfg.MethodIR;
-import decaf.ralloc.ExplicitLoadAdder;
-import decaf.ralloc.ExplicitLoadOptimizer;
+import decaf.memory.LoadStmtsAdder;
+import decaf.memory.NaiveStoreAdder;
 
 public class ArrayAccessOptimizer {
 	private HashMap<String, MethodIR> mMap;
@@ -30,12 +30,11 @@ public class ArrayAccessOptimizer {
 
 	public void addExplicitMemoryInstructions() {
 		// Add loads
-		ExplicitLoadAdder gl = new ExplicitLoadAdder(mMap);
-		gl.addLoads();
-		
-		ExplicitLoadOptimizer glo = new ExplicitLoadOptimizer(mMap);
-		glo.optimizeLoads();
+		LoadStmtsAdder la = new LoadStmtsAdder(mMap);
+		la.addLoads();
 		
 		// Add stores
+		NaiveStoreAdder ns = new NaiveStoreAdder(mMap);
+		ns.addStores();
 	}
 }
