@@ -1,0 +1,11 @@
+VAR: z - (2, 16)
+DEF: [ld z]
+USE: [a = z + 4, A[a] = z + 7]
+
+VAR: a - (3, 17)
+DEF: [a = z + 4]
+USE: [cmp a, 10, cmp a, 0, st A[a]]
+
+VAR: A[a] - (16, 17)
+DEF: [A[a] = z + 7]
+USE: [st A[a]]

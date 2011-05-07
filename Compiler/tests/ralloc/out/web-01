@@ -1,0 +1,7 @@
+VAR: z - (14, 15)
+DEF: [ld z]
+USE: [A[2] = z + 4]
+
+VAR: A[2] - (15, 16)
+DEF: [A[2] = z + 4]
+USE: [st A[2]]
