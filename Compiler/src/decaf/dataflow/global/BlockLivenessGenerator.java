@@ -138,14 +138,16 @@ public class BlockLivenessGenerator {
 							getIntToVar().put(destVar.getMyId(), destVar);
 							nameToVar.put(dest, destVar);
 							updateGlobalVarIDs(dest);
-							if (dest.getClass().equals(ArrayName.class)) {
-								// Update the index to ArrayName map
-								Name arrIndex = ((ArrayName)dest).getIndex();
+							Name destTemp = (Name)dest.clone();
+							while (destTemp.getClass().equals(ArrayName.class)) {
+								// Update the index to ArrayName map recursively looking at indices
+								Name arrIndex = ((ArrayName)destTemp).getIndex();
 								if (!(nameToArrNames.containsKey(arrIndex))) {
 									nameToArrNames.put(arrIndex, new ArrayList<ArrayName>());
 								}
 								if (!(nameToArrNames.get(arrIndex).contains((ArrayName)dest)))
 									nameToArrNames.get(arrIndex).add((ArrayName)dest);
+								destTemp = arrIndex;
 							}
 						}
 					}
@@ -238,7 +240,7 @@ public class BlockLivenessGenerator {
 		PushStmt pushStmt;
 		CmpStmt cStmt;
 		QuadrupletStmt qStmt;
-		Name arg1 = null, arg2 = null, dest = null, arrIndex = null;
+		Name arg1 = null, arg2 = null, dest = null;
 		Variable destVar, arg1Var;
 		
 		// Traverse statements in reverse order
@@ -279,22 +281,22 @@ public class BlockLivenessGenerator {
 					bFlow.getKill().set(destVar.getMyId());
 					// Set dest -> id to false in current use set
 					bFlow.getGen().set(destVar.getMyId(), false);
-					// Any ArrayName that have dest as an id should update Gen bit to true
-					List<ArrayName> arrNamesWithDestIndex = nameToArrNames.get(dest);
-					if (arrNamesWithDestIndex != null) {
-						for (ArrayName aName : arrNamesWithDestIndex) {
-							Variable aNameVar = nameToVar.get(aName);
-							if (aNameVar != null) {
-								bFlow.getGen().set(aNameVar.getMyId());
-							}
+				}
+				// Any ArrayName that may have dest as an id should update Gen bit to true
+				List<ArrayName> arrNamesWithDestIndex = nameToArrNames.get(dest);
+				if (arrNamesWithDestIndex != null) {
+					for (ArrayName aName : arrNamesWithDestIndex) {
+						Variable aNameVar = nameToVar.get(aName);
+						if (aNameVar != null) {
+							bFlow.getGen().set(aNameVar.getMyId());
 						}
 					}
 				}
-				// If dest is a ArrayName, process the index Name
-				if (dest.getClass().equals(ArrayName.class)) {
-					// the index Name was used so update Gen
-					arrIndex = ((ArrayName)dest).getIndex();
-					arg1Var = nameToVar.get(arrIndex);
+				// If dest is a ArrayName, process the index Name recursively
+				while (dest.getClass().equals(ArrayName.class)) {
+					// The index Name was used so update Gen
+					dest = ((ArrayName)dest).getIndex();
+					arg1Var = nameToVar.get(dest);
 					if (arg1Var != null) {	
 						bFlow.getGen().set(arg1Var.getMyId());
 					}
@@ -315,14 +317,20 @@ public class BlockLivenessGenerator {
 			if (argVar != null) {
 				bFlow.getGen().set(argVar.getMyId());
 			}
-			// If arg2 is a ArrayName, process the index Name, and set
-			// ALL Array names with the same ID to true in Gen set
+			// If arg2 is a ArrayName
 			if (arg.getClass().equals(ArrayName.class)) {
+				
+				// Recursively process the index Name
+				arrIndex = (Name)arg.clone();
+				do {
+					arrIndex = ((ArrayName)arrIndex).getIndex();
+					argVar = nameToVar.get(arrIndex);
+					if (argVar != null) {
+						bFlow.getGen().set(argVar.getMyId());
+					}
+				} while (arrIndex.getClass().equals(ArrayName.class));
+				
 				arrIndex = ((ArrayName)arg).getIndex();
-				argVar = nameToVar.get(arrIndex);
-				if (argVar != null) {	
-					bFlow.getGen().set(argVar.getMyId());
-				}
 				String arrId = ((ArrayName)arg).getId();
 				// Loop through all the names and find the ArrayNames with
 				// the same ID

@@ -29,7 +29,7 @@ public class BlockAvailableExpressionGenerator {
 	private HashMap<String, List<AvailableExpression>> methodExpressions;
 	private List<CFGBlock> orderProcessed;
 	private HashSet<CFGBlock> cfgBlocksToProcess;
-	// Map from Name to IDs of QuadrupletStmt which assign to that Name
+	// Map from Name to IDs of QuadrupletStmt which use that Name
 	private HashMap<Name, HashSet<Integer>> nameToExprIds;
 	private int totalExpressionStmts;
 
@@ -98,6 +98,7 @@ public class BlockAvailableExpressionGenerator {
 							AvailableExpression.setID(AvailableExpression.getID()-1);
 						} else {
 							availableExpressions.add(expr);
+							totalExpressionStmts++;
 						}
 						// Update mapping from CFGBlock to AvailableExpression list
 						if (!blockExpressions.containsKey(block)) {
@@ -109,34 +110,37 @@ public class BlockAvailableExpressionGenerator {
 							methodExpressions.put(s, new ArrayList<AvailableExpression>());
 						}
 						methodExpressions.get(s).add(expr);
+						
 						// Update mapping between Name and the AvailableExpressions that 
 						// contain that Name
 						if (!nameToExprIds.containsKey(arg1)) {
 							nameToExprIds.put(arg1, new HashSet<Integer>());
-							// If argument is ArrayName, add the index Name mapping too
-							if (arg1.getClass().equals(ArrayName.class)) {
-								Name arrayIndex = ((ArrayName)arg1).getIndex();
-								if (!nameToExprIds.containsKey(arrayIndex)) {
-									nameToExprIds.put(arrayIndex, new HashSet<Integer>());
-								}
-								nameToExprIds.get(arrayIndex).add(expr.getMyId());
-							}
 						}
 						nameToExprIds.get(arg1).add(expr.getMyId());
+						// If argument is ArrayName, add the index Name mappings recursively too
+						while (arg1.getClass().equals(ArrayName.class)) {
+							arg1 = ((ArrayName)arg1).getIndex();
+							if (!nameToExprIds.containsKey(arg1)) {
+								nameToExprIds.put(arg1, new HashSet<Integer>());
+							}
+							nameToExprIds.get(arg1).add(expr.getMyId());
+						}
+						// Process arg2
 						if (arg2 != null) {
+							// Update mapping between Name and the AvailableExpressions that 
+							// contain that Name
 							if (!nameToExprIds.containsKey(arg2)) {
 								nameToExprIds.put(arg2, new HashSet<Integer>());
-								// If argument is ArrayName, add the index Name mapping too
-								if (arg2.getClass().equals(ArrayName.class)) {
-									Name arrayIndex = ((ArrayName)arg2).getIndex();
-									if (!nameToExprIds.containsKey(arrayIndex)) {
-										nameToExprIds.put(arrayIndex, new HashSet<Integer>());
-									}
-									nameToExprIds.get(arrayIndex).add(expr.getMyId());
-								}
 							}
 							nameToExprIds.get(arg2).add(expr.getMyId());
-							totalExpressionStmts++;
+							// If argument is ArrayName, add the index Name mappings recursively too
+							while (arg2.getClass().equals(ArrayName.class)) {
+								arg2 = ((ArrayName)arg2).getIndex();
+								if (!nameToExprIds.containsKey(arg2)) {
+									nameToExprIds.put(arg2, new HashSet<Integer>());
+								}
+								nameToExprIds.get(arg2).add(expr.getMyId());
+							}
 						}
 					}
 				}

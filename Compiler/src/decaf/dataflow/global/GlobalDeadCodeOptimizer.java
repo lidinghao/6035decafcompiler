@@ -58,7 +58,7 @@ public class GlobalDeadCodeOptimizer {
 		PushStmt pushStmt;
 		CmpStmt cStmt;
 		QuadrupletStmt qStmt;
-		Name arg1 = null, arg2 = null, dest = null, arrIndex = null;
+		Name arg1 = null, arg2 = null, dest = null;
 		Variable arg1Var;
 		
 		// Only QuadrupletStmt is dead code eliminated
@@ -84,7 +84,6 @@ public class GlobalDeadCodeOptimizer {
 						varId = nameToVar.get(dest).getMyId();
 						if (isDead(varId, bFlow.getOut())) {
 							// Don't add statement
-							System.out.println("Stmt REMOVED: " + stmt);
 							continue;
 						}
 					}
@@ -114,26 +113,23 @@ public class GlobalDeadCodeOptimizer {
 			// OUT of the block BUT are used in the future WITHIN the block are still
 			// retained
 			if (dest != null) {
-				// If dest is a ArrayName, process the index Name
-				if (dest.getClass().equals(ArrayName.class)) {
-					arrIndex = ((ArrayName)dest).getIndex();
-					arg1Var = nameToVar.get(arrIndex);
+				// Any ArrayName that have dest as an id should update Out bit to true
+				List<ArrayName> arrNamesWithDestIndex = nameToArrNames.get(dest);
+				if (arrNamesWithDestIndex != null) {
+					for (ArrayName aName : arrNamesWithDestIndex) {
+						Variable aNameVar = nameToVar.get(aName);
+						if (aNameVar != null) {
+							bFlow.getOut().set(aNameVar.getMyId());
+						}
+					}
+				}
+				// If dest is a ArrayName, process the index Name recursively
+				while (dest.getClass().equals(ArrayName.class)) {
+					// the index Name was used so update Gen
+					dest = ((ArrayName)dest).getIndex();
+					arg1Var = nameToVar.get(dest);
 					if (arg1Var != null) {	
 						bFlow.getOut().set(arg1Var.getMyId());
-					}
-				} else {
-					// If dest is not ArrayName, it might be used as some array index, so set those
-					// variable IDs to true in the out set
-					
-					// Get ArrayName that have dest as an id
-					List<ArrayName> arrNamesWithDestIndex = nameToArrNames.get(dest);
-					if (arrNamesWithDestIndex != null) {
-						for (ArrayName aName : arrNamesWithDestIndex) {
-							Variable aNameVar = nameToVar.get(aName);
-							if (aNameVar != null) {
-								bFlow.getOut().set(aNameVar.getMyId());
-							}
-						}
 					}
 				}
 			}
@@ -155,14 +151,21 @@ public class GlobalDeadCodeOptimizer {
 			if (argVar != null) {
 				bFlow.getOut().set(argVar.getMyId());
 			}
-			// If arg2 is a ArrayName, process the index Name, and set
-			// ALL Array names with the same ID to true in out set
+			
+			// If arg2 is a ArrayName
 			if (arg.getClass().equals(ArrayName.class)) {
+				
+				// Recursively process the index Name
+				arrIndex = (Name)arg.clone();
+				do {
+					arrIndex = ((ArrayName)arrIndex).getIndex();
+					argVar = nameToVar.get(arrIndex);
+					if (argVar != null) {
+						bFlow.getOut().set(argVar.getMyId());
+					}
+				} while (arrIndex.getClass().equals(ArrayName.class));
+				
 				arrIndex = ((ArrayName)arg).getIndex();
-				argVar = nameToVar.get(arrIndex);
-				if (argVar != null) {	
-					bFlow.getOut().set(argVar.getMyId());
-				}
 				String arrId = ((ArrayName)arg).getId();
 				// Loop through all the names and find the ArrayNames with
 				// the same ID
@@ -170,7 +173,7 @@ public class GlobalDeadCodeOptimizer {
 					if (n.getClass().equals(ArrayName.class)) {
 						if (((ArrayName)n).getId().equals(arrId)) {
 							// Note: if the index is a constant, then only set the ArrayNames
-							// that have a non-constant index to true in the out set
+							// that have a non-constant index to true in the Gen set
 							if (arrIndex.getClass().equals(ConstantName.class)) {
 								// Index is not a constant
 								if (!((ArrayName)n).getIndex().getClass().equals(ConstantName.class)) {

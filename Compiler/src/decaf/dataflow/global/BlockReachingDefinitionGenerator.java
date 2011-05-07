@@ -21,6 +21,7 @@ import decaf.dataflow.cfg.MethodIR;
 
 public class BlockReachingDefinitionGenerator {
 	private HashMap<String, MethodIR> mMap;
+	private ConfluenceOperator cOp;
 	private HashMap<CFGBlock, BlockDataFlowState> blockReachingDefs;
 	private HashSet<CFGBlock> cfgBlocksToProcess;
 	// Map from Name to QuadrupletStmt which assign to that Name
@@ -30,13 +31,14 @@ public class BlockReachingDefinitionGenerator {
 
 	private int totalDefinitions;
 
-	public BlockReachingDefinitionGenerator(HashMap<String, MethodIR> mMap) {
+	public BlockReachingDefinitionGenerator(HashMap<String, MethodIR> mMap, ConfluenceOperator op) {
 		this.mMap = mMap;
-		nameToQStmts = new HashMap<Name, ArrayList<QuadrupletStmt>>();
-		uniqueQStmts = new HashSet<QuadrupletStmt>();
-		blockReachingDefs = new HashMap<CFGBlock, BlockDataFlowState>();
-		cfgBlocksToProcess = new HashSet<CFGBlock>();
-		totalDefinitions = 0;
+		this.cOp = op;
+		this.nameToQStmts = new HashMap<Name, ArrayList<QuadrupletStmt>>();
+		this.uniqueQStmts = new HashSet<QuadrupletStmt>();
+		this.blockReachingDefs = new HashMap<CFGBlock, BlockDataFlowState>();
+		this.cfgBlocksToProcess = new HashSet<CFGBlock>();
+		this.totalDefinitions = 0;
 	}
 	
 	public void generate() {
@@ -114,12 +116,16 @@ public class BlockReachingDefinitionGenerator {
 		} else {
 			origOut = new BitSet(totalDefinitions);
 		}
-		// Calculate the in BitSet by taking union of predecessors
+		// Calculate the in BitSet by taking union/intersection of predecessors depending
+		// on the cOp
 		BlockDataFlowState bFlow = new BlockDataFlowState(totalDefinitions);
 		BitSet in = bFlow.getIn();
 		for (CFGBlock pred : block.getPredecessors()) {
 			if (blockReachingDefs.containsKey(pred)) {
-				in.or(blockReachingDefs.get(pred).getOut());
+				if (cOp == ConfluenceOperator.AND)
+					in.and(blockReachingDefs.get(pred).getOut());
+				else
+					in.or(blockReachingDefs.get(pred).getOut());
 			}
 		} 
 		calculateGenKillSets(block, bFlow);
@@ -192,6 +198,7 @@ public class BlockReachingDefinitionGenerator {
 	public void updateKillSet(Name dest, BlockDataFlowState bFlow) {
 		BitSet kill = bFlow.getKill();
 		BitSet in = bFlow.getIn();
+		BitSet gen = bFlow.getGen();
 		ArrayList<QuadrupletStmt> qStmtsForDest = nameToQStmts.get(dest);
 		if (qStmtsForDest != null) {
 			// Kill if it is part of In
@@ -200,6 +207,7 @@ public class BlockReachingDefinitionGenerator {
 				if (in.get(index)) {
 					kill.set(index, true); // Ensures Kill is always a subset of In
 				}
+				gen.set(index, false);
 			}
 		}
 		// If the dest is ArrayName of the form A[i], and if index is constant,
@@ -216,6 +224,7 @@ public class BlockReachingDefinitionGenerator {
 						if (in.get(index)) {
 							kill.set(index, true); // Ensures Kill is always a subset of In
 						}
+						gen.set(index, false);
 					}
 				}
 			} else {
@@ -225,6 +234,7 @@ public class BlockReachingDefinitionGenerator {
 						if (in.get(index)) {
 							kill.set(index, true); // Ensures Kill is always a subset of In
 						}
+						gen.set(index, false);
 					}
 				}
 			}
@@ -237,6 +247,7 @@ public class BlockReachingDefinitionGenerator {
 				if (in.get(index)) {
 					kill.set(index, true); // Ensures Kill is always a subset of In
 				}
+				gen.set(index, false);
 			}
 		}
 	}

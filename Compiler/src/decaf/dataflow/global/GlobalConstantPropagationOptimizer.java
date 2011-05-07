@@ -1,6 +1,7 @@
 package decaf.dataflow.global;
 
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.HashMap;
 import java.util.List;
 
@@ -20,11 +21,13 @@ import decaf.dataflow.cfg.MethodIR;
 
 public class GlobalConstantPropagationOptimizer {
 	private HashMap<String, MethodIR> mMap;
+	private HashMap<QuadrupletStmt, BitSet> reachingDefForQStmts;
 	private BlockReachingDefinitionGenerator reachingDefGenerator;
 	
 	public GlobalConstantPropagationOptimizer(HashMap<String, MethodIR> mMap) {
 		this.mMap = mMap;
-		this.reachingDefGenerator = new BlockReachingDefinitionGenerator(mMap);
+		this.reachingDefForQStmts = new HashMap<QuadrupletStmt, BitSet>();
+		this.reachingDefGenerator = new BlockReachingDefinitionGenerator(mMap, ConfluenceOperator.OR);
 		this.reachingDefGenerator.generate();
 	}
 	
@@ -77,14 +80,22 @@ public class GlobalConstantPropagationOptimizer {
 				}
 				if (arg1 != null)
 					// Set arg1 to Constant
+					System.out.println(qStmt + " has been constant propagated in arg1 to " + arg1);
 					qStmt.setArg1(arg1);
 				if (arg2 != null)
 					// Set arg2 to Constant
 					qStmt.setArg2(arg2);
+				
+				System.out.println("reaching defs for qstmt: " + qStmt + " -> " + bFlow.getIn());
+
+				// Update the map for QuadrupletStmt -> reaching defs for stmt (the current IN BitSet)
+				reachingDefForQStmts.put(qStmt, (BitSet)bFlow.getIn().clone());
 				// Update BlockDataFlowState kill set
 				reachingDefGenerator.updateKillSet(qStmt.getDestination(), bFlow);
 				// Update BlockDataFlowState in set by using updated kill set
 				bFlow.getIn().xor(bFlow.getKill());
+				// Add current stmt id to in set
+				bFlow.getIn().set(qStmt.getMyId(), true);
 				
 			// Optimize PopStmt
 			} else if (stmt.getClass().equals(PopStmt.class)) {
@@ -134,25 +145,7 @@ public class GlobalConstantPropagationOptimizer {
 			if (arrIndex != null) {
 				((ArrayName)arg).setIndex(arrIndex);
 			}
-			additionalReachingDefs = new ArrayList<QuadrupletStmt>();
-			// Get the index, and if it is constant, get all qstmts which assign to 
-			// array id with variable index
-			arrIndex = ((ArrayName)arg).getIndex();
-			String id = ((ArrayName)arg).getId();
-			if (arrIndex.getClass().equals(ConstantName.class)) {
-				for (QuadrupletStmt qStmt : reachingDefGenerator.getUniqueQStmts()) {
-					if (reachingDefGenerator.isArrayNameWithIdAndVariableIndex(qStmt.getDestination(), id)) {
-						additionalReachingDefs.add(qStmt);
-					}
-				}
-			} else {
-				for (QuadrupletStmt qStmt : reachingDefGenerator.getUniqueQStmts()) {
-					// If index is not constant, get all qstmts which assign to array id	
-					if (reachingDefGenerator.isArrayNameWithId(qStmt.getDestination(), id)) {
-						additionalReachingDefs.add(qStmt);
-					}
-				}
-			}	
+			additionalReachingDefs = getAdditionalDefinitionsForArrayName((ArrayName)arg);
 		}
 		
 		HashMap<Name, ArrayList<QuadrupletStmt>> nameToStmts = reachingDefGenerator.getNameToQStmts();
@@ -162,6 +155,7 @@ public class GlobalConstantPropagationOptimizer {
 		}
 		
 		ConstantName cName = null;
+		// First see if any of the original QuadrupletStmts reach and agree on the same ConstantName
 		for (QuadrupletStmt qStmt : stmtsForName) {
 			if (bFlow.getIn().get(qStmt.getMyId())) {
 				// Check if statement is of type : arg = constant
@@ -181,7 +175,8 @@ public class GlobalConstantPropagationOptimizer {
 		}
 		if (additionalReachingDefs != null) {
 			if (cName != null) {
-				// Look at the additional reaching definitions
+				// If the original QuadrupletStmts agree on a ConstantName, only then look at the 
+				// additional reaching definitions
 				// First check if any of them reach, and if they don't, we don't care about them
 				boolean additionalReach = false;
 				for (QuadrupletStmt qStmt : additionalReachingDefs) {
@@ -210,7 +205,7 @@ public class GlobalConstantPropagationOptimizer {
 							}
 						}
 					}
-					// Additional cName and original cName should be equal, otherwise return null
+					// Additional ConstantName and original ConstantName should be equal, otherwise return null
 					if (!cName.equals(additionalCName)) {
 						return null;
 					}
@@ -220,7 +215,54 @@ public class GlobalConstantPropagationOptimizer {
 		return cName;
 	}
 
+	// Returns a list of QuadrupletStmts which define the given Name
+	public List<QuadrupletStmt> getDefinitionsForName(Name arg) {
+		HashMap<Name, ArrayList<QuadrupletStmt>> nameToStmts = reachingDefGenerator.getNameToQStmts();
+		ArrayList<QuadrupletStmt> stmtsForName = nameToStmts.get(arg);
+		// If the Name is an Array, add additional QuadrupletStmts
+		if (arg.getClass().equals(ArrayName.class)) {
+			if (stmtsForName != null) {
+				stmtsForName.addAll(getAdditionalDefinitionsForArrayName((ArrayName)arg));
+			} else {
+				return getAdditionalDefinitionsForArrayName((ArrayName)arg); 
+			}
+		}
+		return stmtsForName;
+	}
+	
+	private List<QuadrupletStmt> getAdditionalDefinitionsForArrayName(ArrayName arg) {
+		List<QuadrupletStmt> additionalReachingDefs = new ArrayList<QuadrupletStmt>();
+		// Get the index, and if it is constant, get all qstmts which assign to 
+		// array id with variable index
+		Name arrIndex = ((ArrayName)arg).getIndex();
+		String id = ((ArrayName)arg).getId();
+		if (arrIndex.getClass().equals(ConstantName.class)) {
+			for (QuadrupletStmt qStmt : reachingDefGenerator.getUniqueQStmts()) {
+				if (reachingDefGenerator.isArrayNameWithIdAndVariableIndex(qStmt.getDestination(), id)) {
+					additionalReachingDefs.add(qStmt);
+				}
+			}
+		} else {
+			for (QuadrupletStmt qStmt : reachingDefGenerator.getUniqueQStmts()) {
+				// If index is not constant, get all qstmts which assign to array id	
+				if (reachingDefGenerator.isArrayNameWithId(qStmt.getDestination(), id)) {
+					additionalReachingDefs.add(qStmt);
+				}
+			}
+		}
+		return additionalReachingDefs;
+	}
+	
 	public BlockReachingDefinitionGenerator getReachingDefGenerator() {
 		return reachingDefGenerator;
+	}
+	
+	public HashMap<QuadrupletStmt, BitSet> getReachingDefForQStmts() {
+		return reachingDefForQStmts;
+	}
+
+	public void setReachingDefForQStmts(
+			HashMap<QuadrupletStmt, BitSet> reachingDefForQStmts) {
+		this.reachingDefForQStmts = reachingDefForQStmts;
 	}
 }
