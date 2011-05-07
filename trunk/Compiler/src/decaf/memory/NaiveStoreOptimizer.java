@@ -109,37 +109,37 @@ public class NaiveStoreOptimizer {
 		List<LIRStatement> prevStmts;
 		List<LIRStatement> nextStmts;
 		
-		CFGBlock prev = getBlockForStmt(lStmt, methodName);
+		//CFGBlock prev = getBlockForStmt(lStmt, methodName);
 		int depth = lStmt.getDepth();
 		boolean isOptimized = false;
 		
-		while (!isOptimized) {
-			CFGBlock next = getParentForInitBlock(prev, depth);
-			prevStmts = copyStmts(prev);
-			nextStmts = copyStmts(next);
-			
-			removeLoad(prev, lStmt);
-			insertLoad(next, lStmt);
-			
-			this.mMap.get(methodName).regenerateStmts();
-			
-			lgs.analyze();
-			
-			if (isGlobalDefStateConsistent(methodName)) {
-				depth = next.getStatements().get(0).getDepth();
-				lStmt.setDepth(depth);
-				prev = next;
-			}
-			else {
-				prev.setStatements(prevStmts);
-				next.setStatements(nextStmts);
-				isOptimized = true;
-			}
-			
-			if (depth == 0) break; // Can't optimize more
-		}
-		
-		this.mMap.get(methodName).regenerateStmts();
+		while (!isOptimized) {}
+//			CFGBlock next = getParentForInitBlock(prev, depth);
+//			prevStmts = copyStmts(prev);
+//			nextStmts = copyStmts(next);
+//			
+//			removeLoad(prev, lStmt);
+//			insertLoad(next, lStmt);
+//			
+//			this.mMap.get(methodName).regenerateStmts();
+//			
+//			lgs.analyze();
+//			
+//			if (isGlobalDefStateConsistent(methodName)) {
+//				depth = next.getStatements().get(0).getDepth();
+//				lStmt.setDepth(depth);
+//				prev = next;
+//			}
+//			else {
+//				prev.setStatements(prevStmts);
+//				next.setStatements(nextStmts);
+//				isOptimized = true;
+//			}
+//			
+//			if (depth == 0) break; // Can't optimize more
+//		}
+//		
+//		this.mMap.get(methodName).regenerateStmts();
 	}
 
 	private boolean isGlobalDefStateConsistent(String methodName) {
