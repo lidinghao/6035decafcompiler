@@ -163,17 +163,15 @@ public class GlobalConstantPropagationOptimizer {
 				// Check if statement is of type : arg = constant
 				Name arg1 = qStmt.getArg1();
 				if (qStmt.isAssignmentStatement()) {	
-					if (arg1.getClass().equals(ConstantName.class) && qStmt.getArg2() == null) {
-						if (cName == null) {
-							cName = (ConstantName)arg1;
-						} else {
-							if (!((ConstantName)arg1).equals(cName)) {
-								cName = null; break;
-							}
-						}
+					if (cName == null) {
+						cName = (ConstantName)arg1;
 					} else {
-						cName = null; break;
+						if (!((ConstantName)arg1).equals(cName)) {
+							cName = null; break;
+						}
 					}
+				} else {
+					cName = null; break;
 				}
 			}
 		}
