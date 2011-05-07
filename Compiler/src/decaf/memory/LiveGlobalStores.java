@@ -135,9 +135,9 @@ public class LiveGlobalStores {
 		
 		if (!in.equals(origIn)) {
 			// Add successors to cfgBlocks list
-			for (CFGBlock succ : block.getSuccessors()) {
-				if (!cfgBlocksToProcess.contains(succ)) {
-					cfgBlocksToProcess.add(succ);
+			for (CFGBlock pred : block.getPredecessors()) {
+				if (!cfgBlocksToProcess.contains(pred)) {
+					cfgBlocksToProcess.add(pred);
 				}
 			}
 		}
