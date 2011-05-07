@@ -108,7 +108,7 @@ public class WebGenerator {
 			
 			for (Web w: webs) {
 				int min = this.mMap.get(methodName).getStatements().size(); // Max index
-				int max = 0; // Min index
+				int max = -1; // Min index
 				
 				int index;
 				for (LIRStatement stmt: w.getDefinitions()) {
