@@ -75,7 +75,9 @@ public class LoopInvariantGenerator {
 		for (String s : mMap.keySet()) {
 			boolean inFor = false;
 			List<String> forIdList = new ArrayList<String>();
-			for (LIRStatement stmt : mMap.get(s).getStatements()) {
+			List<LIRStatement> stmts = mMap.get(s).getStatements();
+			for (int i = 0; i < stmts.size(); i++) {
+				LIRStatement stmt = stmts.get(i);
 				if (stmt.getClass().equals(LabelStmt.class)) {
 					forLabel = ((LabelStmt)stmt).getLabelString();
 					if (forLabel.matches(ForInitLabelRegex)) {
@@ -98,7 +100,7 @@ public class LoopInvariantGenerator {
 							} else {
 								loopStmts = loopQuadrupletStmts.get(forId);
 							}
-							loopStmts.add(new LoopQuadrupletStmt((QuadrupletStmt)stmt, forId));
+							loopStmts.add(new LoopQuadrupletStmt((QuadrupletStmt)stmt, forId, i));
 						}
 					}
 				}
@@ -233,10 +235,12 @@ public class LoopInvariantGenerator {
 	public class LoopQuadrupletStmt {
 		private QuadrupletStmt qStmt;
 		private String loopBodyBlockId;
+		private int stmtIndex;
 
-		public LoopQuadrupletStmt(QuadrupletStmt q, String loopId) {
+		public LoopQuadrupletStmt(QuadrupletStmt q, String loopId, int stmtIndex) {
 			this.qStmt = q;
 			this.loopBodyBlockId = loopId;
+			this.stmtIndex = stmtIndex;
 		}
 		
 		public QuadrupletStmt getqStmt() {
@@ -253,6 +257,14 @@ public class LoopInvariantGenerator {
 
 		public void setLoopBodyBlockId(String loopBodyId) {
 			this.loopBodyBlockId = loopBodyId;
+		}
+		
+		public int getStmtIndex() {
+			return stmtIndex;
+		}
+
+		public void setStmtIndex(int stmtIndex) {
+			this.stmtIndex = stmtIndex;
 		}
 		
 		@Override
