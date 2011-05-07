@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import decaf.codegen.flatir.ArrayName;
 import decaf.codegen.flatir.CmpStmt;
 import decaf.codegen.flatir.ConstantName;
 import decaf.codegen.flatir.LIRStatement;
@@ -13,6 +14,7 @@ import decaf.codegen.flatir.PopStmt;
 import decaf.codegen.flatir.PushStmt;
 import decaf.codegen.flatir.QuadrupletStmt;
 import decaf.codegen.flatir.RegisterName;
+import decaf.codegen.flatir.StoreStmt;
 import decaf.codegen.flatir.VarName;
 import decaf.codegen.flattener.ProgramFlattener;
 import decaf.dataflow.cfg.CFGBlock;
@@ -193,7 +195,7 @@ public class WebGenerator {
 					}
 				}
 				
-				if (isValidWebName(mName, dest)) {
+				if (isValidWebName(mName, dest)) {		
 					this.nameToWebs.get(dest).clear();
 					
 					if (!this.defToWeb.containsKey(qStmt)) {
@@ -258,6 +260,34 @@ public class WebGenerator {
 					}
 					
 					this.nameToWebs.get(dest).add(this.defToWeb.get(lStmt));
+					
+					if (dest.isArray()) {
+						ArrayName aDest = (ArrayName)dest;
+						if (isValidWebName(mName, aDest.getIndex())) { // Add use for index variable if load is for array
+							for (Web w: this.nameToWebs.get(aDest)) {
+								w.addUse(lStmt);
+							}
+						}
+					}
+				}
+			}
+			else if (stmt.getClass().equals(StoreStmt.class)) {
+				StoreStmt sStmt = (StoreStmt) stmt;
+				Name dest = sStmt.getVariable();
+				
+				for (Web w: this.nameToWebs.get(dest)) {
+					w.addUse(sStmt);
+				}
+				
+				if (isValidWebName(mName, dest)) {	// Add use for index variable if store is for array
+					if (dest.isArray()) {
+						ArrayName aDest = (ArrayName)dest;
+						if (isValidWebName(mName, aDest.getIndex())) {
+							for (Web w: this.nameToWebs.get(aDest)) {
+								w.addUse(sStmt);
+							}
+						}
+					}
 				}
 			}
 		}
@@ -318,7 +348,9 @@ public class WebGenerator {
 	}
 	
 	private boolean isValidWebName(String methodName, Name name) {
-		if (name != null && !name.getClass().equals(RegisterName.class) && !name.getClass().equals(ConstantName.class)) {
+		if (name != null && 
+				!name.getClass().equals(RegisterName.class) && 
+				!name.getClass().equals(ConstantName.class)) {
 			// Process for Global, Param (on stack)
 			if (!this.nameToWebs.containsKey(name)) {
 				this.nameToWebs.put(name, new ArrayList<Web>());
