@@ -7,7 +7,16 @@ import decaf.codegen.flattener.MethodFlattenerVisitor;
 public abstract class LIRStatement {
 	protected boolean isLeader;
 	protected int depth;
+	protected boolean isDead;
 	
+	public boolean isDead() {
+		return isDead;
+	}
+
+	public void setDead(boolean isDead) {
+		this.isDead = isDead;
+	}
+
 	public int getDepth() {
 		return depth;
 	}
