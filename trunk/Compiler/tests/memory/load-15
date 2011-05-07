@@ -1,0 +1,16 @@
+class Program {
+  int x, y, z, A[10];
+  boolean c;
+
+  void main() {
+  	// Load c, x, A[x]
+  	for i = 1, 10 {
+  		if (c) {
+  			y = A[x] + 5;
+  		}
+  		else {
+  			z = A[x];
+  		}
+  	}
+  }
+}
