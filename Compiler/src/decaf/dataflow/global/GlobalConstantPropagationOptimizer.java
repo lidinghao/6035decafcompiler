@@ -162,7 +162,7 @@ public class GlobalConstantPropagationOptimizer {
 			if (bFlow.getIn().get(qStmt.getMyId())) {
 				// Check if statement is of type : arg = constant
 				Name arg1 = qStmt.getArg1();
-				if (qStmt.getOperator() != QuadrupletOp.MINUS && qStmt.getOperator() != QuadrupletOp.NOT) {	
+				if (qStmt.isAssignmentStatement()) {	
 					if (arg1.getClass().equals(ConstantName.class) && qStmt.getArg2() == null) {
 						if (cName == null) {
 							cName = (ConstantName)arg1;
