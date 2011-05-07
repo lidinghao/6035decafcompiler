@@ -7,8 +7,10 @@ import java.util.HashSet;
 import java.util.List;
 
 import decaf.codegen.flatir.ArrayName;
+import decaf.codegen.flatir.ConstantName;
 import decaf.codegen.flatir.LIRStatement;
 import decaf.codegen.flatir.LoadStmt;
+import decaf.codegen.flatir.Name;
 import decaf.codegen.flatir.QuadrupletStmt;
 import decaf.codegen.flatir.RegisterName;
 import decaf.codegen.flattener.ProgramFlattener;
@@ -41,7 +43,6 @@ public class DefsDFAnalyzer {
 
 	private void runWorkList(String methodName) {
 		int totalDefs = this.uniqueDefinitions.get(methodName).size();
-		//if (totalDefs == 0) return;
 		
 		CFGBlock entry = this.getBlockById(methodName, 0);
 		BlockDataFlowState entryBlockFlow = new BlockDataFlowState(totalDefs); // OUT = GEN for entry block
@@ -171,7 +172,7 @@ public class DefsDFAnalyzer {
 		// Invalidate reaching definitions
 		for (LIRStatement s : this.uniqueDefinitions.get(methodName)) {
 			if (s.getClass().equals(QuadrupletStmt.class)) {
-				QuadrupletStmt qStmt = (QuadrupletStmt) stmt;
+				QuadrupletStmt qStmt = (QuadrupletStmt) s;
 				if (qStmt.getDestination().equals(stmt.getDestination())) { // Definitions to same var name
 					if (in.get(qStmt.getMyId())) {
 						kill.set(qStmt.getMyId(), true);
@@ -180,22 +181,48 @@ public class DefsDFAnalyzer {
 					gen.clear(qStmt.getMyId()); // Clear any previous gen bits for same dest var
 				}
 				
-				if (qStmt.getDestination().isArray()) { // Definition to index var of some array name!
-					ArrayName dest = (ArrayName) qStmt.getDestination();
-					if (dest.getIndex().equals(stmt.getDestination())) {
-						if (in.get(qStmt.getMyId())) {
-							kill.set(qStmt.getMyId(), true);
+				Name name = qStmt.getDestination();
+				
+				boolean resetName = false;
+				
+				if (name.isArray()) {
+					Name myName = name;
+					
+					do {
+						ArrayName array = (ArrayName) myName;
+						if (array.getIndex().equals(stmt.getDestination())) { // Index being reassigned, KILL!
+							resetName = true;
 						}
 						
-						gen.clear(qStmt.getMyId()); // Clear any previous gen bits for same dest var
+						myName = array.getIndex();
+						
+					} while (myName.isArray());
+					
+					if (stmt.getDestination().isArray()) {
+						ArrayName dest = (ArrayName) stmt.getDestination();
+						ArrayName arrName = (ArrayName) name;
+						if (dest.getIndex().getClass().equals(ConstantName.class) &&
+								!arrName.getIndex().getClass().equals(ConstantName.class)) {
+							if (arrName.getId().equals(dest.getId())) {
+								resetName = true;
+							}
+						}
 					}
+				}
+				
+				if (resetName) {
+					if (in.get(qStmt.getMyId())) {
+						kill.set(qStmt.getMyId(), true);
+					}
+					
+					gen.clear(qStmt.getMyId()); // Clear any previous gen bits for same dest var
 				}
 				
 				gen.set(stmt.getMyId()); // Set gen bit on
 			}
 			else if (s.getClass().equals(LoadStmt.class)) {
 				LoadStmt lStmt = (LoadStmt) s;
-				if (in.get(lStmt.getMyId())) {
+				if (in.get(lStmt.getMyId())) { // Does this make sense?
 					kill.set(lStmt.getMyId(), true);
 				}
 				
