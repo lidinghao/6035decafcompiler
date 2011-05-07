@@ -13,6 +13,7 @@ import decaf.codegen.flatir.LIRStatement;
 import decaf.codegen.flatir.Name;
 import decaf.codegen.flatir.PopStmt;
 import decaf.codegen.flatir.PushStmt;
+import decaf.codegen.flatir.QuadrupletOp;
 import decaf.codegen.flatir.QuadrupletStmt;
 import decaf.codegen.flatir.RegisterName;
 import decaf.codegen.flattener.ProgramFlattener;
@@ -161,16 +162,18 @@ public class GlobalConstantPropagationOptimizer {
 			if (bFlow.getIn().get(qStmt.getMyId())) {
 				// Check if statement is of type : arg = constant
 				Name arg1 = qStmt.getArg1();
-				if (arg1.getClass().equals(ConstantName.class) && qStmt.getArg2() == null) {
-					if (cName == null) {
-						cName = (ConstantName)arg1;
-					} else {
-						if (!((ConstantName)arg1).equals(cName)) {
-							cName = null; break;
+				if (qStmt.getOperator() != QuadrupletOp.MINUS && qStmt.getOperator() != QuadrupletOp.NOT) {	
+					if (arg1.getClass().equals(ConstantName.class) && qStmt.getArg2() == null) {
+						if (cName == null) {
+							cName = (ConstantName)arg1;
+						} else {
+							if (!((ConstantName)arg1).equals(cName)) {
+								cName = null; break;
+							}
 						}
+					} else {
+						cName = null; break;
 					}
-				} else {
-					cName = null; break;
 				}
 			}
 		}
