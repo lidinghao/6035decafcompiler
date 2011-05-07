@@ -2,9 +2,13 @@ package decaf.optimize;
 
 import java.util.HashMap;
 
+import decaf.dataflow.cfg.CFGBlock;
 import decaf.dataflow.cfg.MethodIR;
+import decaf.memory.LiveGlobalStores;
 import decaf.memory.LoadStmtsAdder;
 import decaf.memory.NaiveStoreAdder;
+import decaf.memory.NaiveStoreOptimizer;
+import decaf.memory.StoreStmtsAdder;
 
 public class ArrayAccessOptimizer {
 	private HashMap<String, MethodIR> mMap;
@@ -33,8 +37,15 @@ public class ArrayAccessOptimizer {
 		LoadStmtsAdder la = new LoadStmtsAdder(mMap);
 		la.addLoads();
 		
-		// Add stores
-		NaiveStoreAdder ns = new NaiveStoreAdder(mMap);
-		ns.addStores();
+		// Add stores		
+		StoreStmtsAdder sa = new StoreStmtsAdder(mMap);
+		sa.addStores();
+		
+//		for (CFGBlock b: this.mMap.get("main").getCfgBlocks()) {
+//			System.out.println("===================");
+//			System.out.println(sa.getSo().getLGS().getUniqueGlobals().get("main") + "\n");
+//			System.out.println(b);
+//			System.out.println(sa.getSo().getLGS().getCfgBlocksState().get(b));
+//		}
 	}
 }
