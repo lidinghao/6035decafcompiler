@@ -86,6 +86,12 @@ public class ReachingStores {
 					
 					temp.add(lStmt.getVariable());
 				}
+				else if (stmt.getClass().equals(QuadrupletStmt.class)) {
+					QuadrupletStmt qStmt = (QuadrupletStmt) stmt;
+					if (qStmt.getDestination().isGlobal()) {
+						temp.add(qStmt.getDestination());
+					}
+				}
 			}
 			
 			this.cfgBlocksToProcess.add(block);
@@ -198,7 +204,6 @@ public class ReachingStores {
 		
 		BitSet in = bFlow.getIn();
 		BitSet gen = bFlow.getGen();
-		BitSet kill = bFlow.getKill();
 		
 		for (Name name : this.globalLoads.get(methodName)) {
 			int i = this.globalLoads.get(methodName).indexOf(name);
@@ -231,10 +236,7 @@ public class ReachingStores {
 			}
 			
 			if (resetName) {
-				if (in.get(i)) {
-					kill.set(i);
-				}
-				
+				in.clear(i);
 				gen.clear(i);
 			}
 			
