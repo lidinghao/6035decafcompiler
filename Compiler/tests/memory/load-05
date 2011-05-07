@@ -1,0 +1,17 @@
+class Program {
+  int x, z, A[10];
+
+  void main() {
+  	int a;
+  	
+  	// Add load x, A[x] here
+  	
+  	for i = 0, 10 {
+  		for j = 0, 10 {
+  			a = A[x];
+  		}
+  	}
+  	
+  	z = a;
+  }
+}
