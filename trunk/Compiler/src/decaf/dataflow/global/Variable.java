@@ -37,4 +37,9 @@ public class Variable {
 	public void setVar(Name arg1) {
 		this.var = arg1;
 	}
+	
+	@Override
+	public String toString() {
+		return var.toString();
+	}
 }
