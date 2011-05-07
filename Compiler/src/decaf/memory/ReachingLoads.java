@@ -86,6 +86,12 @@ public class ReachingLoads {
 					
 					temp.add(lStmt.getVariable());
 				}
+				else if (stmt.getClass().equals(QuadrupletStmt.class)) {
+					QuadrupletStmt qStmt = (QuadrupletStmt) stmt;
+					if (qStmt.getDestination().isGlobal()) {
+						temp.add(qStmt.getDestination());
+					}
+				}
 			}
 			
 			this.cfgBlocksToProcess.add(block);
@@ -130,6 +136,7 @@ public class ReachingLoads {
 		out.or(bFlow.getGen());
 		
 		if (!out.equals(origOut)) {
+			//System.out.println(out + ";" +origOut);
 			// Add successors to cfgBlocks list
 			for (CFGBlock succ : block.getSuccessors()) {
 				if (!cfgBlocksToProcess.contains(succ)) {
@@ -196,7 +203,6 @@ public class ReachingLoads {
 		
 		BitSet in = bFlow.getIn();
 		BitSet gen = bFlow.getGen();
-		BitSet kill = bFlow.getKill();
 		
 		for (Name name : this.globalLoads.get(methodName)) {
 			int i = this.globalLoads.get(methodName).indexOf(name);
@@ -229,10 +235,7 @@ public class ReachingLoads {
 			}
 			
 			if (resetName) {
-				if (in.get(i)) {
-					kill.set(i);
-				}
-				
+				in.clear(i);
 				gen.clear(i);
 			}
 			
