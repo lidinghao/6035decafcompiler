@@ -264,7 +264,7 @@ public class WebGenerator {
 					if (dest.isArray()) {
 						ArrayName aDest = (ArrayName)dest;
 						if (isValidWebName(mName, aDest.getIndex())) { // Add use for index variable if load is for array
-							for (Web w: this.nameToWebs.get(aDest)) {
+							for (Web w: this.nameToWebs.get(aDest.getIndex())) {
 								w.addUse(lStmt);
 							}
 						}
@@ -275,17 +275,17 @@ public class WebGenerator {
 				StoreStmt sStmt = (StoreStmt) stmt;
 				Name dest = sStmt.getVariable();
 				
-				for (Web w: this.nameToWebs.get(dest)) {
-					w.addUse(sStmt);
+				if (isValidWebName(mName, dest)) {
+					for (Web w: this.nameToWebs.get(dest)) {
+						w.addUse(sStmt);
+					}
 				}
 				
-				if (isValidWebName(mName, dest)) {	// Add use for index variable if store is for array
-					if (dest.isArray()) {
-						ArrayName aDest = (ArrayName)dest;
-						if (isValidWebName(mName, aDest.getIndex())) {
-							for (Web w: this.nameToWebs.get(aDest)) {
-								w.addUse(sStmt);
-							}
+				if (dest.isArray()) { // Add use for index variable if store is for array
+					ArrayName aDest = (ArrayName)dest;
+					if (isValidWebName(mName, aDest.getIndex())) {
+						for (Web w: this.nameToWebs.get(aDest.getIndex())) {
+							w.addUse(sStmt);
 						}
 					}
 				}
