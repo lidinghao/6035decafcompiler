@@ -58,6 +58,10 @@ public class NaiveStoreOptimizer {
 			
 			this.mMap.get(methodName).regenerateStmts();
 		}
+		
+		// Dead code stores
+		StoresDC dc = new StoresDC(this.mMap);
+		dc.removeDeadStores();
 	}
 
 	private void optimizeMethod(String methodName) {
@@ -84,10 +88,6 @@ public class NaiveStoreOptimizer {
 			}
 			
 		}
-		
-		// Dead code loads
-		LoadsDC dc = new LoadsDC(this.mMap);
-		dc.removeDeadLoads();
 	}
 
 	private void optimizeStore(String methodName) {	
