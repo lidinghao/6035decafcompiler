@@ -2,12 +2,8 @@ package decaf.optimize;
 
 import java.util.HashMap;
 
-import decaf.dataflow.cfg.CFGBlock;
 import decaf.dataflow.cfg.MethodIR;
-import decaf.memory.LiveGlobalStores;
 import decaf.memory.LoadStmtsAdder;
-import decaf.memory.NaiveStoreAdder;
-import decaf.memory.NaiveStoreOptimizer;
 import decaf.memory.StoreStmtsAdder;
 
 public class ArrayAccessOptimizer {
