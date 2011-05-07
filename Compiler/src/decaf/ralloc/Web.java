@@ -3,6 +3,7 @@ package decaf.ralloc;
 import java.util.ArrayList;
 import java.util.List;
 
+import decaf.codegen.flatir.ArrayName;
 import decaf.codegen.flatir.CmpStmt;
 import decaf.codegen.flatir.LIRStatement;
 import decaf.codegen.flatir.LoadStmt;
@@ -89,7 +90,7 @@ public class Web {
 			if (this.variable.equals(qStmt.getArg1())) {
 				qStmt.setArg1(this.variable);
 			}
-			else if (this.variable.equals(qStmt.getArg2())) {
+			if (this.variable.equals(qStmt.getArg2())) {
 				qStmt.setArg2(this.variable);
 			}
 		}
@@ -98,7 +99,7 @@ public class Web {
 			if (this.variable.equals(cStmt.getArg1())) {
 				cStmt.setArg1(this.variable);
 			}
-			else if (this.variable.equals(cStmt.getArg2())) {
+			if (this.variable.equals(cStmt.getArg2())) {
 				cStmt.setArg2(this.variable);
 			}
 		}
@@ -118,6 +119,25 @@ public class Web {
 			StoreStmt sStmt = (StoreStmt) use;
 			if (sStmt.getVariable().equals(this.variable)) {
 				sStmt.setVariable(this.variable);
+			}
+			
+			Name dest = sStmt.getVariable();
+			
+			if (dest.isArray()) {
+				ArrayName aDest = (ArrayName) dest;
+				if (aDest.getIndex().equals(this.variable)) {
+					aDest.setIndex(this.variable);
+				}
+			}
+		}
+		else if (use.getClass().equals(LoadStmt.class)) {
+			Name dest = ((LoadStmt)use).getVariable();
+			
+			if (dest.isArray()) {
+				ArrayName aDest = (ArrayName) dest;
+				if (aDest.getIndex().equals(this.variable)) {
+					aDest.setIndex(this.variable);
+				}
 			}
 		}
 	}
