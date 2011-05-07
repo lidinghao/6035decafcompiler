@@ -1,0 +1,10 @@
+class Program {
+  int z, A[10];
+
+  void main() {
+  	z = 10;
+  	// Store z here
+  	A[4] = 67;
+  	// Store A[4] here
+  }
+}

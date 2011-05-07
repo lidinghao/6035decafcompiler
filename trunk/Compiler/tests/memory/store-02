@@ -1,0 +1,9 @@
+class Program {
+  int y, z, A[10];
+
+  void main() {
+  	z = 10 + y;
+  	A[4] = z;
+  	z = 90;
+  }
+}
