@@ -62,6 +62,10 @@ public class NaiveLoadOptimizer {
 			
 			this.mMap.get(methodName).regenerateStmts();
 		}
+		
+		// Dead code loads
+		LoadsDC dc = new LoadsDC(this.mMap);
+		dc.removeDeadLoads();
 	}
 
 	private void optimizeMethod(String methodName) {
@@ -88,10 +92,6 @@ public class NaiveLoadOptimizer {
 			}
 			
 		}
-		
-		// Dead code loads
-		LoadsDC dc = new LoadsDC(this.mMap);
-		dc.removeDeadLoads();
 		
 		addBoundChecksToLoads(methodName);
 	}
@@ -234,9 +234,6 @@ public class NaiveLoadOptimizer {
 						return false;
 				}
 			}
-			else if (stmt.getClass().equals(LoadStmt.class)) {
-				this.globalsInBlock.add(((LoadStmt)stmt).getVariable());
-			}
 			else if (stmt.getClass().equals(CallStmt.class)) {
 				if (((CallStmt)stmt).getMethodLabel().equals(ProgramFlattener.exceptionHandlerLabel)) continue;
 				this.globalsInBlock.clear();
@@ -304,7 +301,8 @@ public class NaiveLoadOptimizer {
 					if (qStmt.getDestination().isArray()) {
 						ArrayName dest = (ArrayName) qStmt.getDestination();
 						ArrayName arrName = (ArrayName) name;
-						if (!arrName.getIndex().getClass().equals(ConstantName.class)) {
+						if (dest.getIndex().getClass().equals(ConstantName.class) &&
+								!arrName.getIndex().getClass().equals(ConstantName.class)) {
 							if (arrName.getId().equals(dest.getId())) {
 								resetName = true;
 							}

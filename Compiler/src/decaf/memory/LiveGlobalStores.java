@@ -113,22 +113,22 @@ public class LiveGlobalStores {
 		// Calculate the in BitSet by taking intersection of predecessors
 		BlockDataFlowState bFlow = new BlockDataFlowState(totalGlobals);
 		
-		// If there exists no successor, set Out to all True
+		// If there exist at least one successor, set Out to all True
 		if (block.getSuccessors().size() > 0) {
 			bFlow.getOut().set(0, totalGlobals);
 		}
 		
 		BitSet out = bFlow.getOut();
-		for (CFGBlock pred : block.getPredecessors()) {
+		for (CFGBlock pred : block.getSuccessors()) {
 			if (this.cfgBlocksState.containsKey(pred)) {
-				out.and(this.cfgBlocksState.get(pred).getOut());
+				out.and(this.cfgBlocksState.get(pred).getIn());
 			}
 		}
 		
 		calculateGenKillSets(block, bFlow);
 		
 		// Calculate Out
-		BitSet in = bFlow.getOut(); // IN = (OUT - KILL) U GEN
+		BitSet in = bFlow.getIn(); // IN = (OUT - KILL) U GEN
 		in.or(out);
 		in.xor(bFlow.getKill());
 		in.or(bFlow.getGen());
@@ -190,7 +190,7 @@ public class LiveGlobalStores {
 	public void updateKillGenSet(String methodName, QuadrupletStmt stmt, BlockDataFlowState bFlow) {
 		if (stmt == null) return;
 		
-		BitSet in = bFlow.getIn();
+		BitSet out = bFlow.getOut();
 		BitSet gen = bFlow.getGen();
 		BitSet kill = bFlow.getKill();
 		
@@ -215,7 +215,8 @@ public class LiveGlobalStores {
 				if (stmt.getDestination().isArray()) {
 					ArrayName dest = (ArrayName) stmt.getDestination();
 					ArrayName arrName = (ArrayName) name;
-					if (!arrName.getIndex().getClass().equals(ConstantName.class)) {
+					if (dest.getIndex().getClass().equals(ConstantName.class) &&
+							!arrName.getIndex().getClass().equals(ConstantName.class)) {
 						if (arrName.getId().equals(dest.getId())) {
 							resetName = true;
 						}
@@ -224,7 +225,7 @@ public class LiveGlobalStores {
 			}
 			
 			if (resetName) {
-				if (in.get(i)) {
+				if (out.get(i)) {
 					kill.set(i);
 				}
 				
@@ -234,7 +235,7 @@ public class LiveGlobalStores {
 			if (name.equals(stmt.getDestination())) {
 				gen.set(i);
 			}
-		}		
+		}	
 	}
 
 	public HashMap<CFGBlock, BlockDataFlowState> getCfgBlocksState() {

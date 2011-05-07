@@ -234,8 +234,9 @@ public class ReachingGlobalDefinitions {
 				if (stmt.getDestination().isArray()) {
 					ArrayName dest = (ArrayName) stmt.getDestination();
 					ArrayName arrName = (ArrayName) name;
-					if (!arrName.getIndex().getClass().equals(ConstantName.class)) {
-						if (arrName.getId().equals(dest.getId())) {
+					if (dest.getIndex().getClass().equals(ConstantName.class) &&
+							!arrName.getIndex().getClass().equals(ConstantName.class)) {
+						if (dest.getId().equals(arrName.getId())) {
 							resetName = true;
 						}
 					}

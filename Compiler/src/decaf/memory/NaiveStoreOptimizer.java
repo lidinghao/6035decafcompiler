@@ -7,14 +7,10 @@ import java.util.List;
 
 import decaf.codegen.flatir.ArrayName;
 import decaf.codegen.flatir.CallStmt;
-import decaf.codegen.flatir.CmpStmt;
 import decaf.codegen.flatir.ConstantName;
 import decaf.codegen.flatir.LIRStatement;
 import decaf.codegen.flatir.LabelStmt;
-import decaf.codegen.flatir.LoadStmt;
 import decaf.codegen.flatir.Name;
-import decaf.codegen.flatir.PopStmt;
-import decaf.codegen.flatir.PushStmt;
 import decaf.codegen.flatir.QuadrupletStmt;
 import decaf.codegen.flatir.StoreStmt;
 import decaf.codegen.flatir.VarName;
@@ -24,9 +20,8 @@ import decaf.dataflow.cfg.MethodIR;
 import decaf.dataflow.global.BlockDataFlowState;
 
 public class NaiveStoreOptimizer {
-	private static String ArrayPassLabelRegex = "[a-zA-z_]\\w*.array.[a-zA-z_]\\w*.\\d+.pass";
 	private static String ForTestLabelRegex = "[a-zA-z_]\\w*.for\\d+.test";
-	private static String ForInitLabelRegex = "[a-zA-z_]\\w*.for\\d+.init";
+	private static String ForEndLabelRegex = "[a-zA-z_]\\w*.for\\d+.end";
 	private HashMap<String, MethodIR> mMap;
 	private LiveGlobalStores lgs;
 	private HashSet<StoreStmt> storeGlobals;
@@ -74,7 +69,7 @@ public class NaiveStoreOptimizer {
 			}
 			
 			getStoreStmts(methodName);
-			optimizeStores(methodName);
+			optimizeStore(methodName);
 
 			boolean isChanged = false;
 			for (CFGBlock block : this.mMap.get(methodName).getCfgBlocks()) {
@@ -90,14 +85,14 @@ public class NaiveStoreOptimizer {
 			
 		}
 		
-		// Dead code stores TODO
+		// Dead code loads
 		LoadsDC dc = new LoadsDC(this.mMap);
 		dc.removeDeadLoads();
 	}
 
-	private void optimizeStores(String methodName) {	
-		for (StoreStmt lStmt: this.storeGlobals) {
-			optimizeStore(methodName, lStmt);
+	private void optimizeStore(String methodName) {	
+		for (StoreStmt sStmt: this.storeGlobals) {
+			optimizeStore(methodName, sStmt);
 		}
 		
 		for (StoreStmt lStmt: this.storeArrays) {
@@ -105,41 +100,47 @@ public class NaiveStoreOptimizer {
 		}
 	}
 
-	private void optimizeStore(String methodName, StoreStmt lStmt) {
+	private void optimizeStore(String methodName, StoreStmt sStmt) {
 		List<LIRStatement> prevStmts;
 		List<LIRStatement> nextStmts;
 		
-		//CFGBlock prev = getBlockForStmt(lStmt, methodName);
-		int depth = lStmt.getDepth();
+		CFGBlock prev = getBlockForStmt(sStmt, methodName);
+		int depth = sStmt.getDepth();
 		boolean isOptimized = false;
 		
-		while (!isOptimized) {}
-//			CFGBlock next = getParentForInitBlock(prev, depth);
-//			prevStmts = copyStmts(prev);
-//			nextStmts = copyStmts(next);
-//			
-//			removeLoad(prev, lStmt);
-//			insertLoad(next, lStmt);
-//			
-//			this.mMap.get(methodName).regenerateStmts();
-//			
-//			lgs.analyze();
-//			
-//			if (isGlobalDefStateConsistent(methodName)) {
-//				depth = next.getStatements().get(0).getDepth();
-//				lStmt.setDepth(depth);
-//				prev = next;
+		while (!isOptimized) {
+			CFGBlock next = getChildForEndBlock(prev, depth);
+			prevStmts = copyStmts(prev);
+			nextStmts = copyStmts(next);
+			
+			removeStore(prev, sStmt);
+			insertStore(next, sStmt);
+			
+			this.mMap.get(methodName).regenerateStmts();
+			
+			lgs.analyze();
+			
+//			System.out.println("\n\nTRY: " + sStmt);
+//			for (LIRStatement stmt: this.mMap.get(methodName).getStatements()) {
+//				System.out.println(stmt);
 //			}
-//			else {
-//				prev.setStatements(prevStmts);
-//				next.setStatements(nextStmts);
-//				isOptimized = true;
-//			}
-//			
-//			if (depth == 0) break; // Can't optimize more
-//		}
-//		
-//		this.mMap.get(methodName).regenerateStmts();
+//			System.out.println("END TRY: " + sStmt + "\n\n");
+			
+			if (isGlobalDefStateConsistent(methodName)) {
+				depth = next.getStatements().get(0).getDepth();
+				sStmt.setDepth(depth);
+				prev = next;
+			}
+			else {
+				prev.setStatements(prevStmts);
+				next.setStatements(nextStmts);
+				isOptimized = true;
+			}
+			
+			if (depth == 0) break; // Can't optimize more
+		}
+		
+		this.mMap.get(methodName).regenerateStmts();
 	}
 
 	private boolean isGlobalDefStateConsistent(String methodName) {
@@ -156,60 +157,25 @@ public class NaiveStoreOptimizer {
 		this.globalsInBlock.clear();
 		this.seenCall = false;
 		
-		for (LIRStatement stmt: block.getStatements()) {			
-			if (stmt.getClass().equals(LoadStmt.class)) {
-				this.globalsInBlock.add(((LoadStmt)stmt).getVariable());
+		for (int i = block.getStatements().size()-1; i >= 0; i--) {	
+			LIRStatement stmt = block.getStatements().get(i);
+			
+			if (stmt.getClass().equals(StoreStmt.class)) {
+				this.globalsInBlock.add(((StoreStmt)stmt).getVariable());
 			}
 			else if (stmt.getClass().equals(QuadrupletStmt.class)) {
 				QuadrupletStmt qStmt = (QuadrupletStmt) stmt;
-
-				if (qStmt.getArg1().isGlobal()) {
-					if (!checkName(qStmt.getArg1(), block)) {
+				
+				if (qStmt.getDestination().isGlobal()) {
+					if (!checkName(qStmt.getDestination(), block)) {
 						return false;
 					}
-				}
-				if (qStmt.getArg2() != null && qStmt.getArg2().isGlobal()) {
-					if (!checkName(qStmt.getArg2(), block)) {
-						return false;
-					}
+					
+					this.globalsInBlock.add(qStmt.getDestination());
 				}
 				
 				killLocalGlobals(qStmt, block);
-				
-				if (qStmt.getDestination().isGlobal()) {
-					this.globalsInBlock.add(qStmt.getDestination());
-				}				
 			} 
-			else if (stmt.getClass().equals(CmpStmt.class)) {
-				CmpStmt cStmt = (CmpStmt) stmt;
-				if (cStmt.getArg1().isGlobal()) {
-					if (!checkName(cStmt.getArg1(), block))
-						return false;
-				}
-				if (cStmt.getArg2().isGlobal()) {
-					if (!checkName(cStmt.getArg2(), block))
-						return false;
-				}
-			} 
-			else if (stmt.getClass().equals(PushStmt.class)) {
-				PushStmt pStmt = (PushStmt) stmt;
-
-				if (pStmt.getName().isGlobal()) {
-					if (!checkName(pStmt.getName(), block))
-						return false;
-				}
-			} 
-			else if (stmt.getClass().equals(PopStmt.class)) {
-				PopStmt pStmt = (PopStmt) stmt;
-
-				if (pStmt.getName().isGlobal()) {
-					if (!checkName(pStmt.getName(), block))
-						return false;
-				}
-			}
-			else if (stmt.getClass().equals(LoadStmt.class)) {
-				this.globalsInBlock.add(((LoadStmt)stmt).getVariable());
-			}
 			else if (stmt.getClass().equals(CallStmt.class)) {
 				if (((CallStmt)stmt).getMethodLabel().equals(ProgramFlattener.exceptionHandlerLabel)) continue;
 				this.globalsInBlock.clear();
@@ -248,7 +214,7 @@ public class NaiveStoreOptimizer {
 //		}
 		
 		BlockDataFlowState state = this.lgs.getCfgBlocksState().get(block);
-		if (!state.getIn().get(i)) {
+		if (!state.getOut().get(i)) {
 			return false;
 		}
 
@@ -277,7 +243,8 @@ public class NaiveStoreOptimizer {
 					if (qStmt.getDestination().isArray()) {
 						ArrayName dest = (ArrayName) qStmt.getDestination();
 						ArrayName arrName = (ArrayName) name;
-						if (!arrName.getIndex().getClass().equals(ConstantName.class)) {
+						if (dest.getIndex().getClass().equals(ConstantName.class) &&
+								!arrName.getIndex().getClass().equals(ConstantName.class)) {
 							if (arrName.getId().equals(dest.getId())) {
 								resetName = true;
 							}
@@ -288,7 +255,7 @@ public class NaiveStoreOptimizer {
 				if (resetName) {
 					List<Name> uniqueGlobals = this.lgs.getUniqueGlobals().get(block.getMethodName());
 					int i = uniqueGlobals.indexOf(name);
-					this.lgs.getCfgBlocksState().get(block).getIn().set(i, false);
+					this.lgs.getCfgBlocksState().get(block).getOut().set(i, false);
 					remove.add(name);
 				}
 			}
@@ -297,27 +264,27 @@ public class NaiveStoreOptimizer {
 		this.globalsInBlock.removeAll(remove);
 	}
 
-	private void insertLoad(CFGBlock block, LoadStmt loadStmt) {
+	private void insertStore(CFGBlock block, StoreStmt sStmt) {
 		int index = -1;
 		
 		for (int i = block.getStatements().size()-1; i >= 0; i--) {
 			LIRStatement stmt = block.getStatements().get(i);
 			if (stmt.getClass().equals(LabelStmt.class)) {
 				LabelStmt lStmt = (LabelStmt) stmt;
-				if (lStmt.getLabelString().matches(ForInitLabelRegex)) {
-					index = i;
+				if (lStmt.getLabelString().matches(ForEndLabelRegex)) {
+					index = i+1;
 					break;
 				}
 			}
 		}
 		
-		block.getStatements().add(index, loadStmt);	
+		block.getStatements().add(index, sStmt);	
 	}
 
-	private void removeLoad(CFGBlock prev, LoadStmt lStmt) {
+	private void removeStore(CFGBlock prev, StoreStmt sStmt) {
 		int index = -1;
 		for (int i = 0; i < prev.getStatements().size(); i++) {
-			if (prev.getStatements().get(i) == lStmt) {
+			if (prev.getStatements().get(i) == sStmt) {
 				index = i;
 				break;
 			}
@@ -332,27 +299,27 @@ public class NaiveStoreOptimizer {
 		return newStmts;
 	}
 	
-	private CFGBlock getParentForInitBlock(CFGBlock block, int depth) {
-		CFGBlock parent = block;
+	private CFGBlock getChildForEndBlock(CFGBlock block, int depth) {
+		CFGBlock succ = block;
 		boolean found = false;
 		
 		while (!found) {
-			parent = parent.getPredecessors().get(0);
-			LIRStatement stmt = parent.getStatements().get(0);
+			succ = succ.getPredecessors().get(0);
+			LIRStatement stmt = succ.getStatements().get(0);
 			
 			if (stmt.getClass().equals(LabelStmt.class)) {
 				LabelStmt lStmt = (LabelStmt) stmt;
 				if (lStmt.getLabelString().matches(ForTestLabelRegex)) {
-					parent = parent.getPredecessors().get(0);
+					succ = succ.getSuccessors().get(1);
 					found = true;
 				}
 			}
 		}
 		
-		return parent;
+		return succ;
 	}
 
-	private CFGBlock getBlockForStmt(LoadStmt lStmt, String methodName) {
+	private CFGBlock getBlockForStmt(StoreStmt lStmt, String methodName) {
 		for (CFGBlock block: this.mMap.get(methodName).getCfgBlocks()) {
 			for (LIRStatement stmt: block.getStatements()) {
 				if (stmt == lStmt) return block;
@@ -368,13 +335,13 @@ public class NaiveStoreOptimizer {
 		
 		for (LIRStatement stmt: this.mMap.get(methodName).getStatements()) {
 			if (stmt.getClass().equals(StoreStmt.class)) {
-				StoreStmt lStmt = (StoreStmt) stmt;
-				if (lStmt.getDepth() != 0) {
-					if (lStmt.getVariable().isArray()) {
-						this.storeArrays.add(lStmt);
+				StoreStmt sStmt = (StoreStmt) stmt;
+				if (sStmt.getDepth() != 0) {
+					if (sStmt.getVariable().isArray()) {
+						this.storeArrays.add(sStmt);
 					}
 					else {
-						this.storeGlobals.add(lStmt);
+						this.storeGlobals.add(sStmt);
 					}
 				}
 			}

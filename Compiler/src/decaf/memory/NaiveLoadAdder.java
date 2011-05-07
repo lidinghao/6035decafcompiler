@@ -172,7 +172,8 @@ public class NaiveLoadAdder {
 				if (qStmt.getDestination().isArray()) {
 					ArrayName dest = (ArrayName) qStmt.getDestination();
 					ArrayName arrName = (ArrayName) name;
-					if (!arrName.getIndex().getClass().equals(ConstantName.class)) {
+					if (dest.getIndex().getClass().equals(ConstantName.class) &&
+							!arrName.getIndex().getClass().equals(ConstantName.class)) {
 						if (arrName.getId().equals(dest.getId())) {
 							resetName = true;
 						}

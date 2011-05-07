@@ -219,7 +219,8 @@ public class ReachingLoads {
 				if (stmt.getDestination().isArray()) {
 					ArrayName dest = (ArrayName) stmt.getDestination();
 					ArrayName arrName = (ArrayName) name;
-					if (!arrName.getIndex().getClass().equals(ConstantName.class)) {
+					if (dest.getIndex().getClass().equals(ConstantName.class) &&
+							!arrName.getIndex().getClass().equals(ConstantName.class)) {
 						if (arrName.getId().equals(dest.getId())) {
 							resetName = true;
 						}
@@ -233,6 +234,10 @@ public class ReachingLoads {
 				}
 				
 				gen.clear(i);
+			}
+			
+			if (name.equals(stmt.getDestination())) {
+				gen.set(i);
 			}
 		}		
 	}

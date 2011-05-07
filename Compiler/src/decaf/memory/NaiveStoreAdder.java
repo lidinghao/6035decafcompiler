@@ -55,7 +55,7 @@ public class NaiveStoreAdder {
 			}
 			
 			for (CFGBlock block : this.mMap.get(methodName).getCfgBlocks()) {
-				if (processBlock(block)) { // Returns true if added some load stmt
+				if (processBlock(block)) { // Returns true if added some store stmt
 					break;
 				}
 			}
@@ -91,17 +91,17 @@ public class NaiveStoreAdder {
 			}
 			else if (stmt.getClass().equals(QuadrupletStmt.class)) {		
 				QuadrupletStmt qStmt = (QuadrupletStmt) stmt;
-				
-				killLocalGlobals(qStmt);
-				
-				// Add store stmt if needed
-				if (processName(qStmt.getDestination(), block, i)) {
-					return true;
+
+				if (qStmt.getDestination().isGlobal()) {
+					// Add store stmt if needed
+					if (processName(qStmt.getDestination(), block, i)) {
+						return true;
+					}
+					
+					this.globalsSavedInBlock.add(qStmt.getDestination());
 				}
 				
-				if (qStmt.getDestination().isGlobal()) {
-					this.globalsSavedInBlock.add(qStmt.getDestination());
-				}				
+				killLocalGlobals(qStmt);
 			}
 			else if (stmt.getClass().equals(CallStmt.class)) {
 				if (((CallStmt)stmt).getMethodLabel().equals(ProgramFlattener.exceptionHandlerLabel)) continue;
@@ -134,7 +134,8 @@ public class NaiveStoreAdder {
 				if (qStmt.getDestination().isArray()) {
 					ArrayName dest = (ArrayName) qStmt.getDestination();
 					ArrayName arrName = (ArrayName) name;
-					if (!arrName.getIndex().getClass().equals(ConstantName.class)) {
+					if (dest.getIndex().getClass().equals(ConstantName.class) &&
+							!arrName.getIndex().getClass().equals(ConstantName.class)) {
 						if (arrName.getId().equals(dest.getId())) {
 							resetName = true;
 						}
@@ -170,7 +171,7 @@ public class NaiveStoreAdder {
 		}
 		
 		if (this.seenCall || 
-				block.getPredecessors().size() == 0 ||
+				block.getSuccessors().size() == 0 ||
 				succCount != 0) {
 			StoreStmt store = new StoreStmt(name);
 			store.setDepth(block.getStatements().get(index).getDepth()); // set depth
@@ -190,7 +191,7 @@ public class NaiveStoreAdder {
 		this.lgs = lgs;
 	}
 
-	public LiveGlobalStores getDf() {
+	public LiveGlobalStores getLGS() {
 		return lgs;
 	}
 }
