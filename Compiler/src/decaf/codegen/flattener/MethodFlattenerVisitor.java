@@ -249,21 +249,29 @@ public class MethodFlattenerVisitor implements ASTVisitor<Integer> {
 		this.statements.add(new LabelStmt(getIfTest()));
 		Name condition = stmt.getCondition().accept(this.exprFlatenner);
 		this.statements.add(new CmpStmt(condition, new ConstantName(0)));
-		this.statements.add(new JumpStmt(JumpCondOp.NEQ, new LabelStmt(
-				getIfTrue())));
-
-		// Else block (if any)
+		
 		if (stmt.getElseBlock() != null) {
-			this.statements.add(new LabelStmt(getIfElse()));
-			stmt.getElseBlock().accept(this);
+			this.statements.add(new JumpStmt(JumpCondOp.EQ, new LabelStmt(
+					getIfElse())));
 		}
-
-		this.statements.add(new JumpStmt(JumpCondOp.NONE, new LabelStmt(
-				getIfEnd())));
-
+		else {
+			this.statements.add(new JumpStmt(JumpCondOp.EQ, new LabelStmt(
+					getIfEnd())));
+		}
+		
 		// True block
 		this.statements.add(new LabelStmt(getIfTrue()));
 		stmt.getIfBlock().accept(this);
+
+		// Else block (if any)
+		if (stmt.getElseBlock() != null) {
+			this.statements.add(new JumpStmt(JumpCondOp.NONE, new LabelStmt(
+					getIfEnd())));
+			
+			this.statements.add(new LabelStmt(getIfElse()));
+			
+			stmt.getElseBlock().accept(this);
+		}
 
 		// End block
 		this.statements.add(new LabelStmt(getIfEnd()));
