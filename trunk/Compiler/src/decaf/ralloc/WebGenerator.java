@@ -57,8 +57,28 @@ public class WebGenerator {
 		removeRedundantWebs();
 		unionWebs();
 		indexWebs();
+		
+		removeDeadCodedLoads();
 	}
 	
+	private void removeDeadCodedLoads() {		
+		for (String methodName: this.mMap.keySet()) {
+			for (CFGBlock block: this.mMap.get(methodName).getCfgBlocks()) {
+				List<LIRStatement> newStmts = new ArrayList<LIRStatement>();
+				
+				for (LIRStatement stmt: block.getStatements()) {
+					if (!stmt.isDead()) {
+						newStmts.add(stmt);
+					}
+				}
+				
+				block.setStatements(newStmts);
+			}
+			
+			this.mMap.get(methodName).regenerateStmts();
+		}
+	}
+
 	private void unionWebs() {
 		for (String methodName: this.webMap.keySet()) {
 			if (methodName.equals(ProgramFlattener.exceptionHandlerLabel)) continue;
@@ -142,8 +162,17 @@ public class WebGenerator {
 					}
 				}
 				
-				if (w.getDefinitions().isEmpty() && w.getUses().isEmpty()) { // Empty webs
-					temp.add(w);
+				if (w.getUses().isEmpty()) { // Empty webs
+					if (w.getDefinitions().isEmpty()) {
+						temp.add(w);
+					}
+					else if (w.getDefinitions().size() == 1) {
+						LIRStatement stmt = w.getDefinitions().get(0);
+						if (stmt.getClass().equals(LoadStmt.class)) {
+							stmt.setDead(true);
+							temp.add(w);
+						}
+					}
 				}
 			}
 			
