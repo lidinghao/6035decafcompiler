@@ -35,6 +35,7 @@ public class WebGenerator {
 	private HashMap<String, List<Web>> webMap;
 	private HashMap<Name, List<Web>> nameToWebs; // Webs currently mapping to that name
 	private HashMap<LIRStatement, Web> defToWeb; // Web associated with definition
+	private QuadrupletArgReorderer qArg;
 	
 	public WebGenerator(HashMap<String, MethodIR> mMap) {
 		this.mMap = mMap;
@@ -42,9 +43,13 @@ public class WebGenerator {
 		this.webMap = new HashMap<String, List<Web>>();
 		this.nameToWebs = new HashMap<Name, List<Web>>();
 		this.defToWeb = new HashMap<LIRStatement, Web>();
+		this.qArg = new QuadrupletArgReorderer(mMap);
+		
 	}
 	
-	public void generateWebs() {
+	public void generateWebs() {	
+		this.qArg.reorder();
+		
 		this.defAnalyzer.analyze();
 		
 		for (String methodName: this.mMap.keySet()) {
@@ -56,7 +61,7 @@ public class WebGenerator {
 		
 		removeRedundantWebs();
 		unionWebs();
-		indexWebs();
+		indexWebs(); // Don't use this to generate interference graph
 		
 		removeDeadCodedLoads();
 	}
@@ -176,8 +181,12 @@ public class WebGenerator {
 				}
 			}
 			
-			for (Web w: temp) {
-				this.webMap.get(methodName).remove(w);
+			for (Web web: temp) { // Remove redundant webs (also fix interference graph)
+				for (Web w: web.getInterferingWebs()) {
+					w.removeInterferingWeb(web);
+				}
+				
+				this.webMap.get(methodName).remove(web);
 			}
 			
 			temp.clear();
@@ -214,12 +223,14 @@ public class WebGenerator {
 				
 				if (isValidWebName(mName, arg1)) {
 					for (Web w: this.nameToWebs.get(arg1)) {
+						addToInterferingGraph(w, arg1);
 						w.addUse(qStmt);
 					}
 				}
 				
 				if (isValidWebName(mName, arg2)) {
 					for (Web w: this.nameToWebs.get(arg2)) {
+						addToInterferingGraph(w, arg2);
 						w.addUse(qStmt);
 					}
 				}
@@ -234,7 +245,9 @@ public class WebGenerator {
 						this.webMap.get(mName).add(w); // Add to global web map for method
 					}
 					
-					this.nameToWebs.get(dest).add(this.defToWeb.get(qStmt));
+					Web w = this.defToWeb.get(qStmt);
+					this.nameToWebs.get(dest).add(w);
+					addToInterferingGraph(w, dest);
 				}
 			}
 			else if (stmt.getClass().equals(CmpStmt.class)) {
@@ -244,12 +257,14 @@ public class WebGenerator {
 				
 				if (isValidWebName(mName, arg1)) {
 					for (Web w: this.nameToWebs.get(arg1)) {
+						addToInterferingGraph(w, arg1);
 						w.addUse(cStmt);
 					}
 				}
 				
 				if (isValidWebName(mName, arg2)) {
 					for (Web w: this.nameToWebs.get(arg2)) {
+						addToInterferingGraph(w, arg2);
 						w.addUse(cStmt);
 					}
 				}
@@ -260,6 +275,7 @@ public class WebGenerator {
 				
 				if (isValidWebName(mName, arg)) {
 					for (Web w: this.nameToWebs.get(arg)) {
+						addToInterferingGraph(w, arg);
 						w.addUse(pStmt);
 					}
 				}
@@ -270,6 +286,7 @@ public class WebGenerator {
 				
 				if (isValidWebName(mName, arg)) {
 					for (Web w: this.nameToWebs.get(arg)) {
+						addToInterferingGraph(w, arg);
 						w.addUse(pStmt);
 					}
 				}
@@ -288,12 +305,15 @@ public class WebGenerator {
 						this.webMap.get(mName).add(w); // Add to global web map for method
 					}
 					
-					this.nameToWebs.get(dest).add(this.defToWeb.get(lStmt));
+					Web web = this.defToWeb.get(lStmt);
+					this.nameToWebs.get(dest).add(web);
+					addToInterferingGraph(web, dest);
 					
 					if (dest.isArray()) {
 						ArrayName aDest = (ArrayName)dest;
 						if (isValidWebName(mName, aDest.getIndex())) { // Add use for index variable if load is for array
 							for (Web w: this.nameToWebs.get(aDest.getIndex())) {
+								addToInterferingGraph(w, aDest.getIndex());
 								w.addUse(lStmt);
 							}
 						}
@@ -306,6 +326,7 @@ public class WebGenerator {
 				
 				if (isValidWebName(mName, dest)) {
 					for (Web w: this.nameToWebs.get(dest)) {
+						addToInterferingGraph(w, dest);
 						w.addUse(sStmt);
 					}
 				}
@@ -314,10 +335,21 @@ public class WebGenerator {
 					ArrayName aDest = (ArrayName)dest;
 					if (isValidWebName(mName, aDest.getIndex())) {
 						for (Web w: this.nameToWebs.get(aDest.getIndex())) {
+							addToInterferingGraph(w, aDest.getIndex());
 							w.addUse(sStmt);
 						}
 					}
 				}
+			}
+		}
+	}
+
+	private void addToInterferingGraph(Web web, Name arg) {
+		for (Name name: this.nameToWebs.keySet()) {
+			if (name.equals(arg)) continue;
+			
+			for (Web w: this.nameToWebs.get(name)) {
+				w.addInterferingWeb(web);
 			}
 		}
 	}
