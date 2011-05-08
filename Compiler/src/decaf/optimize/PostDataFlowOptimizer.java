@@ -1,13 +1,13 @@
 package decaf.optimize;
 
 import java.util.HashMap;
+import java6035.tools.CLI.CLI;
 
 import decaf.codegen.flattener.ProgramFlattener;
 import decaf.dataflow.cfg.CFGBlock;
 import decaf.dataflow.cfg.CFGBuilder;
 import decaf.dataflow.cfg.MethodIR;
-
-import java6035.tools.CLI.CLI;
+import decaf.dataflow.global.LoopInvariantOptimizer;
 
 public class PostDataFlowOptimizer {
 	private ArrayAccessOptimizer arrOpt;
@@ -15,6 +15,7 @@ public class PostDataFlowOptimizer {
 	private HashMap<String, MethodIR> mMap;
 	private ProgramFlattener pf;
 	private CFGBuilder cb;
+	private LoopInvariantOptimizer loops;
 	private HashMap<CFGBlock, String> blockState;
 	
 	public PostDataFlowOptimizer(ProgramFlattener pf, CFGBuilder cb) {
@@ -32,6 +33,7 @@ public class PostDataFlowOptimizer {
 		
 		this.arrOpt = new ArrayAccessOptimizer(this.mMap);
 		this.sje = new StaticJumpEvaluator(pf, cb);
+		this.loops = new LoopInvariantOptimizer(mMap);
 	}
 	
 	public void optimize() {
@@ -39,12 +41,14 @@ public class PostDataFlowOptimizer {
 		while (i < 2) {
 			updateBlockState();
 			
-//			System.out.println("++++++++++++++++++++++++++++");
-			System.out.println("SPO PASS: " + i);
-//			this.cb.printCFG(System.out);
+			//System.out.println("++++++++++++++++++++++++++++");
+			//System.out.println("SPO PASS: " + i);
+			//this.cb.printCFG(System.out);
+			
 			
 			arrOpt.optimize(CLI.opts);
 			sje.staticEvaluateJumps();
+			loops.performLoopInvariantOptimization();
 			
 //			System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%");
 //			this.cb.printCFG(System.out);
