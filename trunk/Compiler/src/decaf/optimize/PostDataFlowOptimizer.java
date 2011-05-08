@@ -38,7 +38,7 @@ public class PostDataFlowOptimizer {
 	
 	public void optimize() {
 		int i = 0;
-		while (i < 2) {
+		while (i < 100) {
 			updateBlockState();
 			
 			//System.out.println("++++++++++++++++++++++++++++");

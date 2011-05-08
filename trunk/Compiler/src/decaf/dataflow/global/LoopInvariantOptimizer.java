@@ -249,8 +249,9 @@ public class LoopInvariantOptimizer {
 		List<LIRStatement> boundCheck = getBoundCheck(qStmt.getDestination(), 
 				blockWithQStmt, indexOfQStmtInBlock);
 		
+		// NOTE: The array bound checks are not removed from the loop body since the array bounds DC
+		// optimizer will take care of that
 		if (boundCheck != null) {
-			blockWithQStmt.getStatements().removeAll(boundCheck);
 			for (LIRStatement bcStmt : boundCheck) {
 				bcStmt.setDepth(loopInitStmtList.get(0).getDepth());
 			}
@@ -258,7 +259,6 @@ public class LoopInvariantOptimizer {
 		}
 		boundCheck = getBoundCheck(qStmt.getArg1(), blockWithQStmt, indexOfQStmtInBlock);
 		if (boundCheck != null) {
-			blockWithQStmt.getStatements().removeAll(boundCheck);
 			for (LIRStatement bcStmt : boundCheck) {
 				bcStmt.setDepth(loopInitStmtList.get(0).getDepth());
 			}
@@ -266,7 +266,6 @@ public class LoopInvariantOptimizer {
 		}
 		boundCheck = getBoundCheck(qStmt.getArg2(), blockWithQStmt, indexOfQStmtInBlock);
 		if (boundCheck != null) {
-			blockWithQStmt.getStatements().removeAll(boundCheck);
 			for (LIRStatement bcStmt : boundCheck) {
 				bcStmt.setDepth(loopInitStmtList.get(0).getDepth());
 			}

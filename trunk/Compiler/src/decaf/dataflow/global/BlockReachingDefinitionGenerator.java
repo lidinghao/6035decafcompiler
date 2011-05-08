@@ -67,27 +67,58 @@ public class BlockReachingDefinitionGenerator {
 	
 	// Performs reaching definition analysis on a subset of the entire control flow graph which
 	// only looks at the blocks between the forLoopTestBlock and forLoopEndBlock (inclusive)
+	// The key is to linearize the for loop CFG
 	public void generateForForLoop(CFGBlock forLoopTestBlock, CFGBlock forLoopEndBlock, 
 			CFGBlock forLoopInitBlock) {
 		reset();
 		initialize();
 		if (totalDefinitions == 0)
 			return;
-		// Temporary remove the inset of test block to remove the init block id
-		forLoopTestBlock.getPredecessors().remove(forLoopInitBlock);
+		// Temporary remove the predecessors of loop test block
+		List<CFGBlock> testPreds = new ArrayList<CFGBlock>(forLoopTestBlock.getPredecessors());
+		forLoopTestBlock.getPredecessors().removeAll(testPreds);
+		// Temporary remove the test block from the predecessors of loop end block
+		List<CFGBlock> endPreds = new ArrayList<CFGBlock>(forLoopEndBlock.getPredecessors());
+		forLoopEndBlock.getPredecessors().remove(forLoopTestBlock);
+		// Temporary remove the end block from the successors of loop test block
+		forLoopTestBlock.getSuccessors().remove(forLoopEndBlock);
+		
 		generateCFGBlocksToProcess(forLoopTestBlock, forLoopEndBlock);
+		// Temporary modify the successors of blocks which contain the test block to instead
+		// contain the end block
+		HashMap<CFGBlock, List<CFGBlock>> origSuccessors = new HashMap<CFGBlock, List<CFGBlock>>();
+		for (CFGBlock block : cfgBlocksToProcess) {
+			List<CFGBlock> successors = block.getSuccessors();
+			if (successors.contains(forLoopTestBlock)) {
+				origSuccessors.put(block, new ArrayList<CFGBlock>(successors));
+				successors.remove(forLoopTestBlock);
+				successors.add(forLoopEndBlock);
+				forLoopEndBlock.getPredecessors().add(block);
+			}
+		}
+		// Initialize for loop test block
+		BlockDataFlowState entryBlockFlow = new BlockDataFlowState(totalDefinitions);
+		calculateGenKillSets(forLoopTestBlock, entryBlockFlow);
+		entryBlockFlow.setOut(entryBlockFlow.getGen());
+		cfgBlocksToProcess.remove(forLoopTestBlock);
+		blockReachingDefs.put(forLoopTestBlock, entryBlockFlow);
+		
 		while (cfgBlocksToProcess.size() != 0) {
 			CFGBlock block = (CFGBlock)(cfgBlocksToProcess.toArray())[0];
 			BlockDataFlowState bFlow = generateForBlock(block);
 			blockReachingDefs.put(block, bFlow);
 		}
-//		System.out.println("FOR LOOP REACHING DEF");
-//		for (CFGBlock cfgBlock : blockReachingDefs.keySet()) {
-//			System.out.println(cfgBlock);
-//			System.out.println(blockReachingDefs.get(cfgBlock));
-//		}
-		// Restore the inset of test block back to original
-		forLoopTestBlock.getPredecessors().add(forLoopInitBlock);
+		
+		// Restore the predecessors of test block back to original
+		forLoopTestBlock.setPredecessors(testPreds);
+		// Restore the predecessor of the end block back to original
+		forLoopEndBlock.setPredecessors(endPreds);
+		// Restore the successor of test block back to original
+		forLoopTestBlock.getSuccessors().add(forLoopEndBlock);
+		// Restore the successors of intermediate blocks back to original
+		for (CFGBlock block : origSuccessors.keySet()) {
+			block.setSuccessors(origSuccessors.get(block));
+		}
 	}
 	
 	// Sets the cfgBlockToProcess to only blocks between the forLoopTestBlock and forLoopEndBlock (inclusive)
