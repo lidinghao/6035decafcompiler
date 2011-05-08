@@ -357,19 +357,19 @@ public class NaiveLoadOptimizer {
 	
 	private CFGBlock getParentForInitBlock(CFGBlock block, int depth) {
 		CFGBlock parent = block;
-		boolean found = false;
 		
-		while (!found) {
-			parent = parent.getPredecessors().get(0);
+		while (true) {
 			LIRStatement stmt = parent.getStatements().get(0);
 			
 			if (stmt.getClass().equals(LabelStmt.class)) {
 				LabelStmt lStmt = (LabelStmt) stmt;
 				if (lStmt.getLabelString().matches(NaiveLoadOptimizer.ForTestLabelRegex)) {
 					parent = parent.getPredecessors().get(0);
-					found = true;
+					break;
 				}
 			}
+			
+			parent = parent.getPredecessors().get(0);
 		}
 		
 		return parent;
