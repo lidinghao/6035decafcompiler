@@ -144,18 +144,21 @@ public class LoopInvariantOptimizer {
 				for (LIRStatement stmt : block.getStatements()) {
 					if (stmt.getClass().equals(LabelStmt.class)) {
 						forLabel = ((LabelStmt)stmt).getLabelString();
-						forId = getIdFromForLabel(forLabel);
 						boolean isForLabel = false;
 						if (forLabel.matches(ForInitLabelRegex)) {
+							forId = getIdFromForLabel(forLabel);
 							loopIdToLoopInitCFGBlock.put(forId, block);
 							isForLabel = true;
 						} else if (forLabel.matches(ForEndLabelRegex)) {
+							forId = getIdFromForLabel(forLabel);
 							loopIdToLoopEndCFGBlock.put(forId, block);
 							isForLabel = true;
 						} else if (forLabel.matches(ForBodyLabelRegex)) {
+							forId = getIdFromForLabel(forLabel);
 							loopIdToLoopBodyCFGBlock.put(forId, block);
 							isForLabel = true;
 						} else if (forLabel.matches(ForTestLabelRegex)) {
+							forId = getIdFromForLabel(forLabel);
 							loopIdToLoopTestCFGBlock.put(forId, block);
 							isForLabel = true;
 						}
