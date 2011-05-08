@@ -9,17 +9,18 @@ import decaf.codegen.flatir.JumpCondOp;
 import decaf.codegen.flatir.JumpStmt;
 import decaf.codegen.flatir.LIRStatement;
 import decaf.codegen.flatir.LabelStmt;
+import decaf.codegen.flattener.ProgramFlattener;
 
 public class CFGBuilder {
-	private HashMap<String, List<LIRStatement>> lirMap;
+	private ProgramFlattener pf;
 	private HashMap<String, List<CFGBlock>> cfgMap;
 	private LeaderElector le;
 	private boolean mergeBoundChecks;
 
-	public CFGBuilder(HashMap<String, List<LIRStatement>> lirMap) {
-		this.lirMap = lirMap;
+	public CFGBuilder(ProgramFlattener pf) {
+		this.pf = pf;
 		this.cfgMap = new HashMap<String, List<CFGBlock>>();
-		le = new LeaderElector(lirMap);
+		le = new LeaderElector(pf);
 		this.setMergeBoundChecks(false);
 	}
 	
@@ -38,7 +39,7 @@ public class CFGBuilder {
 		
 		cfgMap.clear();
 		
-		for (String methodName: lirMap.keySet()) {
+		for (String methodName: pf.getLirMap().keySet()) {
 			List<CFGBlock> cfgList = generateCFGBlocks(methodName);
 			generateCFG(cfgList);
 			cfgMap.put(methodName, cfgList);
@@ -50,7 +51,7 @@ public class CFGBuilder {
 		CFGBlock cfg = null;
 		int i = 0;
 		
-		for (LIRStatement stmt: this.lirMap.get(methodName)) {
+		for (LIRStatement stmt: this.pf.getLirMap().get(methodName)) {
 			if (stmt.isLeader()) {
 				if (cfg != null) cfgList.add(cfg);
 				cfg = new CFGBlock(methodName);
