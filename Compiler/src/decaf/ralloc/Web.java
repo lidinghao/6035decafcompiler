@@ -205,6 +205,7 @@ public class Web {
 	
 	public void combineWeb(Web web) {	
 		if (web == null) return;
+		if (this == web) return;
 		
 		for (LIRStatement s1: web.getUses()) {
 			boolean add = true;
@@ -230,7 +231,11 @@ public class Web {
 			}
 		}
 		
+		List<Web> remove = new ArrayList<Web>();
 		for (Web w: web.getInterferingWebs()) {
+			remove.add(w);
+		}
+		for (Web w: remove) {
 			web.removeInterferingWeb(w);
 			this.addInterferingWeb(w);
 		}
