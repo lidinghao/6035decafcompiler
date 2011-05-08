@@ -180,7 +180,7 @@ public class Web {
 	
 	@Override
 	public String toString() {
-		String rtn = "VAR: " + this.variable.toString() + "_" + this.id + " - (" + this.firstStmtIndex + ", " + this.lastStmtIndex + ")\n";
+		String rtn = "VAR: " + this.getIdentifier() + " - (" + this.firstStmtIndex + ", " + this.lastStmtIndex + ")\n";
 		rtn += "DEF: " + this.definitions.toString() + "\n";
 		rtn += "USE: " + this.uses.toString();
 		
@@ -247,6 +247,23 @@ public class Web {
 	}
 	
 	public String getIdentifier() {
-		return this.variable.toString() + "_" + this.id;
+		return this.variable.toString() + "{" + this.id + "}";
+	}
+	
+	@Override 
+	public int hashCode() {
+		return 13*this.id + 17*this.variable.hashCode();
+	}
+	
+	@Override
+	public boolean equals(Object o) {
+		if (o == null) return false;
+		if (!o.getClass().equals(Web.class)) return false;
+		
+		Web web = (Web)o;
+		if (this.id != web.id) return false;
+		if (!this.variable.equals(web.variable)) return false;
+		
+		return true;		
 	}
 }
