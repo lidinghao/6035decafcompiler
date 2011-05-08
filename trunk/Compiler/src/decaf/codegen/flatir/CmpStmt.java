@@ -43,8 +43,9 @@ public class CmpStmt extends LIRStatement {
 	private void moveToRegister(PrintStream out, Name name, Register register) {
 		if (name.isArray()) {
 			ArrayName arrayName = (ArrayName) name;
-			String indexLocation = arrayName.getIndex().getLocation().getASMRepresentation();
-			out.println("\tmov\t" + indexLocation + ", " + register);
+			moveToRegister(out, arrayName.getIndex(), register);
+//			String indexLocation = arrayName.getIndex().getLocation().getASMRepresentation();
+//			out.println("\tmov\t" + indexLocation + ", " + register);
 			arrayName.setOffsetRegister(register);
 		}
 		
