@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Stack;
 
+import decaf.codegen.flattener.ProgramFlattener;
 import decaf.dataflow.cfg.MethodIR;
 
 public class WebColorer {
@@ -20,14 +21,18 @@ public class WebColorer {
 	}
 	
 	public void colorWebs() {
-		while (true) {
-			this.webGen.generateWebs();
+		for (String methodName: this.webGen.getWebMap().keySet()) {
+			if (methodName.equals(ProgramFlattener.exceptionHandlerLabel)) continue;
 			
-			if (tryColoring()) {
-				break;
+			while (true) {
+				this.webGen.generateWebs();
+				
+				if (tryColoring()) {
+					break;
+				}
+				
+				splitWebs();
 			}
-			
-			splitWebs();
 		}
 	}
 
