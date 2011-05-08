@@ -68,6 +68,7 @@ public class DynamicVarName extends Name {
 	
 	@Override 
 	public boolean equals(Object name) {
+		if (name == null) return false;
 		if (this == name) return true;
 		if (!name.getClass().equals(DynamicVarName.class)) return false;
 		
