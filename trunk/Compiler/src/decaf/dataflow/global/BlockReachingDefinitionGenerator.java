@@ -65,6 +65,57 @@ public class BlockReachingDefinitionGenerator {
 		}
 	}
 	
+	// Performs reaching definition analysis on a subset of the entire control flow graph which
+	// only looks at the blocks between the forLoopTestBlock and forLoopEndBlock (inclusive)
+	public void generateForForLoop(CFGBlock forLoopTestBlock, CFGBlock forLoopEndBlock, 
+			CFGBlock forLoopInitBlock) {
+		reset();
+		initialize();
+		if (totalDefinitions == 0)
+			return;
+		// Temporary remove the inset of test block to remove the init block id
+		forLoopTestBlock.getPredecessors().remove(forLoopInitBlock);
+		generateCFGBlocksToProcess(forLoopTestBlock, forLoopEndBlock);
+		while (cfgBlocksToProcess.size() != 0) {
+			CFGBlock block = (CFGBlock)(cfgBlocksToProcess.toArray())[0];
+			BlockDataFlowState bFlow = generateForBlock(block);
+			blockReachingDefs.put(block, bFlow);
+		}
+		System.out.println("FOR LOOP REACHING DEF");
+		for (CFGBlock cfgBlock : blockReachingDefs.keySet()) {
+			System.out.println(cfgBlock);
+			System.out.println(blockReachingDefs.get(cfgBlock));
+		}
+		// Restore the inset of test block back to original
+		forLoopTestBlock.getPredecessors().add(forLoopInitBlock);
+	}
+	
+	// Sets the cfgBlockToProcess to only blocks between the forLoopTestBlock and forLoopEndBlock (inclusive)
+	private void generateCFGBlocksToProcess(CFGBlock forLoopTestBlock, CFGBlock forLoopEndBlock) {
+		cfgBlocksToProcess = new HashSet<CFGBlock>();
+		cfgBlocksToProcess.add(forLoopTestBlock);
+		cfgBlocksToProcess.add(forLoopEndBlock);
+		List<CFGBlock> blocksNotAdded = forLoopTestBlock.getSuccessors();
+		while (!blocksNotAdded.isEmpty()) {
+			CFGBlock blockToAdd = blocksNotAdded.get(0);
+			if (!cfgBlocksToProcess.contains(blockToAdd)) {
+				cfgBlocksToProcess.add(blockToAdd);
+				for (CFGBlock succ : blockToAdd.getSuccessors()) {
+					blocksNotAdded.add(succ);
+				}
+			}
+			blocksNotAdded.remove(blockToAdd);
+		}
+	}
+	
+	private void reset() {
+		this.nameToQStmts = new HashMap<Name, ArrayList<QuadrupletStmt>>();
+		this.uniqueQStmts = new HashSet<QuadrupletStmt>();
+		this.blockReachingDefs = new HashMap<CFGBlock, BlockDataFlowState>();
+		this.cfgBlocksToProcess = new HashSet<CFGBlock>();
+		this.totalDefinitions = 0;
+	}
+	
 	private CFGBlock getBlockById(String name, int i) {
 		if (this.mMap.containsKey(name)) {
 			for (CFGBlock b: this.mMap.get(name).getCfgBlocks()) {
@@ -115,10 +166,19 @@ public class BlockReachingDefinitionGenerator {
 			origOut = blockReachingDefs.get(block).getOut();
 		} else {
 			origOut = new BitSet(totalDefinitions);
+			if (cOp == ConfluenceOperator.AND) {
+				// Confluence operator is AND, so initialize out set to all 1s
+				origOut.set(0, totalDefinitions, true);
+			}
 		}
 		// Calculate the in BitSet by taking union/intersection of predecessors depending
 		// on the cOp
 		BlockDataFlowState bFlow = new BlockDataFlowState(totalDefinitions);
+		if (cOp == ConfluenceOperator.AND) {
+			if (block.getPredecessors().size() > 0) {
+				bFlow.getIn().set(0, totalDefinitions);
+			}
+		}
 		BitSet in = bFlow.getIn();
 		for (CFGBlock pred : block.getPredecessors()) {
 			if (blockReachingDefs.containsKey(pred)) {

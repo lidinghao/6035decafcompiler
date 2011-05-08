@@ -54,7 +54,6 @@ public class LoopInvariantOptimizer {
 		this.livenessGenerator = new BlockLivenessGenerator(mMap);
 		livenessGenerator.generate();
 		loopInvariantGenerator.generateLoopInvariants();
-		reachingDefGenerator.generate();
 		generateLoopIdToCFGBlockMaps();
 	}
 	
@@ -63,29 +62,13 @@ public class LoopInvariantOptimizer {
 		List<LoopQuadrupletStmt> hoistedLQStmts = new ArrayList<LoopQuadrupletStmt>();
 		for (LoopQuadrupletStmt lqs : loopInvariantGenerator.getLoopInvariantStmts()) {
 			if (canBeHoisted(lqs)) {
-				hoistedQStmts.add(lqs.getqStmt());
 				hoistedLQStmts.add(lqs);
+				hoistedQStmts.add(lqs.getqStmt());
 			}
 		}
 		
 		System.out.println("LOOP INVARIANT STMTS WHICH CAN BE HOISTED: " + hoistedLQStmts);
 		
-		// Remove all hoisted QuadrupletStmts from CFGs
-		for (String s : mMap.keySet()) {
-			for (CFGBlock block : mMap.get(s).getCfgBlocks()) {
-				List<LIRStatement> newStmts = new ArrayList<LIRStatement>();
-				for (LIRStatement stmt : block.getStatements()) {
-					if (stmt.getClass().equals(QuadrupletStmt.class)) {
-						if (hoistedQStmts.contains(stmt)) {
-							// Don't add it back
-							continue;
-						}
-					}
-					newStmts.add(stmt);
-				}
-				block.setStatements(newStmts);
-			}
-		}
 		// Add all hoisted LoopQuadrupletStmts at the end of the loop init block
 		for (LoopQuadrupletStmt lqs : hoistedLQStmts) {
 			hoist(lqs);
@@ -102,19 +85,54 @@ public class LoopInvariantOptimizer {
 	//		(the stmt reaches - with AND confluence op - the beginning of the 
 	//		block containing the for loop end)
 	// 2. There is only one definition of dest in the loop
+	// 3. Destination is either not live out of loop preheader or if it is, it is not
+	//		used before the loop invariant statement
 	private boolean canBeHoisted(LoopQuadrupletStmt lqs) {
 		String loopId = lqs.getLoopBodyBlockId();
+		int stmtIndex = lqs.getStmtIndex();
 		QuadrupletStmt qStmt = lqs.getqStmt(); 
 		int stmtId = qStmt.getMyId();
 		Name dest = qStmt.getDestination();
 		CFGBlock forEndBlock = loopIdToLoopEndCFGBlock.get(loopId);
+		CFGBlock forTestBlock = loopIdToLoopTestCFGBlock.get(loopId);
+		CFGBlock forInitBlock = loopIdToLoopInitCFGBlock.get(loopId);
+		reachingDefGenerator.generateForForLoop(forTestBlock, forEndBlock, forInitBlock);
 		BlockDataFlowState endBlockReachDefState = reachingDefGenerator.getBlockReachingDefs().get(forEndBlock);
 		if (endBlockReachDefState.getIn().get(stmtId)) {
 			// Satisfies condition 1
 			if (oneDefinitionOfDestInLoop(dest, loopId)) {
 				// Satisfied condition 2
-				return true;
+				// If The dest is not live out of the loop preheader (the end of the block containing 
+				// the for loop init), the simply add the statement
+				BlockDataFlowState initBlockLivenessState = livenessGenerator.getBlockLiveVars().get(forInitBlock);
+				if (notLiveOutOfLoopPreheader(qStmt.getDestination(), initBlockLivenessState)) {
+					// Satisfied condition 3
+					return true;
+				} else {
+					// Need to check whether the destination is used in the loop body before the loop invariant statement
+					boolean destUsed = false;
+					LIRStatement stmt;
+					List<LIRStatement> methodStmts = mMap.get(loopIdToMethod.get(loopId)).getStatements();
+					int bodyLabelIndex = loopInvariantGenerator.getLoopIdToBodyStmtIndex().get(loopId);
+					for (int i = bodyLabelIndex; i < stmtIndex; i++) {
+						stmt = methodStmts.get(i);
+						if (stmtUsesName(stmt, qStmt.getDestination())) {
+							destUsed = true;
+							break;
+						}
+					}
+					if (!destUsed) {
+						// Satisified condition 3
+						lqs.setNeedConditionalCheck(true);
+						return true;
+					}
+					System.out.println(lqs.getqStmt() + " cannot be hoisted because dest is used before invariant stmt");
+				}
+			} else {
+				System.out.println(lqs.getqStmt() + " cannot be hoisted because it doesn't satisfy condition 2");
 			}
+		} else {
+			System.out.println(lqs.getqStmt() + " cannot be hoisted because it doesn't satisfy condition 1");
 		}
 		return false;
 	}
@@ -179,60 +197,68 @@ public class LoopInvariantOptimizer {
 	
 	// Hoist the given LoopQuadrupletStmt outside of the loop it is in
 	// If the QuadrupletStmt contains array references, move the associated bound checks as well
-	// If the destination is live in the loop preheader, perform additional checks and hoist
-	// conditional logic to only execute the QuadrupletStmt if the loop is entered
 	private void hoist(LoopQuadrupletStmt lqs) {
 		String loopId = lqs.getLoopBodyBlockId();
 		CFGBlock loopInitBlock = loopIdToLoopInitCFGBlock.get(loopId);
-		CFGBlock loopBodyBlock = loopIdToLoopBodyCFGBlock.get(loopId);
-		QuadrupletStmt qStmt = lqs.getqStmt();
-		int stmtIndex = lqs.getStmtIndex();
 		List<LIRStatement> loopInitStmtList = loopInitBlock.getStatements();
-		// If The dest is not live out of the loop preheader (the end of the block containing 
-		// the for loop init), the simply add the statement
-		BlockDataFlowState initBlockLivenessState = livenessGenerator.getBlockLiveVars().get(loopInitBlock);
-		if (notLiveOutOfLoopPreheader(qStmt.getDestination(), initBlockLivenessState)) {
-			// If the qStmt contains array bound checks before, hoist those as well
-			hoistArrayBoundsChecks(lqs.getqStmt(), loopBodyBlock, loopInitBlock, stmtIndex);
-			loopInitStmtList.add(lqs.getqStmt());
-		} else {
-			// Need to check whether the destination is used in the loop body before the loop invariant statement
-			boolean destUsed = false;
-			LIRStatement stmt;
-			List<LIRStatement> methodStmts = mMap.get(loopIdToMethod.get(loopId)).getStatements();
-			for (int i = 0; i < stmtIndex; i++) {
-				stmt = methodStmts.get(i);
-				if (stmtUsesName(stmt, qStmt.getDestination())) {
-					destUsed = true;
-					break;
-				}
+		if (lqs.getNeedConditionalCheck()) {
+			CFGBlock loopTestBlock = loopIdToLoopTestCFGBlock.get(loopId);
+			List<LIRStatement> testStmts = loopTestBlock.getStatements();
+			for (int i = 1; i < testStmts.size(); i++) {
+				loopInitBlock.getStatements().add(testStmts.get(i));
 			}
-			if (!destUsed) {
-				// Need to add additional logic to perform the for condition test, so that this statement
-				// is only executed if we are certain that we are going into the for loop
-				// Add the statements in the loopId test block to the end of the init block
-				CFGBlock loopTestBlock = loopIdToLoopTestCFGBlock.get(loopId);
-				loopInitBlock.getStatements().addAll(loopTestBlock.getStatements());
-				// If the qStmt contains array bound checks before, hoist those as well
-				hoistArrayBoundsChecks(lqs.getqStmt(), loopBodyBlock, loopInitBlock, stmtIndex);
-				loopInitStmtList.add(lqs.getqStmt());
+		}
+		hoistArrayBoundsChecks(lqs.getqStmt(), loopInitBlock);
+		for (String s : mMap.keySet()) {
+			for (CFGBlock block : mMap.get(s).getCfgBlocks()) {
+				List<LIRStatement> blockStmts =  block.getStatements();
+				for (int i = 0; i < blockStmts.size(); i++) {
+					LIRStatement stmt = blockStmts.get(i);
+					if (stmt == lqs.getqStmt()) {
+						// Remove statement from existing location
+						blockStmts.remove(i);
+						// Add statement to end of init block
+						loopInitStmtList.add(lqs.getqStmt());
+					}
+				}
 			}
 		}
 	}
 	
-	private void hoistArrayBoundsChecks(QuadrupletStmt qStmt, CFGBlock loopBodyBlock, 
-			CFGBlock loopInitBlock, int stmtIndex) {
+	private void hoistArrayBoundsChecks(QuadrupletStmt qStmt, CFGBlock loopInitBlock) {
+		// Find the CFGBlock and the statement index within the CFGBlock for the qStmt
+		CFGBlock blockWithQStmt = null;
+		int indexOfQStmtInBlock = -1;
+		pf:
+		for (String s : mMap.keySet()) {
+			for (CFGBlock block : mMap.get(s).getCfgBlocks()) {
+				List<LIRStatement> blockStmts =  block.getStatements();
+				for (int i = 0; i < blockStmts.size(); i++) {
+					LIRStatement stmt = blockStmts.get(i);
+					if (stmt == qStmt) {
+						blockWithQStmt = block;
+						indexOfQStmtInBlock = i;
+						break pf;
+					}
+				}
+			}
+		}
 		List<LIRStatement> loopInitStmtList = loopInitBlock.getStatements();
-		List<LIRStatement> boundCheck = getBoundCheck(qStmt.getDestination(), loopBodyBlock, stmtIndex);
+		List<LIRStatement> boundCheck = getBoundCheck(qStmt.getDestination(), 
+				blockWithQStmt, indexOfQStmtInBlock);
+		
 		if (boundCheck != null) {
+			blockWithQStmt.getStatements().removeAll(boundCheck);
 			loopInitStmtList.addAll(boundCheck);
 		}
-		boundCheck = getBoundCheck(qStmt.getArg1(), loopBodyBlock, stmtIndex);
+		boundCheck = getBoundCheck(qStmt.getArg1(), blockWithQStmt, indexOfQStmtInBlock);
 		if (boundCheck != null) {
+			blockWithQStmt.getStatements().removeAll(boundCheck);
 			loopInitStmtList.addAll(boundCheck);
 		}
-		boundCheck = getBoundCheck(qStmt.getArg2(), loopBodyBlock, stmtIndex);
+		boundCheck = getBoundCheck(qStmt.getArg2(), blockWithQStmt, indexOfQStmtInBlock);
 		if (boundCheck != null) {
+			blockWithQStmt.getStatements().removeAll(boundCheck);
 			loopInitStmtList.addAll(boundCheck);
 		}
 	}
@@ -306,15 +332,30 @@ public class LoopInvariantOptimizer {
 	}
 	
 	// Returns true if there is only one definition of dest in the given loopId, false otherwise
+	// Special case for ArrayName
 	private boolean oneDefinitionOfDestInLoop(Name dest, String loopId) {
 		boolean oneDef = false;
 		for (LoopQuadrupletStmt lqs : loopInvariantGenerator.getAllLoopBodyQStmts().get(loopId)) {
 			QuadrupletStmt qStmt = lqs.getqStmt();
-			if (qStmt.getDestination().equals(dest)) {
+			Name stmtDest = qStmt.getDestination();
+			if (stmtDest.equals(dest)) {
 				if (!oneDef) {
 					oneDef = true;
 				} else {
 					return false;
+				}
+			} else if (dest.getClass().equals(ArrayName.class) && stmtDest.getClass().equals(ArrayName.class)) {
+				ArrayName destArr = (ArrayName)dest;
+				ArrayName stmtDestArr = (ArrayName)stmtDest;
+				Name arrIndex = destArr.getIndex();
+				if (stmtDestArr.getId().equals(destArr.getId())) {
+					if (arrIndex.getClass().equals(ConstantName.class)) {
+						if (!(stmtDestArr.getIndex().getClass().equals(ConstantName.class))) {
+							return false;
+						}
+					} else {
+						return false;
+					}
 				}
 			}
 		}

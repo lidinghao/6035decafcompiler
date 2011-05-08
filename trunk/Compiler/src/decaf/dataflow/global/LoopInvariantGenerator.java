@@ -31,15 +31,19 @@ public class LoopInvariantGenerator {
 	private HashMap<QuadrupletStmt, BitSet> reachingDefForQStmts;
 	// Map from loop body id to a HashSet of all the LoopQuadrupletStmts in that loop body
 	private HashMap<String, HashSet<LoopQuadrupletStmt>> allLoopBodyQStmts;
+	// Map from loop id to its statement index in ProgramFlattener
+	private HashMap<String, Integer> loopIdToBodyStmtIndex;
 	// This optimizer isn't related to LoopInvariant optimizations, but it updates the Reaching definitions
 	// which we need for loop optimizations
 	private GlobalConstantPropagationOptimizer gcp;
 	private static String ForInitLabelRegex = "[a-zA-z_]\\w*.for\\d+.init";
 	private static String ForEndLabelRegex = "[a-zA-z_]\\w*.for\\d+.end";
+	private static String ForBodyLabelRegex = "[a-zA-z_]\\w*.for\\d+.body";
 	
 	public LoopInvariantGenerator(HashMap<String, MethodIR> mMap) {
 		this.mMap = mMap;
 		this.loopInvariantStmts = new HashSet<LoopQuadrupletStmt>();
+		this.loopIdToBodyStmtIndex = new HashMap<String, Integer>();
 		gcp = new GlobalConstantPropagationOptimizer(mMap);
 		// Generates the Map of QStmt -> BitSet representing all the QStmts IDs which reach at that point
 		gcp.performGlobalConstantProp();
@@ -84,14 +88,14 @@ public class LoopInvariantGenerator {
 						forIdList.add(getIdFromForLabel(forLabel));
 					} else if (forLabel.matches(ForEndLabelRegex)) {
 						forIdList.remove(forIdList.size()-1);
+					} else  if (forLabel.matches(ForBodyLabelRegex)) {
+						// Update map of body label to its stmt index
+						loopIdToBodyStmtIndex.put(getIdFromForLabel(forLabel), i);
 					}
 					inFor = !forIdList.isEmpty();
 					continue;
 				} else if (inFor) { 
 					if (stmt.getClass().equals(QuadrupletStmt.class)) {
-						// Ensure it doesn't assign to register or use register
-						if (usesRegisters((QuadrupletStmt)stmt))
-							continue;
 						// Add the QuadrupletStmt to all the loops in the list
 						for (String forId : forIdList) {
 							if (!loopQuadrupletStmts.containsKey(forId)) {
@@ -111,6 +115,9 @@ public class LoopInvariantGenerator {
 	
 	// Returns true if the LoopQuadrupletStmt is a loop invariant stmt, False otherwise
 	private boolean isLoopInvariant(LoopQuadrupletStmt loopQStmt) {
+		// Ignore statements which assign or use registers
+		if (usesRegisters(loopQStmt.getqStmt()))
+			return false;
 		System.out.println("processing " + loopQStmt.getqStmt());
 		QuadrupletStmt qStmt = loopQStmt.getqStmt();
 		HashSet<QuadrupletStmt> loopQStmts = getQuadrupletStmtsInLoopBody(loopQStmt.getLoopBodyBlockId());
@@ -155,6 +162,7 @@ public class LoopInvariantGenerator {
 						reachingDefsForArg.add(qs);
 					}
 				}
+				System.out.println("Reaching defs for arg: " + reachingDefsForArg);
 				// Check if all defs which are reaching are outside the loop body
 				argSatisfiesLoopInvariant = true;
 				for (QuadrupletStmt reachingQStmt : reachingDefsForArg) {
@@ -232,15 +240,26 @@ public class LoopInvariantGenerator {
 		this.allLoopBodyQStmts = allLoopBodyQStmts;
 	}
 	
+	public HashMap<String, Integer> getLoopIdToBodyStmtIndex() {
+		return loopIdToBodyStmtIndex;
+	}
+
+	public void setLoopIdToBodyStmtIndex(
+			HashMap<String, Integer> loopIdToBodyStmtIndex) {
+		this.loopIdToBodyStmtIndex = loopIdToBodyStmtIndex;
+	}
+	
 	public class LoopQuadrupletStmt {
 		private QuadrupletStmt qStmt;
 		private String loopBodyBlockId;
 		private int stmtIndex;
-
+		private boolean needConditionalCheck;
+		
 		public LoopQuadrupletStmt(QuadrupletStmt q, String loopId, int stmtIndex) {
 			this.qStmt = q;
 			this.loopBodyBlockId = loopId;
 			this.stmtIndex = stmtIndex;
+			this.needConditionalCheck = false;
 		}
 		
 		public QuadrupletStmt getqStmt() {
@@ -266,7 +285,19 @@ public class LoopInvariantGenerator {
 		public void setStmtIndex(int stmtIndex) {
 			this.stmtIndex = stmtIndex;
 		}
+	
+		public boolean isNeedConditionalCheck() {
+			return needConditionalCheck;
+		}
+
+		public void setNeedConditionalCheck(boolean needConditionalCheck) {
+			this.needConditionalCheck = needConditionalCheck;
+		}
 		
+		public boolean getNeedConditionalCheck() {
+			return this.needConditionalCheck;
+		}
+
 		@Override
 		public int hashCode() {
 			return toString().hashCode();
