@@ -1,0 +1,14 @@
+class Program {
+	void main() {
+		int j;
+		int k;
+		for i = 0, 10 {
+			k = 5;	
+			j = 1;
+			j = j + i;
+			
+		}
+		k = 10;
+		callout("printf","%d\n",k);		
+	}
+}	
