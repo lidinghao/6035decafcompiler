@@ -194,7 +194,6 @@ public class QuadrupletStmt extends LIRStatement {
 	}
 
 	private void processMoveQuadruplet(PrintStream out) {
-		System.out.println(this);
 		moveToRegister(out, this.getArg1(), Register.R10);
 		//if(!this.getDestination().isArray()) {
 			//out.println("\tmov\t" + Register.R10 + ", " + this.getDestination().getLocation().getASMRepresentation());
