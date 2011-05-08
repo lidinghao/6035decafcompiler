@@ -1,0 +1,15 @@
+//example where k is loop invariant and should be taken out of loop
+class Program { 
+	void main() {
+		int j;
+		int k;
+		for i = 0, 10 {
+			k = 5;	//conditional loop invariant
+			j = 1;  //not loop invariant 
+			j = j + i; //not loop invariant
+		}
+		callout("printf","%d\n",k); 
+		k = 10;
+		callout("printf","%d\n",k);
+	}
+}

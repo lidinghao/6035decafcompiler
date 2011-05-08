@@ -1,0 +1,16 @@
+//example where k is loop invariant and should be taken out of loop
+class Program { 
+	void main() {
+		int j;
+		int k, z, m;
+		
+		m =6 ;
+		z = 5;
+		
+		for i = 0, 5 {
+			k = m + k + z*i;
+			m = 5; // not conditional loop invariant
+		}
+		callout("printf","%d\n",k); // should return 76 :(
+	}
+}
