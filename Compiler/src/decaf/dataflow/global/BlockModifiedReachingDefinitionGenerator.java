@@ -85,7 +85,6 @@ public class BlockModifiedReachingDefinitionGenerator {
 							// of something
 							qStmt.setMyId();
 							if (!nameToQStmts.containsKey(dest)) {
-								System.out.println("DEST NAME: " + dest.toString());
 								nameToQStmts.put(dest, new ArrayList<QuadrupletStmt>());
 							}
 							nameToQStmts.get(dest).add(qStmt);
