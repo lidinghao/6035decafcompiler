@@ -13,6 +13,8 @@ import decaf.codegen.flatir.LIRStatement;
 import decaf.codegen.flatir.LabelStmt;
 import decaf.codegen.flatir.LeaveStmt;
 import decaf.codegen.flatir.Name;
+import decaf.codegen.flatir.PopStmt;
+import decaf.codegen.flatir.PushStmt;
 import decaf.codegen.flatir.QuadrupletOp;
 import decaf.codegen.flatir.QuadrupletStmt;
 import decaf.codegen.flatir.Register;
@@ -309,7 +311,7 @@ public class MethodFlattenerVisitor implements ASTVisitor<Integer> {
 
 		// Save callee-saved registers
 		for (int i = 0; i < Register.calleeSaved.length; i++) {
-			//this.statements.add(new PushStmt(new RegisterName(Register.calleeSaved[i])));
+			this.statements.add(new PushStmt(new RegisterName(Register.calleeSaved[i])));
 		}
 
 		// Save params on stack (first 6)
@@ -402,7 +404,7 @@ public class MethodFlattenerVisitor implements ASTVisitor<Integer> {
 		
 		// Restore callee-saved regs (reverse order as saved!)
 		for (int i = Register.calleeSaved.length - 1; i >= 0; i--) {
-			//this.statements.add(new PopStmt(new RegisterName(Register.calleeSaved[i])));
+			this.statements.add(new PopStmt(new RegisterName(Register.calleeSaved[i])));
 		}
 		
 		this.statements.add(new LeaveStmt());
