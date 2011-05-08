@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import decaf.codegen.flatir.ArrayName;
+import decaf.codegen.flatir.CallStmt;
 import decaf.codegen.flatir.CmpStmt;
 import decaf.codegen.flatir.ConstantName;
 import decaf.codegen.flatir.LIRStatement;
@@ -32,15 +33,18 @@ import decaf.dataflow.global.BlockDataFlowState;
  */
 public class WebGenerator {
 	private HashMap<String, MethodIR> mMap;
-	private DefsDFAnalyzer defAnalyzer;
+	private ReachingDefinitions reachingDef;
+	private LivenessAnalysis liveAnalysis;
 	private HashMap<String, List<Web>> webMap;
 	private HashMap<Name, List<Web>> nameToWebs; // Webs currently mapping to that name
 	private HashMap<LIRStatement, Web> defToWeb; // Web associated with definition
 	private QuadrupletArgReorderer qArg;
+	private String currentMethod;
 	
 	public WebGenerator(HashMap<String, MethodIR> mMap) {
 		this.mMap = mMap;
-		this.defAnalyzer = new DefsDFAnalyzer(mMap);
+		this.reachingDef = new ReachingDefinitions(mMap);
+		this.liveAnalysis = new LivenessAnalysis(mMap);
 		this.webMap = new HashMap<String, List<Web>>();
 		this.nameToWebs = new HashMap<Name, List<Web>>();
 		this.defToWeb = new HashMap<LIRStatement, Web>();
@@ -50,10 +54,13 @@ public class WebGenerator {
 	public void generateWebs() {	
 		this.qArg.reorder();
 		
-		this.defAnalyzer.analyze();
+		this.reachingDef.analyze();
+		this.liveAnalysis.analyze();
 		
 		for (String methodName: this.mMap.keySet()) {
 			if (methodName.equals(ProgramFlattener.exceptionHandlerLabel)) continue;
+			
+			this.currentMethod = methodName;
 			
 			this.webMap.put(methodName, new ArrayList<Web>());
 			this.generateWeb(methodName);
@@ -64,13 +71,18 @@ public class WebGenerator {
 		indexWebs(); // Don't use this to generate interference graph
 		removeDeadCodedLoads();
 		assignIdsToWebs();
+		
+		for (CFGBlock block: this.liveAnalysis.getCfgBlocksState().keySet()) {
+			System.out.println(this.liveAnalysis.getCfgBlocksState().get(block));
+		}
 	}
 	
 	private void assignIdsToWebs() {
+		int id = 0;
+		
 		for (String methodName: this.webMap.keySet()) {
 			if (methodName.equals(ProgramFlattener.exceptionHandlerLabel)) continue;
 			
-			int id = 0;
 			for (Web w: this.webMap.get(methodName)) {
 				w.setId(id);
 				id++;
@@ -194,7 +206,11 @@ public class WebGenerator {
 			}
 			
 			for (Web web: temp) { // Remove redundant webs (also fix interference graph)
+				List<Web> remove = new ArrayList<Web>();
 				for (Web w: web.getInterferingWebs()) {
+					remove.add(w);
+				}
+				for (Web w: remove) {
 					w.removeInterferingWeb(web);
 				}
 				
@@ -223,10 +239,19 @@ public class WebGenerator {
 	private void processBlock(CFGBlock block) {
 		this.nameToWebs.clear(); // Clear names to web map
 		
+//		System.out.println("START: " + this.nameToWebs);
+		
 		setReachingDefinitions(block);
+		
+//		System.out.println("BLOW: " + this.nameToWebs);
 		String mName = block.getMethodName();
 		
 		for (LIRStatement stmt: block.getStatements()) {
+			
+//			System.out.println("*************");
+//			System.out.println(stmt);
+//			System.out.println(stmt.getInSet());
+			
 			if (stmt.getClass().equals(QuadrupletStmt.class)) {
 				QuadrupletStmt qStmt = (QuadrupletStmt) stmt;
 				Name arg1 = qStmt.getArg1();
@@ -235,14 +260,14 @@ public class WebGenerator {
 				
 				if (isValidWebName(mName, arg1)) {
 					for (Web w: this.nameToWebs.get(arg1)) {
-						addToInterferingGraph(w, arg1);
+						addToInterferingGraph(w, stmt);
 						w.addUse(qStmt);
 					}
 				}
 				
 				if (isValidWebName(mName, arg2)) {
 					for (Web w: this.nameToWebs.get(arg2)) {
-						addToInterferingGraph(w, arg2);
+						addToInterferingGraph(w, stmt);
 						w.addUse(qStmt);
 					}
 				}
@@ -259,7 +284,7 @@ public class WebGenerator {
 					
 					Web w = this.defToWeb.get(qStmt);
 					this.nameToWebs.get(dest).add(w);
-					addToInterferingGraph(w, dest);
+					addToInterferingGraph(w, stmt);
 				}
 			}
 			else if (stmt.getClass().equals(CmpStmt.class)) {
@@ -269,14 +294,14 @@ public class WebGenerator {
 				
 				if (isValidWebName(mName, arg1)) {
 					for (Web w: this.nameToWebs.get(arg1)) {
-						addToInterferingGraph(w, arg1);
+						addToInterferingGraph(w, stmt);
 						w.addUse(cStmt);
 					}
 				}
 				
 				if (isValidWebName(mName, arg2)) {
 					for (Web w: this.nameToWebs.get(arg2)) {
-						addToInterferingGraph(w, arg2);
+						addToInterferingGraph(w, stmt);
 						w.addUse(cStmt);
 					}
 				}
@@ -287,7 +312,7 @@ public class WebGenerator {
 				
 				if (isValidWebName(mName, arg)) {
 					for (Web w: this.nameToWebs.get(arg)) {
-						addToInterferingGraph(w, arg);
+						addToInterferingGraph(w, stmt);
 						w.addUse(pStmt);
 					}
 				}
@@ -298,7 +323,7 @@ public class WebGenerator {
 				
 				if (isValidWebName(mName, arg)) {
 					for (Web w: this.nameToWebs.get(arg)) {
-						addToInterferingGraph(w, arg);
+						addToInterferingGraph(w, stmt);
 						w.addUse(pStmt);
 					}
 				}
@@ -319,13 +344,13 @@ public class WebGenerator {
 					
 					Web web = this.defToWeb.get(lStmt);
 					this.nameToWebs.get(dest).add(web);
-					addToInterferingGraph(web, dest);
+					addToInterferingGraph(web, stmt);
 					
 					if (dest.isArray()) {
 						ArrayName aDest = (ArrayName)dest;
 						if (isValidWebName(mName, aDest.getIndex())) { // Add use for index variable if load is for array
 							for (Web w: this.nameToWebs.get(aDest.getIndex())) {
-								addToInterferingGraph(w, aDest.getIndex());
+								addToInterferingGraph(w, stmt);
 								w.addUse(lStmt);
 							}
 						}
@@ -338,7 +363,7 @@ public class WebGenerator {
 				
 				if (isValidWebName(mName, dest)) {
 					for (Web w: this.nameToWebs.get(dest)) {
-						addToInterferingGraph(w, dest);
+						addToInterferingGraph(w, stmt);
 						w.addUse(sStmt);
 					}
 				}
@@ -347,25 +372,45 @@ public class WebGenerator {
 					ArrayName aDest = (ArrayName)dest;
 					if (isValidWebName(mName, aDest.getIndex())) {
 						for (Web w: this.nameToWebs.get(aDest.getIndex())) {
-							addToInterferingGraph(w, aDest.getIndex());
+							addToInterferingGraph(w, stmt);
 							w.addUse(sStmt);
 						}
 					}
 				}
 			}
+			else if (stmt.getClass().equals(CallStmt.class)) {
+				CallStmt cStmt = (CallStmt) stmt;
+				if (cStmt.getMethodLabel().equals(ProgramFlattener.exceptionHandlerLabel)) continue;
+				
+				invalidateFunctionCall();
+			}
+		}
+	}
+
+	private void invalidateFunctionCall() {
+		for (Name name: this.nameToWebs.keySet()) {
+			if (name.isGlobal()) {
+				this.nameToWebs.get(name).clear();
+			}
 		}
 	}
 
 	/**
-	 * Adds to all webs except for ones for arg.
+	 * Adds to all *live* webs except for ones for arg.
 	 * When adding use, don't want to interfere same names as will merge webs later
 	 * When defining, don't want to interfere as can reuse that register now (qArg reordering ensures that!)
 	 * @param web
-	 * @param arg
+	 * @param stmt
 	 */
-	private void addToInterferingGraph(Web web, Name arg) {
-		for (Name name: this.nameToWebs.keySet()) {
-			if (name.equals(arg)) continue;
+	private void addToInterferingGraph(Web web, LIRStatement stmt) {
+		Name skip = web.getVariable();
+		
+		for (int i = 0; i < this.liveAnalysis.getUniqueVariables().get(this.currentMethod).size(); i++) {
+			if (!stmt.getInSet().get(i)) continue; // Not live
+			
+			Name name = this.liveAnalysis.getUniqueVariables().get(this.currentMethod).get(i);
+			
+			if (name.equals(skip) || !this.nameToWebs.containsKey(name)) continue; // Skip own shit, or undefined
 			
 			for (Web w: this.nameToWebs.get(name)) {
 				w.addInterferingWeb(web);
@@ -374,7 +419,7 @@ public class WebGenerator {
 	}
 
 	private void setReachingDefinitions(CFGBlock block) {
-		BlockDataFlowState dfState = this.defAnalyzer.getCfgBlocksState().get(block);
+		BlockDataFlowState dfState = this.reachingDef.getCfgBlocksState().get(block);
 		
 		for (int i = 0; i < dfState.getIn().size(); i++) {
 			if (dfState.getIn().get(i)) {
@@ -407,7 +452,7 @@ public class WebGenerator {
 	}
 	
 	private LIRStatement findStmtWithId(String methodName, int id) {
-		for (LIRStatement stmt: this.defAnalyzer.getUniqueDefinitions().get(methodName)) {
+		for (LIRStatement stmt: this.reachingDef.getUniqueDefinitions().get(methodName)) {
 			if (stmt.getClass().equals(LoadStmt.class)) {
 				if (((LoadStmt)stmt).getMyId() == id) return stmt;
 			}
@@ -455,12 +500,12 @@ public class WebGenerator {
 		return -1;
 	}
 
-	public DefsDFAnalyzer getDefAnalyzer() {
-		return defAnalyzer;
+	public ReachingDefinitions getDefAnalyzer() {
+		return reachingDef;
 	}
 
-	public void setDefAnalyzer(DefsDFAnalyzer defAnalyzer) {
-		this.defAnalyzer = defAnalyzer;
+	public void setDefAnalyzer(ReachingDefinitions defAnalyzer) {
+		this.reachingDef = defAnalyzer;
 	}
 	
 	public void printInterferenceGraph(PrintStream out) {
