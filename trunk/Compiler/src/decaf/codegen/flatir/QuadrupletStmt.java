@@ -15,7 +15,6 @@ public class QuadrupletStmt extends LIRStatement {
 		this.dest = dest;
 		this.arg1 = arg1;
 		this.arg2 = arg2;
-		this.myId = -1;
 		this.setDepth();
 	}
 
@@ -196,15 +195,76 @@ public class QuadrupletStmt extends LIRStatement {
 
 	private void processMoveQuadruplet(PrintStream out) {
 		moveToRegister(out, this.getArg1(), Register.R10);
-		moveFromRegister(out, Register.R10, this.getDestination(), Register.R11);
+		if(!this.getArg1().isArray()) {
+			out.println("\tmov\t" + Register.R10 + ", " + this.getDestination().getLocation().getASMRepresentation());
+		} else {
+			moveFromRegister(out, Register.R10, this.getDestination(), Register.R11);
+		}
 	}
 
 	private void processArithmeticQuadruplet(PrintStream out, QuadrupletOp op) {
-		moveToRegister(out, this.getArg1(), Register.R10);
-		moveToRegister(out, this.getArg2(), Register.R11);
-		
 		String instr = "\t";
-		switch(op) {
+		
+		if(this.getArg2().getClass().equals(ConstantName.class)) {
+			argConst((ConstantName) this.getArg2(), this.getArg1(), out, op, instr);
+		} else if(this.getArg1().getClass().equals(ConstantName.class)){
+			argConst((ConstantName) this.getArg1(), this.getArg2(), out, op, instr);
+		} else {
+			switch(op) {
+				case ADD:
+					instr += "add\t";
+					break;
+				case SUB:
+					instr += "sub\t";
+					break;
+				case MUL:
+					instr += "imul\t";
+					break;
+			}
+			moveToRegister(out, this.getArg1(), Register.R10);
+			out.println(instr + this.getArg2().getLocation().getASMRepresentation() + ", " + Register.R10);
+			out.println("\tmov\t" + Register.R10 + ", " + this.getDestination().getLocation().getASMRepresentation());
+		}
+		
+	}
+	
+	private void argConst(ConstantName constName, Name name, PrintStream out, QuadrupletOp op, String instr) {
+		moveToRegister(out, name, Register.R10);
+		int arg2 = Integer.parseInt(constName.getValue());
+		if(arg2 == 1) { // using inc and dec if arg2 is 1
+			switch(op) {
+			case ADD:
+				instr += "inc\t";
+				out.println(instr + Register.R10);
+				break;
+			case SUB:
+				instr += "dec\t";
+				out.println(instr + Register.R10);
+				break;
+			case MUL:
+				break;
+			}
+		} else if ((arg2&(arg2-1)) == 0) { // arg is a power of 2
+			
+			int p = (int) (Math.log(arg2)/Math.log(2)); // the power value
+			switch(op) {
+			case ADD:
+				instr += "add\t";
+				out.println(instr + constName.getLocation().getASMRepresentation() + ", " + Register.R10);
+				break;
+			case SUB:
+				instr += "sub\t";
+				out.println(instr + constName.getLocation().getASMRepresentation() + ", " + Register.R10);
+				break;
+			case MUL:
+				
+				instr += "shl\t";
+				out.println(instr + "$" + p  + ", " +  Register.R10);
+				break;
+			}
+			
+		} else {
+			switch(op) {
 			case ADD:
 				instr += "add\t";
 				break;
@@ -215,10 +275,10 @@ public class QuadrupletStmt extends LIRStatement {
 				instr += "imul\t";
 				break;
 		}
-		
-		out.println(instr + Register.R11 + ", " + Register.R10);
-		
-		moveFromRegister(out, Register.R10, this.getDestination(), Register.R11);
+			out.println(instr + constName.getLocation().getASMRepresentation() + ", " + Register.R10);
+			
+		}
+		out.println("\tmov\t" + Register.R10 + ", " + this.getDestination().getLocation().getASMRepresentation());
 	}
 	
 	private void moveToRegister(PrintStream out, Name name, Register register) {
@@ -247,7 +307,7 @@ public class QuadrupletStmt extends LIRStatement {
 	
 	@Override
 	public int hashCode() {
-		return toString().hashCode() + this.myId * 13;
+		return toString().hashCode();
 	}
 	
 	@Override
@@ -329,8 +389,8 @@ public class QuadrupletStmt extends LIRStatement {
 		return ID;
 	}
 
-	public static void setID(int id) {
-		ID = id;
+	public static void setID(int iD) {
+		ID = iD;
 	}
 	
 	@Override
