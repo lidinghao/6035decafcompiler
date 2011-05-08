@@ -16,6 +16,7 @@ import decaf.codegen.flatir.StoreStmt;
 
 public class Web {
 	private Name variable;
+	private List<Web> interferingWebs;
 	private List<LIRStatement> definitions;
 	private List<LIRStatement> uses;
 	private Register register;
@@ -27,6 +28,31 @@ public class Web {
 		this.definitions = new ArrayList<LIRStatement>();
 		this.uses = new ArrayList<LIRStatement>();
 		this.register = null;
+		this.interferingWebs = new ArrayList<Web>();
+	}
+
+	public List<Web> getInterferingWebs() {
+		return interferingWebs;
+	}
+
+	public void setInterferingWebs(List<Web> interferingWebs) {
+		this.interferingWebs = interferingWebs;
+	}
+	
+	public void addInterferingWeb(Web w) {
+		if (w == null) return;
+		
+		if (!this.interferingWebs.contains(w)) { // Undirected edge
+			this.interferingWebs.add(w);
+			w.addInterferingWeb(this);
+		}
+	}
+	
+	public void removeInterferingWeb(Web w) {
+		if (w == null) return;
+		
+		this.interferingWebs.remove(w);
+		w.interferingWebs.remove(this);
 	}
 
 	public Name getVariable() {
@@ -175,8 +201,10 @@ public class Web {
 		return firstStmtIndex;
 	}
 	
-	public void combineWeb(Web w) {		
-		for (LIRStatement s1: w.getUses()) {
+	public void combineWeb(Web web) {	
+		if (web == null) return;
+		
+		for (LIRStatement s1: web.getUses()) {
 			boolean add = true;
 			for (LIRStatement s2: this.uses) {
 				if (s1 == s2) add = false;
@@ -188,7 +216,7 @@ public class Web {
 			}
 		}
 		
-		for (LIRStatement s1: w.getDefinitions()) {
+		for (LIRStatement s1: web.getDefinitions()) {
 			boolean add = true;
 			for (LIRStatement s2: this.definitions) {
 				if (s1 == s2) add = false;
@@ -199,5 +227,12 @@ public class Web {
 				this.definitions.add(s1);
 			}
 		}
+		
+		for (Web w: web.getInterferingWebs()) {
+			web.removeInterferingWeb(w);
+			this.addInterferingWeb(w);
+		}
+		
+		this.interferingWebs.remove(web); // Web can't interfere with self
 	}
 }
