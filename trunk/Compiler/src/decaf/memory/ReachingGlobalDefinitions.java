@@ -17,6 +17,7 @@ import decaf.codegen.flatir.PopStmt;
 import decaf.codegen.flatir.PushStmt;
 import decaf.codegen.flatir.QuadrupletStmt;
 import decaf.codegen.flatir.RegisterName;
+import decaf.codegen.flatir.StoreStmt;
 import decaf.codegen.flattener.ProgramFlattener;
 import decaf.dataflow.cfg.CFGBlock;
 import decaf.dataflow.cfg.MethodIR;
@@ -106,7 +107,14 @@ public class ReachingGlobalDefinitions {
 					
 					if (pStmt.getName().isGlobal()) temp.add(pStmt.getName());
 				}
-				
+				else if (stmt.getClass().equals(LoadStmt.class)) {
+					LoadStmt lStmt = (LoadStmt) stmt;
+					temp.add(lStmt.getVariable());
+				}
+				else if (stmt.getClass().equals(StoreStmt.class)) {
+					StoreStmt sStmt = (StoreStmt) stmt;
+					temp.add(sStmt.getVariable());
+				}
 			}
 			
 			this.cfgBlocksToProcess.add(block);
