@@ -304,19 +304,19 @@ public class NaiveStoreOptimizer {
 	
 	private CFGBlock getChildForEndBlock(CFGBlock block, int depth) {
 		CFGBlock succ = block;
-		boolean found = false;
 		
-		while (!found) {
-			succ = succ.getPredecessors().get(0);
+		while (true) {
 			LIRStatement stmt = succ.getStatements().get(0);
 			
 			if (stmt.getClass().equals(LabelStmt.class)) {
 				LabelStmt lStmt = (LabelStmt) stmt;
 				if (lStmt.getLabelString().matches(ForTestLabelRegex)) {
 					succ = succ.getSuccessors().get(1);
-					found = true;
+					break;
 				}
 			}
+			
+			succ = succ.getPredecessors().get(0);
 		}
 		
 		return succ;
