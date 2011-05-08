@@ -2,8 +2,6 @@ package decaf.dataflow.block;
 
 import java.util.HashMap;
 
-import decaf.codegen.flattener.ProgramFlattener;
-import decaf.dataflow.cfg.CFGBuilder;
 import decaf.dataflow.cfg.MethodIR;
 
 public class BlockOptimizer {
