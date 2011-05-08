@@ -39,73 +39,120 @@ public class StaticJumpEvaluator {
 		for (String methodName: this.pf.getLirMap().keySet()) {
 			if (methodName.equals(ProgramFlattener.exceptionHandlerLabel)) continue;
 			
-			optimize(methodName);
+			String prev = "";
+			String current = this.pf.getLirMap().get(methodName).toString();
+			
+			while (!prev.equals(current)) {
+				// Regen cfg
+				cb.setMergeBoundChecks(true);
+				cb.generateCFGs();
+								
+				optimize(methodName);
+				dcBlocksAndFixLIR(methodName);
+				
+				prev = current;
+				current = this.pf.getLirMap().get(methodName).toString();
+			}
 		}
-		
-		dcBlocksAndFixLIR();
 	}
 
-	private void dcBlocksAndFixLIR() {
+	private void dcBlocksAndFixLIR(String methodName) {
 		cb.setMergeBoundChecks(true);
 		cb.generateCFGs();
 		
-		for (String methodName: this.pf.getLirMap().keySet()) {
-			if (methodName.equals(ProgramFlattener.exceptionHandlerLabel)) continue;
-
-			this.deadBlocks.clear();
-			
-			// Gen dead block
-			getDeadBlocks(methodName);
-			
-			// Remove from LIR lists	
-			removeDeadStmtsFromLIR(methodName);
-			
-			// Peephole to remove jumps
-			removeRedundantJumps(methodName);
-			
-			// Remove array check left overs
-			removeArrayCheckLeftOvers(methodName);
-			
-			// Remove if condition left overs
-			removeConditionalLeftOvers(methodName);
-		}
-	}
-
-	private void removeConditionalLeftOvers(String methodName) {
-		List<LIRStatement> newStmts = new ArrayList<LIRStatement>();
+		this.deadBlocks.clear();
 		
-		boolean add = true;
+		// Gen dead block
+		getDeadBlocks(methodName);
+		
+		// Remove from LIR lists	
+		removeDeadStmtsFromLIR(methodName);
+		
+		// Remove redundant jumps
+		removeRedundantJumps(methodName);
+		
+		// Remove array check left overs
+		removeArrayCheckLeftOvers(methodName);
+		
+		// Peephole jumps
+		peepholeJumps(methodName);
+		
+		// Remove redundant cmps
+		removeRedundantCmps(methodName);
+	}
+	
+	private void removeRedundantCmps(String methodName) {
+		List<LIRStatement> newStmts = new ArrayList<LIRStatement>();
 		
 		for (int i = 0; i < this.pf.getLirMap().get(methodName).size(); i++) {
 			LIRStatement stmt = this.pf.getLirMap().get(methodName).get(i);
 			
-			if (stmt.getClass().equals(LabelStmt.class)) {
-				LabelStmt lStmt = (LabelStmt) stmt;
-
-				if (lStmt.getLabelString().matches(IfTestLabelRegex)) {
-					LIRStatement next = this.pf.getLirMap().get(methodName).get(i+1);
-					
-					if (!next.getClass().equals(CmpStmt.class)) {
-						add = false;
-						continue;
-					}
-						
+			if (stmt.getClass().equals(CmpStmt.class)) {
+				LIRStatement next = this.pf.getLirMap().get(methodName).get(i+1);
+				if (!next.getClass().equals(JumpStmt.class)) {
+					continue;
 				}
-				else if (lStmt.getLabelString().matches(IfEndLabelRegex)) {
-					if (!add) {
-						add = true;
-						continue;
-					}
-				}
-				
 			}
 			
-			if (add) {
-				newStmts.add(stmt);
-			}
+			newStmts.add(stmt);
 		}
 		
 		this.pf.getLirMap().put(methodName, newStmts);
+	}
+
+	private void peepholeJumps(String methodName) {
+		for (int i = 0; i < this.pf.getLirMap().get(methodName).size(); i++) {
+			LIRStatement stmt = this.pf.getLirMap().get(methodName).get(i);
+			
+			if (stmt.getClass().equals(JumpStmt.class)) {
+				JumpStmt jStmt = (JumpStmt)stmt;
+				jStmt.setLabel(getJumpLabel(methodName, jStmt.getLabel()));
+			}
+		}
+	}
+
+	private LabelStmt getJumpLabel(String methodName, LabelStmt label) {
+		LabelStmt lastLeader = label;
+		int index = getIdForStmt(methodName, label);
+		
+		LIRStatement stmt = this.pf.getLirMap().get(methodName).get(index);
+		while (stmt.getClass().equals(LabelStmt.class)) {
+			if (stmt.isLeader()) {
+				lastLeader = (LabelStmt) stmt;
+			}
+			
+			index++;
+			stmt = this.pf.getLirMap().get(methodName).get(index);
+		}
+		
+		if (stmt.getClass().equals(JumpStmt.class)) {
+			JumpStmt jStmt = (JumpStmt) stmt;
+			if (jStmt.getCondition() == JumpCondOp.NONE) {
+				return jStmt.getLabel();
+			}
+		}
+
+		return lastLeader;
+	}
+
+	private int getIdForStmt(String methodName, LabelStmt label) {
+//		System.out.println("B: " + label);
+//		for (int i = 0; i < this.pf.getLirMap().get(methodName).size(); i++) {
+//			LIRStatement stmt = this.pf.getLirMap().get(methodName).get(i);
+//			System.out.println(stmt);
+//		}
+//		System.out.println("JAJAJAJAJAJJJAJA");
+		
+		
+		for (int i = 0; i < this.pf.getLirMap().get(methodName).size(); i++) {
+			LIRStatement stmt = this.pf.getLirMap().get(methodName).get(i);
+			
+			if (stmt.equals(label)) {
+				return i;
+			}
+		}
+		
+		return -1;
 	}
 
 	private void removeArrayCheckLeftOvers(String methodName) {
@@ -172,9 +219,21 @@ public class StaticJumpEvaluator {
 				JumpStmt jStmt = (JumpStmt) stmt;
 				LIRStatement next = this.pf.getLirMap().get(methodName).get(i+1);
 				
-				if (jStmt.getLabel().equals(next)) { // Conditional or unconitional jump to next stmt
+				if (jStmt.getLabel().equals(next)) { // Conditional or unconitional jump to very next stmt
 					i++;
 					continue;
+				}
+				
+				if (next.getClass().equals(JumpStmt.class)) {
+					JumpStmt jStmt2 = (JumpStmt) next;
+					if (jStmt2.getCondition() == JumpCondOp.NONE) {
+						if (jStmt.getLabel().equals(jStmt2.getLabel())) {
+							jStmt.setCondition(JumpCondOp.NONE);
+							newStmts.add(jStmt);
+							i++;
+							continue;
+						}
+					}
 				}
 			}
 			
@@ -202,6 +261,7 @@ public class StaticJumpEvaluator {
 	private void getDeadBlocks(String methodName) {
 		for (CFGBlock block: cb.getCfgMap().get(methodName)) {
 			if (block.getPredecessors().size() == 0 && block.getIndex() != 0) {
+				System.out.println(block + "\n====");
 				this.deadBlocks.add(block);
 			}
 		}
