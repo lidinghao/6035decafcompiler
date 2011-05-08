@@ -4,6 +4,6 @@ class Program {
 	void main() {
 		int a;
 		a = z + 4;
-		A[a] = A[a] + 7;
+		A[a] = z + 7;
 	}
 }
