@@ -1,0 +1,13 @@
+class Program {
+	int a[10];
+
+	void main() {
+		int i, j;
+		for i = 0, 10 {
+			if (j < 10) {
+				continue;
+			}
+			a[1] = 6; // not loop invariant
+		}
+	}
+}
