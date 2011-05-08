@@ -22,6 +22,7 @@ public class Web {
 	private Register register;
 	private int firstStmtIndex;
 	private int lastStmtIndex;
+	private int id;
 	
 	public Web(Name variable) {
 		this.variable = (Name)variable.clone(); // important to clone
@@ -29,6 +30,7 @@ public class Web {
 		this.uses = new ArrayList<LIRStatement>();
 		this.register = null;
 		this.interferingWebs = new ArrayList<Web>();
+		this.id = -1;
 	}
 
 	public List<Web> getInterferingWebs() {
@@ -178,7 +180,7 @@ public class Web {
 	
 	@Override
 	public String toString() {
-		String rtn = "VAR: " + this.variable.toString() + " - (" + this.firstStmtIndex + ", " + this.lastStmtIndex + ")\n";
+		String rtn = "VAR: " + this.variable.toString() + "_" + this.id + " - (" + this.firstStmtIndex + ", " + this.lastStmtIndex + ")\n";
 		rtn += "DEF: " + this.definitions.toString() + "\n";
 		rtn += "USE: " + this.uses.toString();
 		
@@ -234,5 +236,17 @@ public class Web {
 		}
 		
 		this.interferingWebs.remove(web); // Web can't interfere with self
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
+
+	public int getId() {
+		return id;
+	}
+	
+	public String getIdentifier() {
+		return this.variable.toString() + "_" + this.id;
 	}
 }

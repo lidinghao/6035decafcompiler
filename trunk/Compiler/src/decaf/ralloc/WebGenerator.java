@@ -1,5 +1,6 @@
 package decaf.ralloc;
 
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -44,7 +45,6 @@ public class WebGenerator {
 		this.nameToWebs = new HashMap<Name, List<Web>>();
 		this.defToWeb = new HashMap<LIRStatement, Web>();
 		this.qArg = new QuadrupletArgReorderer(mMap);
-		
 	}
 	
 	public void generateWebs() {	
@@ -62,10 +62,22 @@ public class WebGenerator {
 		removeRedundantWebs();
 		unionWebs();
 		indexWebs(); // Don't use this to generate interference graph
-		
 		removeDeadCodedLoads();
+		assignIdsToWebs();
 	}
 	
+	private void assignIdsToWebs() {
+		for (String methodName: this.webMap.keySet()) {
+			if (methodName.equals(ProgramFlattener.exceptionHandlerLabel)) continue;
+			
+			int id = 0;
+			for (Web w: this.webMap.get(methodName)) {
+				w.setId(id);
+				id++;
+			}
+		}
+	}
+
 	private void removeDeadCodedLoads() {		
 		for (String methodName: this.mMap.keySet()) {
 			for (CFGBlock block: this.mMap.get(methodName).getCfgBlocks()) {
@@ -344,6 +356,13 @@ public class WebGenerator {
 		}
 	}
 
+	/**
+	 * Adds to all webs except for ones for arg.
+	 * When adding use, don't want to interfere same names as will merge webs later
+	 * When defining, don't want to interfere as can reuse that register now (qArg reordering ensures that!)
+	 * @param web
+	 * @param arg
+	 */
 	private void addToInterferingGraph(Web web, Name arg) {
 		for (Name name: this.nameToWebs.keySet()) {
 			if (name.equals(arg)) continue;
@@ -442,5 +461,22 @@ public class WebGenerator {
 
 	public void setDefAnalyzer(DefsDFAnalyzer defAnalyzer) {
 		this.defAnalyzer = defAnalyzer;
+	}
+	
+	public void printInterferenceGraph(PrintStream out) {
+		for (String methodName: this.webMap.keySet()) {
+			if (methodName.equals(ProgramFlattener.exceptionHandlerLabel)) continue;
+			
+			out.println(methodName + ":");
+			for (Web w: this.webMap.get(methodName)) {
+				String rtn = "";
+				rtn += w.getIdentifier() + " : [";
+				for (Web w2: w.getInterferingWebs()) {
+					rtn += w2.getIdentifier() + ", ";
+				}
+				rtn += "]";
+				out.println(rtn);
+			}
+		}
 	}
 }
