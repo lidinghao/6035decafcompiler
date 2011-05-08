@@ -35,9 +35,14 @@ public class LoopInvariantOptimizer {
 	// Loop body id => CFGBlock map where the CFGBlock is the block containing the
 	// body label for the loop with the given id
 	private HashMap<String, CFGBlock> loopIdToLoopBodyCFGBlock;
+	// Loop body id => CFGBlock map where the CFGBlock is the block containing the
+	// test label for the loop with the given id
+	private HashMap<String, CFGBlock> loopIdToLoopTestCFGBlock;
+	private HashMap<String, String> loopIdToMethod;
 	private static String ForInitLabelRegex = "[a-zA-z_]\\w*.for\\d+.init";
 	private static String ForBodyLabelRegex = "[a-zA-z_]\\w*.for\\d+.body";
 	private static String ForEndLabelRegex = "[a-zA-z_]\\w*.for\\d+.end";
+	private static String ForTestLabelRegex = "[a-zA-z_]\\w*.for\\d+.test";
 	private static String ArrayPassLabelRegex = "[a-zA-z_]\\w*.array.[a-zA-z_]\\w*.\\d+.pass";
    private static String ArrayBeginLabelRegex = "[a-zA-z_]\\w*.array.[a-zA-z_]\\w*.\\d+.begin";
    private static String ArrayFailLabelRegex = "[a-zA-z_]\\w*.array.[a-zA-z_]\\w*.\\d+.fail";
@@ -131,6 +136,8 @@ public class LoopInvariantOptimizer {
 		loopIdToLoopInitCFGBlock = new HashMap<String, CFGBlock>();
 		loopIdToLoopEndCFGBlock = new HashMap<String, CFGBlock>();
 		loopIdToLoopBodyCFGBlock = new HashMap<String, CFGBlock>();
+		loopIdToLoopTestCFGBlock = new HashMap<String, CFGBlock>();
+		loopIdToMethod = new HashMap<String, String>();
 		String forLabel, forId;
 		for (String s : mMap.keySet()) {
 			for (CFGBlock block : mMap.get(s).getCfgBlocks()) {
@@ -138,12 +145,22 @@ public class LoopInvariantOptimizer {
 					if (stmt.getClass().equals(LabelStmt.class)) {
 						forLabel = ((LabelStmt)stmt).getLabelString();
 						forId = getIdFromForLabel(forLabel);
+						boolean isForLabel = false;
 						if (forLabel.matches(ForInitLabelRegex)) {
 							loopIdToLoopInitCFGBlock.put(forId, block);
+							isForLabel = true;
 						} else if (forLabel.matches(ForEndLabelRegex)) {
 							loopIdToLoopEndCFGBlock.put(forId, block);
+							isForLabel = true;
 						} else if (forLabel.matches(ForBodyLabelRegex)) {
 							loopIdToLoopBodyCFGBlock.put(forId, block);
+							isForLabel = true;
+						} else if (forLabel.matches(ForTestLabelRegex)) {
+							loopIdToLoopTestCFGBlock.put(forId, block);
+							isForLabel = true;
+						}
+						if (isForLabel) {
+							loopIdToMethod.put(forId, s);
 						}
 					}
 				}
@@ -178,9 +195,9 @@ public class LoopInvariantOptimizer {
 			// Need to check whether the destination is used in the loop body before the loop invariant statement
 			boolean destUsed = false;
 			LIRStatement stmt;
-			List<LIRStatement> loopBodyStmts = loopBodyBlock.getStatements();
+			List<LIRStatement> methodStmts = mMap.get(loopIdToMethod.get(loopId)).getStatements();
 			for (int i = 0; i < stmtIndex; i++) {
-				stmt = loopBodyStmts.get(i);
+				stmt = methodStmts.get(i);
 				if (stmtUsesName(stmt, qStmt.getDestination())) {
 					destUsed = true;
 					break;
@@ -189,7 +206,9 @@ public class LoopInvariantOptimizer {
 			if (!destUsed) {
 				// Need to add additional logic to perform the for condition test, so that this statement
 				// is only executed if we are certain that we are going into the for loop
-				// TODO
+				// Add the statements in the loopId test block to the end of the init block
+				CFGBlock loopTestBlock = loopIdToLoopTestCFGBlock.get(loopId);
+				loopInitBlock.getStatements().addAll(loopTestBlock.getStatements());
 				// If the qStmt contains array bound checks before, hoist those as well
 				hoistArrayBoundsChecks(lqs.getqStmt(), loopBodyBlock, loopInitBlock, stmtIndex);
 				loopInitStmtList.add(lqs.getqStmt());
@@ -302,6 +321,7 @@ public class LoopInvariantOptimizer {
 	// TODO: Put this logic into a utility class so it does not have to be copied
 	
 	private List<LIRStatement> getBoundCheck(Name name, CFGBlock block, int stmtIndex) {
+		if (name == null) return null;
 		if (!name.isArray()) return null;
 				
 		ArrayName arrName = (ArrayName) name;
