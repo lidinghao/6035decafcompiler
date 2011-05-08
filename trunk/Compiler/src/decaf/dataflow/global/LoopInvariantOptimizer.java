@@ -88,16 +88,17 @@ public class LoopInvariantOptimizer {
 	// 3. Destination is either not live out of loop preheader or if it is, it is not
 	//		used before the loop invariant statement
 	private boolean canBeHoisted(LoopQuadrupletStmt lqs) {
+		System.out.println("TRYING TO HOIST " + lqs);
 		String loopId = lqs.getLoopBodyBlockId();
 		int stmtIndex = lqs.getStmtIndex();
-		QuadrupletStmt qStmt = lqs.getqStmt(); 
-		int stmtId = qStmt.getMyId();
+		QuadrupletStmt qStmt = lqs.getqStmt();
 		Name dest = qStmt.getDestination();
 		CFGBlock forEndBlock = loopIdToLoopEndCFGBlock.get(loopId);
 		CFGBlock forTestBlock = loopIdToLoopTestCFGBlock.get(loopId);
 		CFGBlock forInitBlock = loopIdToLoopInitCFGBlock.get(loopId);
 		reachingDefGenerator.generateForForLoop(forTestBlock, forEndBlock, forInitBlock);
 		BlockDataFlowState endBlockReachDefState = reachingDefGenerator.getBlockReachingDefs().get(forEndBlock);
+		int stmtId = qStmt.getMyId();
 		if (endBlockReachDefState.getIn().get(stmtId)) {
 			// Satisfies condition 1
 			if (oneDefinitionOfDestInLoop(dest, loopId)) {

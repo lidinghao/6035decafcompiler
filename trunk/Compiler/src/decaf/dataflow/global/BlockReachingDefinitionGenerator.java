@@ -81,11 +81,11 @@ public class BlockReachingDefinitionGenerator {
 			BlockDataFlowState bFlow = generateForBlock(block);
 			blockReachingDefs.put(block, bFlow);
 		}
-		System.out.println("FOR LOOP REACHING DEF");
-		for (CFGBlock cfgBlock : blockReachingDefs.keySet()) {
-			System.out.println(cfgBlock);
-			System.out.println(blockReachingDefs.get(cfgBlock));
-		}
+//		System.out.println("FOR LOOP REACHING DEF");
+//		for (CFGBlock cfgBlock : blockReachingDefs.keySet()) {
+//			System.out.println(cfgBlock);
+//			System.out.println(blockReachingDefs.get(cfgBlock));
+//		}
 		// Restore the inset of test block back to original
 		forLoopTestBlock.getPredecessors().add(forLoopInitBlock);
 	}
@@ -95,7 +95,8 @@ public class BlockReachingDefinitionGenerator {
 		cfgBlocksToProcess = new HashSet<CFGBlock>();
 		cfgBlocksToProcess.add(forLoopTestBlock);
 		cfgBlocksToProcess.add(forLoopEndBlock);
-		List<CFGBlock> blocksNotAdded = forLoopTestBlock.getSuccessors();
+		List<CFGBlock> blocksNotAdded = new ArrayList<CFGBlock>();
+		blocksNotAdded.addAll(forLoopTestBlock.getSuccessors());
 		while (!blocksNotAdded.isEmpty()) {
 			CFGBlock blockToAdd = blocksNotAdded.get(0);
 			if (!cfgBlocksToProcess.contains(blockToAdd)) {
