@@ -163,6 +163,7 @@ public class LoopInvariantOptimizer {
 							isForLabel = true;
 						}
 						if (isForLabel) {
+							forId = getIdFromForLabel(forLabel);
 							loopIdToMethod.put(forId, s);
 						}
 					}
