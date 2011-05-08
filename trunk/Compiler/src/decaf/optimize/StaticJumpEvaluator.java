@@ -36,6 +36,9 @@ public class StaticJumpEvaluator {
 	}
 	
 	public void staticEvaluateJumps() {
+		cb.setMergeBoundChecks(true);
+		cb.generateCFGs();
+		
 		for (String methodName: this.pf.getLirMap().keySet()) {
 			if (methodName.equals(ProgramFlattener.exceptionHandlerLabel)) continue;
 			
@@ -44,7 +47,6 @@ public class StaticJumpEvaluator {
 			
 			while (!prev.equals(current)) {
 				// Regen cfg
-				cb.setMergeBoundChecks(true);
 				cb.generateCFGs();
 								
 				optimize(methodName);
@@ -54,10 +56,11 @@ public class StaticJumpEvaluator {
 				current = this.pf.getLirMap().get(methodName).toString();
 			}
 		}
+		
+		cb.generateCFGs();
 	}
 
 	private void dcBlocksAndFixLIR(String methodName) {
-		cb.setMergeBoundChecks(true);
 		cb.generateCFGs();
 		
 		this.deadBlocks.clear();
@@ -261,7 +264,7 @@ public class StaticJumpEvaluator {
 	private void getDeadBlocks(String methodName) {
 		for (CFGBlock block: cb.getCfgMap().get(methodName)) {
 			if (block.getPredecessors().size() == 0 && block.getIndex() != 0) {
-				System.out.println(block + "\n====");
+//				System.out.println(block + "\n====");
 				this.deadBlocks.add(block);
 			}
 		}

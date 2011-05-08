@@ -17,6 +17,14 @@ public class ArrayAccessOptimizer {
 		this.cse = new BoundCheckCSEOptimizer(mMap);
 	}
 	
+	public HashMap<String, MethodIR> getmMap() {
+		return mMap;
+	}
+
+	public void setmMap(HashMap<String, MethodIR> mMap) {
+		this.mMap = mMap;
+	}
+
 	public void optimize(boolean[] opts) {
 		addExplicitMemoryInstructions(); // Must add explicit load store first!
 		
