@@ -229,61 +229,6 @@ public class QuadrupletStmt extends LIRStatement {
 		
 	}
 	
-	private void argConst(ConstantName constName, Name name, PrintStream out, QuadrupletOp op, String instr) {
-		moveToRegister(out, name, Register.R10);
-		int arg2 = Integer.parseInt(constName.getValue());
-		if(arg2 == 1) { // using inc and dec if arg2 is 1
-			switch(op) {
-			case ADD:
-				instr += "inc\t";
-				out.println(instr + Register.R10);
-				break;
-			case SUB:
-				instr += "dec\t";
-				out.println(instr + Register.R10);
-				break;
-			case MUL:
-				break;
-			}
-		} else if ((arg2&(arg2-1)) == 0) { // arg is a power of 2
-			
-			int p = (int) (Math.log(arg2)/Math.log(2)); // the power value
-			switch(op) {
-			case ADD:
-				instr += "add\t";
-				out.println(instr + constName.getLocation().getASMRepresentation() + ", " + Register.R10);
-				break;
-			case SUB:
-				instr += "sub\t";
-				out.println(instr + constName.getLocation().getASMRepresentation() + ", " + Register.R10);
-				break;
-			case MUL:
-				
-				instr += "shl\t";
-				out.println(instr + "$" + p  + ", " +  Register.R10);
-				break;
-			}
-			
-		} else {
-			switch(op) {
-			case ADD:
-				instr += "add\t";
-				break;
-			case SUB:
-				instr += "sub\t";
-				break;
-			case MUL:
-				instr += "imul\t";
-				break;
-		}
-			out.println(instr + constName.getLocation().getASMRepresentation() + ", " + Register.R10);
-			
-		}
-		
-		
-		out.println("\tmov\t" + Register.R10 + ", " + this.getDestination().getLocation().getASMRepresentation());
-	}
-	
 	private void moveToRegister(PrintStream out, Name name, Register register) {
 		if (name.isArray()) {
 			ArrayName arrayName = (ArrayName) name;
