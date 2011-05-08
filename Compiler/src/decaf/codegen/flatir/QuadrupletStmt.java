@@ -194,37 +194,39 @@ public class QuadrupletStmt extends LIRStatement {
 	}
 
 	private void processMoveQuadruplet(PrintStream out) {
+		System.out.println(this);
 		moveToRegister(out, this.getArg1(), Register.R10);
-		if(!this.getArg1().isArray()) {
-			out.println("\tmov\t" + Register.R10 + ", " + this.getDestination().getLocation().getASMRepresentation());
-		} else {
+		//if(!this.getDestination().isArray()) {
+			//out.println("\tmov\t" + Register.R10 + ", " + this.getDestination().getLocation().getASMRepresentation());
+		//} else {
 			moveFromRegister(out, Register.R10, this.getDestination(), Register.R11);
-		}
+		//}
 	}
 
 	private void processArithmeticQuadruplet(PrintStream out, QuadrupletOp op) {
 		String instr = "\t";
 		
-		if(this.getArg2().getClass().equals(ConstantName.class)) {
-			argConst((ConstantName) this.getArg2(), this.getArg1(), out, op, instr);
-		} else if(this.getArg1().getClass().equals(ConstantName.class)){
-			argConst((ConstantName) this.getArg1(), this.getArg2(), out, op, instr);
-		} else {
-			switch(op) {
-				case ADD:
-					instr += "add\t";
-					break;
-				case SUB:
-					instr += "sub\t";
-					break;
-				case MUL:
-					instr += "imul\t";
-					break;
-			}
-			moveToRegister(out, this.getArg1(), Register.R10);
-			out.println(instr + this.getArg2().getLocation().getASMRepresentation() + ", " + Register.R10);
-			out.println("\tmov\t" + Register.R10 + ", " + this.getDestination().getLocation().getASMRepresentation());
+//		if(this.getArg2().getClass().equals(ConstantName.class)) {
+//			argConst((ConstantName) this.getArg2(), this.getArg1(), out, op, instr);
+//		} else if(this.getArg1().getClass().equals(ConstantName.class)){
+//			argConst((ConstantName) this.getArg1(), this.getArg2(), out, op, instr);
+//		} else {
+		switch(op) {
+			case ADD:
+				instr += "add\t";
+				break;
+			case SUB:
+				instr += "sub\t";
+				break;
+			case MUL:
+				instr += "imul\t";
+				break;
 		}
+		moveToRegister(out, this.getArg1(), Register.R10);
+		moveToRegister(out, this.getArg2(), Register.R11);
+		out.println(instr + Register.R11 + ", " + Register.R10);
+		moveFromRegister(out, Register.R10, this.getDestination(), Register.R11);
+			//out.println("\tmov\t" + Register.R10 + ", " + this.getDestination().getLocation().getASMRepresentation());
 		
 	}
 	
@@ -278,6 +280,8 @@ public class QuadrupletStmt extends LIRStatement {
 			out.println(instr + constName.getLocation().getASMRepresentation() + ", " + Register.R10);
 			
 		}
+		
+		
 		out.println("\tmov\t" + Register.R10 + ", " + this.getDestination().getLocation().getASMRepresentation());
 	}
 	

@@ -218,6 +218,7 @@ public class LoopInvariantOptimizer {
 						// Remove statement from existing location
 						blockStmts.remove(i);
 						// Add statement to end of init block
+						lqs.getqStmt().setDepth(loopInitStmtList.get(0).getDepth());
 						loopInitStmtList.add(lqs.getqStmt());
 					}
 				}
@@ -249,16 +250,25 @@ public class LoopInvariantOptimizer {
 		
 		if (boundCheck != null) {
 			blockWithQStmt.getStatements().removeAll(boundCheck);
+			for (LIRStatement bcStmt : boundCheck) {
+				bcStmt.setDepth(loopInitStmtList.get(0).getDepth());
+			}
 			loopInitStmtList.addAll(boundCheck);
 		}
 		boundCheck = getBoundCheck(qStmt.getArg1(), blockWithQStmt, indexOfQStmtInBlock);
 		if (boundCheck != null) {
 			blockWithQStmt.getStatements().removeAll(boundCheck);
+			for (LIRStatement bcStmt : boundCheck) {
+				bcStmt.setDepth(loopInitStmtList.get(0).getDepth());
+			}
 			loopInitStmtList.addAll(boundCheck);
 		}
 		boundCheck = getBoundCheck(qStmt.getArg2(), blockWithQStmt, indexOfQStmtInBlock);
 		if (boundCheck != null) {
 			blockWithQStmt.getStatements().removeAll(boundCheck);
+			for (LIRStatement bcStmt : boundCheck) {
+				bcStmt.setDepth(loopInitStmtList.get(0).getDepth());
+			}
 			loopInitStmtList.addAll(boundCheck);
 		}
 	}
