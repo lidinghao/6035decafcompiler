@@ -1,0 +1,8 @@
+class Program {
+	void main() {
+		int a, b, c, d;
+		for a = 0, 10 {
+			b = c + d; // loop invariant
+		}
+	}
+}

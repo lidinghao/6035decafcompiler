@@ -1,0 +1,11 @@
+class Program {
+	int a[10];
+	
+	void main() {
+		int i;
+		for i = 0, 10 {
+			a[i] = 5; // not loop invariant
+			a[1] = 6; // not loop invariant
+		}
+	}
+}
