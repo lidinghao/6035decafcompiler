@@ -2,28 +2,28 @@ package decaf.dataflow.cfg;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 import decaf.codegen.flatir.JumpStmt;
 import decaf.codegen.flatir.LIRStatement;
 import decaf.codegen.flatir.LabelStmt;
+import decaf.codegen.flattener.ProgramFlattener;
 
 public class LeaderElector {
-	private HashMap<String, List<LIRStatement>> lirMap;
+	private ProgramFlattener pf;
 	private List<String> labelsToMakeLeaders;
 	private boolean mergeBoundChecks;
 	private static String ArrayPassLabelRegex = "[a-zA-z_]\\w*.array.[a-zA-z_]\\w*.\\d+.pass";
 	private static String ArrayBeginLabelRegex = "[a-zA-z_]\\w*.array.[a-zA-z_]\\w*.\\d+.begin";
 	
-	public LeaderElector(HashMap<String, List<LIRStatement>> lirMap) {
-		this.lirMap = lirMap;
+	public LeaderElector(ProgramFlattener pf) {
+		this.pf = pf;
 		this.labelsToMakeLeaders = new ArrayList<String>();
 	}
 	
 	public void electLeaders() {
-		for (String s: lirMap.keySet()) {
-			processMethod(lirMap.get(s));
+		for (String s: pf.getLirMap().keySet()) {
+			processMethod(pf.getLirMap().get(s));
 			labelsToMakeLeaders.clear(); // Clear list
 		}
 	}
@@ -87,9 +87,9 @@ public class LeaderElector {
 	}
 
 	public void printLeaders(PrintStream out) {
-		for (String s: lirMap.keySet()) {
+		for (String s: pf.getLirMap().keySet()) {
 			out.println("Method " + s + ":");
-			for (LIRStatement stmt: lirMap.get(s)) {
+			for (LIRStatement stmt: pf.getLirMap().get(s)) {
 				if (stmt.isLeader()) {
 					out.println(stmt);
 				}

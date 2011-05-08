@@ -114,6 +114,20 @@ public class CFGBlock {
 
 	@Override
 	public int hashCode() {
-		return this.index + 17*this.methodName.hashCode();
+		return 13*this.index + 17*this.methodName.hashCode();
+	}
+	
+	@Override
+	public boolean equals(Object o) {
+		if (o == null) return false;
+		if (!o.getClass().equals(CFGBlock.class)) return false;
+		
+		CFGBlock b = (CFGBlock) o;
+		
+		if (this.index != b.index) return false;
+		if (!this.methodName.equals(b.methodName)) return false;
+		if (!this.getLeader().equals(b.getLeader())) return false;
+		
+		return true;
 	}
 }
