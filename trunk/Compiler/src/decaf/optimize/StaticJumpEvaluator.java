@@ -22,8 +22,6 @@ public class StaticJumpEvaluator {
 	private static String ArrayBeginLabelRegex = "[a-zA-z_]\\w*.array.[a-zA-z_]\\w*.\\d+.begin";
 	private static String ArrayPassLabelRegex = "[a-zA-z_]\\w*.array.[a-zA-z_]\\w*.\\d+.pass";
 	private static String ArrayFailLabelRegex = "[a-zA-z_]\\w*.array.[a-zA-z_]\\w*.\\d+.fail";
-	private static String IfTestLabelRegex = "[a-zA-z_]\\w*.if\\d+.test";
-	private static String IfEndLabelRegex = "[a-zA-z_]\\w*.if\\d+.end";
 	
 	private ProgramFlattener pf;
 	private CFGBuilder cb;
@@ -65,8 +63,8 @@ public class StaticJumpEvaluator {
 		
 		this.deadBlocks.clear();
 		
-		// Gen dead block
-		getDeadBlocks(methodName);
+		// Gen dead CFG block
+		getDeadCFGBlocks(methodName);
 		
 		// Remove from LIR lists	
 		removeDeadStmtsFromLIR(methodName);
@@ -261,7 +259,7 @@ public class StaticJumpEvaluator {
 		this.pf.getLirMap().put(methodName, newStmts);
 	}
 
-	private void getDeadBlocks(String methodName) {
+	private void getDeadCFGBlocks(String methodName) {
 		for (CFGBlock block: cb.getCfgMap().get(methodName)) {
 			if (block.getPredecessors().size() == 0 && block.getIndex() != 0) {
 //				System.out.println(block + "\n====");
