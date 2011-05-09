@@ -124,6 +124,13 @@ public class LoopInvariantGenerator {
 		BitSet reachingDefForQStmt = reachingDefForQStmts.get(qStmt);
 		Name arg1 = qStmt.getArg1();
 		Name arg2 = qStmt.getArg2();
+		// If the dest is array name, check its index argument
+		if (qStmt.getDestination().getClass().equals(ArrayName.class)) {
+			Name index = ((ArrayName)qStmt.getDestination()).getIndex();
+			if (!argSatisfiesLoopInvariant(index, reachingDefForQStmt, loopQStmts)) {
+				return false;
+			}
+		}
 		if (arg1 != null) {
 			if (argSatisfiesLoopInvariant(arg1, reachingDefForQStmt, loopQStmts)) {
 				if (arg2 != null) {
