@@ -19,7 +19,6 @@ import decaf.codegen.flatir.QuadrupletStmt;
 import decaf.codegen.flattener.ExpressionFlattenerVisitor;
 import decaf.dataflow.cfg.CFGBlock;
 import decaf.dataflow.cfg.MethodIR;
-import decaf.dataflow.global.LoopInvariantGenerator.LoopQuadrupletStmt;
 
 public class LoopInvariantOptimizer {
 	private HashMap<String, MethodIR> mMap;
@@ -52,12 +51,12 @@ public class LoopInvariantOptimizer {
 		this.loopInvariantGenerator = new LoopInvariantGenerator(mMap);
 		this.reachingDefGenerator = new BlockReachingDefinitionGenerator(mMap, ConfluenceOperator.AND);
 		this.livenessGenerator = new BlockLivenessGenerator(mMap);
-		livenessGenerator.generate();
-		loopInvariantGenerator.generateLoopInvariants();
-		generateLoopIdToCFGBlockMaps();
 	}
 	
 	public void performLoopInvariantOptimization() {
+		livenessGenerator.generate();
+		loopInvariantGenerator.generateLoopInvariants();
+		generateLoopIdToCFGBlockMaps();
 		HashSet<QuadrupletStmt> hoistedQStmts = new HashSet<QuadrupletStmt>();
 		List<LoopQuadrupletStmt> hoistedLQStmts = new ArrayList<LoopQuadrupletStmt>();
 		for (LoopQuadrupletStmt lqs : loopInvariantGenerator.getLoopInvariantStmts()) {
