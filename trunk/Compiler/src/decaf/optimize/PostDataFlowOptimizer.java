@@ -44,18 +44,24 @@ public class PostDataFlowOptimizer {
 			this.arrOpt = new ArrayAccessOptimizer(this.mMap);
 			arrOpt.optimize(CLI.opts);
 			
+			System.out.println("BEFORE SJE -------------------------");
+			this.cb.printCFG(System.out);
 
 			this.sje = new StaticJumpEvaluator(pf, cb);
 			sje.staticEvaluateJumps();
 			this.mMap = MethodIR.generateMethodIRs(pf, cb);
 			
+			System.out.println("BEFORE LOOP INVARIANTS");
+			this.cb.printCFG(System.out);
+			
 			this.loops = new LoopInvariantOptimizer(this.mMap);
 			loops.performLoopInvariantOptimization();
 			
+			System.out.println("AFTER LOOP INVARIANTS");
+			this.cb.printCFG(System.out);
+			
 //			System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%");
 //			this.cb.printCFG(System.out);
-			
-			this.cb.generateCFGs();
 //			
 //			System.out.println("***********************");
 //			this.cb.printCFG(System.out);
