@@ -21,6 +21,7 @@ import decaf.dataflow.cfg.MethodIR;
 
 public class GlobalConstantPropagationOptimizer {
 	private HashMap<String, MethodIR> mMap;
+	// The reaching definition bitset at the program point of the qstmt
 	private HashMap<QuadrupletStmt, BitSet> reachingDefForQStmts;
 	private BlockReachingDefinitionGenerator reachingDefGenerator;
 	
@@ -41,6 +42,52 @@ public class GlobalConstantPropagationOptimizer {
 			// Optimize blocks
 			for (CFGBlock block: this.mMap.get(s).getCfgBlocks()) {
 				optimize(block);
+			}
+		}
+	}
+	
+	public void generateReachingDefsForQStmts() {
+		if (reachingDefGenerator.getTotalDefinitions() == 0)
+			return;
+		
+		for (String s: this.mMap.keySet()) {
+			if (s.equals(ProgramFlattener.exceptionHandlerLabel)) continue;
+			
+			// Optimize blocks
+			for (CFGBlock block: this.mMap.get(s).getCfgBlocks()) {
+				generateReachingDefsForQStmtsInBlock(block);
+			}
+		}
+	}
+	
+	private void generateReachingDefsForQStmtsInBlock(CFGBlock block) {
+		BlockDataFlowState bFlow = reachingDefGenerator.getBlockReachingDefs().get(block);
+		QuadrupletStmt qStmt;
+		
+		for (LIRStatement stmt: block.getStatements()) {
+			// Reset kill set
+			bFlow.getKill().clear();
+			if (stmt.getClass().equals(CallStmt.class)) {
+				CallStmt callStmt = (CallStmt) stmt;
+				if (callStmt.getMethodLabel().equals(ProgramFlattener.exceptionHandlerLabel)) continue;
+				
+				// Update BlockDataFlowState kill set
+				reachingDefGenerator.invalidateFunctionCall(bFlow);
+				// Update BlockDataFlowState in set by using updated kill set
+				bFlow.getIn().xor(bFlow.getKill());
+			} else if (stmt.getClass().equals(QuadrupletStmt.class)) {
+				qStmt = (QuadrupletStmt)stmt;
+				
+				System.out.println("reaching defs for qstmt: " + qStmt + " -> " + bFlow.getIn());
+
+				// Update the map for QuadrupletStmt -> reaching defs for stmt (the current IN BitSet)
+				reachingDefForQStmts.put(qStmt, (BitSet)bFlow.getIn().clone());
+				// Update BlockDataFlowState kill set
+				reachingDefGenerator.updateKillSet(qStmt.getDestination(), bFlow);
+				// Update BlockDataFlowState in set by using updated kill set
+				bFlow.getIn().xor(bFlow.getKill());
+				// Add current stmt id to in set
+				bFlow.getIn().set(qStmt.getMyId(), true);
 			}
 		}
 	}
@@ -87,10 +134,6 @@ public class GlobalConstantPropagationOptimizer {
 					qStmt.setArg2(arg2);
 				}
 				
-				System.out.println("reaching defs for qstmt: " + qStmt + " -> " + bFlow.getIn());
-
-				// Update the map for QuadrupletStmt -> reaching defs for stmt (the current IN BitSet)
-				reachingDefForQStmts.put(qStmt, (BitSet)bFlow.getIn().clone());
 				// Update BlockDataFlowState kill set
 				reachingDefGenerator.updateKillSet(qStmt.getDestination(), bFlow);
 				// Update BlockDataFlowState in set by using updated kill set

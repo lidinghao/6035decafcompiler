@@ -48,7 +48,7 @@ public class LoopInvariantGenerator {
 	
 	public void generateLoopInvariants() {
 		// Generates the Map of QStmt -> BitSet representing all the QStmts IDs which reach at that point
-		gcp.performGlobalConstantProp();
+		gcp.generateReachingDefsForQStmts();
 		reachingDefForQStmts = gcp.getReachingDefForQStmts();
 		allLoopBodyQStmts = getLoopBodyQuadrupletStmts();
 		// Keep loop until no more loop invariants are added
@@ -68,7 +68,7 @@ public class LoopInvariantGenerator {
 	}
 	
 	// Returns a map which maps a loop CFGBlock to all the QuadrupletStmts in that block
-	private HashMap<String, HashSet<LoopQuadrupletStmt>> getLoopBodyQuadrupletStmts() {
+	public HashMap<String, HashSet<LoopQuadrupletStmt>> getLoopBodyQuadrupletStmts() {
 		HashMap<String, HashSet<LoopQuadrupletStmt>> loopQuadrupletStmts = 
 			new HashMap<String, HashSet<LoopQuadrupletStmt>>();
 		String forLabel;
@@ -222,7 +222,7 @@ public class LoopInvariantGenerator {
 	private String getIdFromForLabel(String label) {
 		String[] forInfo = label.split("\\.");
 		System.out.println(label);
-		return forInfo[0] + forInfo[1];
+		return forInfo[0] + "." + forInfo[1];
 	}
 	
 	public HashSet<LoopQuadrupletStmt> getLoopInvariantStmts() {

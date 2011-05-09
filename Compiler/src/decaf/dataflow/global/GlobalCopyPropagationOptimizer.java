@@ -149,8 +149,9 @@ public class GlobalCopyPropagationOptimizer {
 			if (arg.getClass().equals(ArrayName.class)) {
 				Name arrIndex = ((ArrayName)arg).getIndex();
 				Name propagatedName = copyPropagateOnArg(arrIndex, bFlow);
-				if (propagatedName != null)
+				if (propagatedName != null) {
 					((ArrayName)arg).setIndex(propagatedName);
+				}
 			}
 		}
 		return null;

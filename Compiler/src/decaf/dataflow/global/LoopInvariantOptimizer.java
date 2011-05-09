@@ -8,6 +8,7 @@ import java.util.List;
 import decaf.codegen.flatir.ArrayName;
 import decaf.codegen.flatir.CmpStmt;
 import decaf.codegen.flatir.ConstantName;
+import decaf.codegen.flatir.JumpCondOp;
 import decaf.codegen.flatir.JumpStmt;
 import decaf.codegen.flatir.LIRStatement;
 import decaf.codegen.flatir.LabelStmt;
@@ -192,7 +193,7 @@ public class LoopInvariantOptimizer {
 	
 	private String getIdFromForLabel(String label) {
 		String[] forInfo = label.split("\\.");
-		return forInfo[0] + forInfo[1];
+		return forInfo[0] + "." + forInfo[1];
 	}
 	
 	// Hoist the given LoopQuadrupletStmt outside of the loop it is in
@@ -201,7 +202,9 @@ public class LoopInvariantOptimizer {
 		String loopId = lqs.getLoopBodyBlockId();
 		CFGBlock loopInitBlock = loopIdToLoopInitCFGBlock.get(loopId);
 		List<LIRStatement> loopInitStmtList = loopInitBlock.getStatements();
+		boolean addAfterInit = false;
 		if (lqs.getNeedConditionalCheck()) {
+			addAfterInit = true;
 			CFGBlock loopTestBlock = loopIdToLoopTestCFGBlock.get(loopId);
 			List<LIRStatement> testStmts = loopTestBlock.getStatements();
 			for (int i = 1; i < testStmts.size(); i++) {
@@ -217,12 +220,21 @@ public class LoopInvariantOptimizer {
 					if (stmt == lqs.getqStmt()) {
 						// Remove statement from existing location
 						blockStmts.remove(i);
-						// Add statement to end of init block
+						// Add statement to init block
 						lqs.getqStmt().setDepth(loopInitStmtList.get(0).getDepth());
-						loopInitStmtList.add(lqs.getqStmt());
+						if (addAfterInit) {
+							loopInitStmtList.add(lqs.getqStmt());
+						} else {
+							loopInitStmtList.add(0, lqs.getqStmt());
+						}
 					}
 				}
 			}
+		}
+		if (lqs.getNeedConditionalCheck()) {
+			// Add jmp statement to body
+			JumpStmt jmp = new JumpStmt(JumpCondOp.NONE, new LabelStmt(loopId + "." + "body"));
+			loopInitStmtList.add(jmp);
 		}
 	}
 	
