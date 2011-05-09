@@ -49,6 +49,7 @@ public class PostDataFlowOptimizer {
 			arrOpt.optimize(CLI.opts);
 			sje.staticEvaluateJumps();
 			
+			// MUST DO FOR EVERYTHING THAT USES mMap
 			this.mMap = MethodIR.generateMethodIRs(pf, cb);
 			arrOpt.setmMap(this.mMap);
 			loops.setmMap(this.mMap);
