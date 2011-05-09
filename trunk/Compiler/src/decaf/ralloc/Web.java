@@ -15,6 +15,7 @@ import decaf.codegen.flatir.Register;
 import decaf.codegen.flatir.StoreStmt;
 
 public class Web {
+	public static int ID = 0;
 	private Name variable;
 	private List<Web> interferingWebs;
 	private List<LIRStatement> definitions;
@@ -30,7 +31,8 @@ public class Web {
 		this.uses = new ArrayList<LIRStatement>();
 		this.register = null;
 		this.interferingWebs = new ArrayList<Web>();
-		this.id = -1;
+		this.id = ID;
+		ID++;
 	}
 
 	public List<Web> getInterferingWebs() {
@@ -43,6 +45,7 @@ public class Web {
 	
 	public void addInterferingWeb(Web w) {
 		if (w == null) return;
+		if (this.equals(w)) return; // Dont add self edges
 		
 		if (!this.interferingWebs.contains(w)) { // Undirected edge
 			this.interferingWebs.add(w);
