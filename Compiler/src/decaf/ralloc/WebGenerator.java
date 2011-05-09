@@ -383,7 +383,7 @@ public class WebGenerator {
 			for (int j = 0; j < this.liveAnalysis.getUniqueVariables().get(this.currentMethod).size(); j++) {
 				Name name = this.liveAnalysis.getUniqueVariables().get(this.currentMethod).get(j);
 				
-				if (stmt.getInSet().get(j) && !next.getInSet().get(j)) { // Live now but not live at start of next stmt
+				if (stmt.getLiveInSet().get(j) && !next.getLiveInSet().get(j)) { // Live now but not live at start of next stmt
 					this.namesDeadAtOutStmt.add(name);
 				}
 			}
@@ -394,7 +394,7 @@ public class WebGenerator {
 		for (int j = 0; j < this.liveAnalysis.getUniqueVariables().get(this.currentMethod).size(); j++) {
 			Name name = this.liveAnalysis.getUniqueVariables().get(this.currentMethod).get(j);
 			
-			if (!stmt.getInSet().get(j)) { // Not live, so clear all *reaching* webs
+			if (!stmt.getLiveInSet().get(j)) { // Not live, so clear all *reaching* webs
 				this.nameToWebs.remove(name);
 			}
 		}
@@ -589,6 +589,10 @@ public class WebGenerator {
 		
 		return -1;
 	}
+	
+	public LivenessAnalysis getLivenessAnalyzer() {
+		return this.liveAnalysis;
+	}
 
 	public ReachingDefinitions getDefAnalyzer() {
 		return reachingDef;
@@ -612,6 +616,18 @@ public class WebGenerator {
 				rtn += "]";
 				out.println(rtn);
 			}
+		}
+	}
+	
+	public void printInterferenceGraph(PrintStream out, String methodName) {
+		for (Web w: this.webMap.get(methodName)) {
+			String rtn = "";
+			rtn += w.getIdentifier() + " : [";
+			for (Web w2: w.getInterferingWebs()) {
+				rtn += w2.getIdentifier() + ", ";
+			}
+			rtn += "]";
+			out.println(rtn);
 		}
 	}
 }

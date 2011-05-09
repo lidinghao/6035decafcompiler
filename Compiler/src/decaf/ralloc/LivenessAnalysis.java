@@ -174,8 +174,8 @@ public class LivenessAnalysis {
 		return bFlow;
 	}
 	
-	private BitSet getCurrentInSet(BlockDataFlowState bFlow) {
-		BitSet in = (BitSet)bFlow.getIn().clone(); // IN = (OUT - KILL) U GEN
+	private BitSet getCurrentInSet(BlockDataFlowState bFlow, String methodName) {
+		BitSet in = new BitSet(this.uniqueVariables.get(methodName).size()); // IN = (OUT - KILL) U GEN
 		in.or(bFlow.getOut());
 		in.xor(bFlow.getKill());
 		in.or(bFlow.getGen());
@@ -233,7 +233,7 @@ public class LivenessAnalysis {
 			}
 			
 			// Set to stmt in set
-			stmt.setInSet(getCurrentInSet(bFlow));
+			stmt.setLiveInSet(getCurrentInSet(bFlow, methodName));
 		}
 	}
 	

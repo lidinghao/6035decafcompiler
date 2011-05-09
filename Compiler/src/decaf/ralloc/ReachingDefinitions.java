@@ -169,7 +169,18 @@ public class ReachingDefinitions {
 				
 				invalidateFunctionCall(block, bFlow);
 			}
+			
+			stmt.setReachingDefInSet(getReachingInSet(bFlow, block.getMethodName()));
 		}
+	}
+
+	private BitSet getReachingInSet(BlockDataFlowState bFlow, String string) {
+		BitSet out = new BitSet(this.uniqueDefinitions.get(string).size()); // OUT = (IN - KILL) U GEN
+		out.or(bFlow.getIn());
+		out.xor(bFlow.getKill());
+		out.or(bFlow.getGen());
+		
+		return out;
 	}
 
 	private void invalidateFunctionCall(CFGBlock block, BlockDataFlowState bFlow) {

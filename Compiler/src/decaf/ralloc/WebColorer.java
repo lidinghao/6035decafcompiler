@@ -11,13 +11,14 @@ import decaf.codegen.flattener.ProgramFlattener;
 import decaf.dataflow.cfg.MethodIR;
 
 public class WebColorer {
-	private static int regCount = Register.availableRegs.length;
+	private static int regCount = 3; //Register.availableRegs.length;
 	private HashMap<String, MethodIR> mMap;
 	private WebGenerator webGen;
 	private Stack<Web> coloringStack;
 	private HashMap<Web, List<Web>> adjacencyList;
 	private List<Web> splitList;
 	private List<Web> graph;
+	private WebSplitter splitter;
 	
 	public WebColorer(HashMap<String, MethodIR> mMap) {
 		this.mMap = mMap;
@@ -26,30 +27,49 @@ public class WebColorer {
 		this.adjacencyList = new HashMap<Web, List<Web>>();
 		this.splitList = new ArrayList<Web>();
 		this.graph = new ArrayList<Web>();
+		this.splitter = new WebSplitter(mMap, this.webGen.getDefAnalyzer(), this.webGen.getLivenessAnalyzer());
 	}
 	
 	public void colorWebs() {
-		for (String methodName: this.webGen.getWebMap().keySet()) {
+		for (String methodName: this.mMap.keySet()) {
 			if (methodName.equals(ProgramFlattener.exceptionHandlerLabel)) continue;
 			
-			while (true) {
+			// Make graph colorable (if not already)
+			int i = 0;
+			while (i < 2) {
 				this.webGen.generateWebs();
 				
-				if (tryColoring(methodName)) {
+				System.out.println("WEBS GENERATED:");
+				for (Web w: this.webGen.getWebMap().get(methodName)) {
+					System.out.println(w + "\n");
+				}
+				
+				System.out.println("INTERFERENCE GRAPH: ");
+				this.webGen.printInterferenceGraph(System.out, methodName);
+				System.out.println();
+				
+				if (tryColoring(methodName)) { // Coloring succeeded, no more splits
 					break;
 				}
 				
+				System.out.println("SPLIT LIST: " + this.getWebIdentifiers(this.splitList));
+				
 				splitWebs(methodName);
+				i++;
 			}
+			
+			// Color graph
 		}
 	}
 
 	private void splitWebs(String methodName) {
-		// Select web to split
-		// Split at right point
+		this.splitter.setState(methodName, splitList);
+		this.splitter.split();
+		this.mMap.get(methodName).regenerateStmts();
 	}
 
 	private boolean tryColoring(String methodName) {
+		System.out.println("COLORING...");
 		this.splitList.clear();
 		makeGraph(methodName);
 		
@@ -58,6 +78,7 @@ public class WebColorer {
 			
 			for (Web w: this.graph) {
 				if (w.getInterferingWebs().size() < regCount) {
+					System.out.println("CAN COLOR: " + w.getIdentifier());
 					webToRemove = w;
 					break;
 				}
@@ -70,10 +91,13 @@ public class WebColorer {
 			}
 			else { // Could not remove
 				if (this.graph.isEmpty()) { // Graph empty, done coloring
+					System.out.println("COLORING COMPLETED SUCCESSFULLY!");
 					return true;
 				}
 				
 				this.splitList.addAll(this.graph); // Split one of the nodes left in graph
+				
+				System.out.println("COLORING FAILED!");
 				
 				return false;
 			}
@@ -87,15 +111,15 @@ public class WebColorer {
 		
 		for (Web w: this.webGen.getWebMap().get(methodName)) {
 			if (w.getDefinitions().size() == 1) {
-				if (w.getUses().isEmpty()) { // Store directly (def must be Quadruplet)
-					notAdded.add(w);
-					continue;
+				if (w.getUses().isEmpty()) { // Store directly (def must be QuadrupletStmt assigning to global)
+					//notAdded.add(w);
+					//continue;
 				}
 				
 				if (w.getDefinitions().get(0).getClass().equals(LoadStmt.class)) { // Single use, load directly
 					if (w.getUses().size() == 1) {
-						notAdded.add(w);
-						continue;
+						//notAdded.add(w);
+						//continue;
 					}
 				}
 			}
@@ -126,5 +150,17 @@ public class WebColorer {
 		for (Web web: this.adjacencyList.get(w)) {
 			w.removeInterferingWeb(web); // Remove edges
 		}
+	}
+	
+	private String getWebIdentifiers(List<Web> webs) {
+		String rtn = "[ ";
+		
+		for (Web w: webs) {
+			rtn += w.getIdentifier() + ", ";
+		}
+		
+		rtn += " ]";
+		
+		return rtn;
 	}
 }
