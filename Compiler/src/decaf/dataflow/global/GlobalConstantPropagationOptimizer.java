@@ -13,7 +13,6 @@ import decaf.codegen.flatir.LIRStatement;
 import decaf.codegen.flatir.Name;
 import decaf.codegen.flatir.PopStmt;
 import decaf.codegen.flatir.PushStmt;
-import decaf.codegen.flatir.QuadrupletOp;
 import decaf.codegen.flatir.QuadrupletStmt;
 import decaf.codegen.flatir.RegisterName;
 import decaf.codegen.flattener.ProgramFlattener;

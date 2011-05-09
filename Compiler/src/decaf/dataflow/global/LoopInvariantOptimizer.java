@@ -485,4 +485,8 @@ public class LoopInvariantOptimizer {
 	private String getArrayBoundPass(String name, String methodName) {
 		return methodName + ".array." + name + "." + ExpressionFlattenerVisitor.MAXBOUNDCHECKS + ".pass";
 	}
+	
+	public void setmMap(HashMap<String, MethodIR> mMap) {
+		this.mMap = mMap;
+	}
 }
