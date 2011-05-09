@@ -36,7 +36,6 @@ public class LoopInvariantGenerator {
 	// This optimizer isn't related to LoopInvariant optimizations, but it updates the Reaching definitions
 	// which we need for loop optimizations
 	private GlobalConstantPropagationOptimizer gcp;
-	private static String ForInitLabelRegex = "[a-zA-z_]\\w*.for\\d+.init";
 	private static String ForEndLabelRegex = "[a-zA-z_]\\w*.for\\d+.end";
 	private static String ForBodyLabelRegex = "[a-zA-z_]\\w*.for\\d+.body";
 	
@@ -45,13 +44,13 @@ public class LoopInvariantGenerator {
 		this.loopInvariantStmts = new HashSet<LoopQuadrupletStmt>();
 		this.loopIdToBodyStmtIndex = new HashMap<String, Integer>();
 		gcp = new GlobalConstantPropagationOptimizer(mMap);
+	}
+	
+	public void generateLoopInvariants() {
 		// Generates the Map of QStmt -> BitSet representing all the QStmts IDs which reach at that point
 		gcp.performGlobalConstantProp();
 		reachingDefForQStmts = gcp.getReachingDefForQStmts();
 		allLoopBodyQStmts = getLoopBodyQuadrupletStmts();
-	}
-	
-	public void generateLoopInvariants() {
 		// Keep loop until no more loop invariants are added
 		int numLoopInvariants;
 		do {
@@ -68,9 +67,7 @@ public class LoopInvariantGenerator {
 		System.out.println("LOOP INVARIANT STMTS: " + loopInvariantStmts);
 	}
 	
-	// Returns a map which maps a loop body CFGBlock to all the QuadrupletStmts in that block
-	// For QuadrupletStmts which are in nested for loops, the stmt is only added in the most nested
-	// loop which it is a part of
+	// Returns a map which maps a loop CFGBlock to all the QuadrupletStmts in that block
 	private HashMap<String, HashSet<LoopQuadrupletStmt>> getLoopBodyQuadrupletStmts() {
 		HashMap<String, HashSet<LoopQuadrupletStmt>> loopQuadrupletStmts = 
 			new HashMap<String, HashSet<LoopQuadrupletStmt>>();
@@ -84,12 +81,11 @@ public class LoopInvariantGenerator {
 				LIRStatement stmt = stmts.get(i);
 				if (stmt.getClass().equals(LabelStmt.class)) {
 					forLabel = ((LabelStmt)stmt).getLabelString();
-					if (forLabel.matches(ForInitLabelRegex)) {
-						forIdList.add(getIdFromForLabel(forLabel));
-					} else if (forLabel.matches(ForEndLabelRegex)) {
+					if (forLabel.matches(ForEndLabelRegex)) {
 						forIdList.remove(forIdList.size()-1);
 					} else  if (forLabel.matches(ForBodyLabelRegex)) {
 						// Update map of body label to its stmt index
+						forIdList.add(getIdFromForLabel(forLabel));
 						loopIdToBodyStmtIndex.put(getIdFromForLabel(forLabel), i);
 					}
 					inFor = !forIdList.isEmpty();
@@ -254,65 +250,5 @@ public class LoopInvariantGenerator {
 	public void setLoopIdToBodyStmtIndex(
 			HashMap<String, Integer> loopIdToBodyStmtIndex) {
 		this.loopIdToBodyStmtIndex = loopIdToBodyStmtIndex;
-	}
-	
-	public class LoopQuadrupletStmt {
-		private QuadrupletStmt qStmt;
-		private String loopBodyBlockId;
-		private int stmtIndex;
-		private boolean needConditionalCheck;
-		
-		public LoopQuadrupletStmt(QuadrupletStmt q, String loopId, int stmtIndex) {
-			this.qStmt = q;
-			this.loopBodyBlockId = loopId;
-			this.stmtIndex = stmtIndex;
-			this.needConditionalCheck = false;
-		}
-		
-		public QuadrupletStmt getqStmt() {
-			return qStmt;
-		}
-
-		public void setqStmt(QuadrupletStmt qStmt) {
-			this.qStmt = qStmt;
-		}
-		
-		public String getLoopBodyBlockId() {
-			return loopBodyBlockId;
-		}
-
-		public void setLoopBodyBlockId(String loopBodyId) {
-			this.loopBodyBlockId = loopBodyId;
-		}
-		
-		public int getStmtIndex() {
-			return stmtIndex;
-		}
-
-		public void setStmtIndex(int stmtIndex) {
-			this.stmtIndex = stmtIndex;
-		}
-	
-		public boolean isNeedConditionalCheck() {
-			return needConditionalCheck;
-		}
-
-		public void setNeedConditionalCheck(boolean needConditionalCheck) {
-			this.needConditionalCheck = needConditionalCheck;
-		}
-		
-		public boolean getNeedConditionalCheck() {
-			return this.needConditionalCheck;
-		}
-
-		@Override
-		public int hashCode() {
-			return toString().hashCode();
-		}
-		
-		@Override
-		public String toString() {
-			return loopBodyBlockId + " " + qStmt.toString();
-		}
 	}
 }
