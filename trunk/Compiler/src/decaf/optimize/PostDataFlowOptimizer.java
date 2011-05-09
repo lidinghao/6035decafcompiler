@@ -33,7 +33,7 @@ public class PostDataFlowOptimizer {
 		
 		this.arrOpt = new ArrayAccessOptimizer(this.mMap);
 		this.sje = new StaticJumpEvaluator(pf, cb);
-		this.loops = new LoopInvariantOptimizer(mMap);
+		this.loops = new LoopInvariantOptimizer(this.mMap);
 	}
 	
 	public void optimize() {
@@ -48,6 +48,11 @@ public class PostDataFlowOptimizer {
 			
 			arrOpt.optimize(CLI.opts);
 			sje.staticEvaluateJumps();
+			
+			this.mMap = MethodIR.generateMethodIRs(pf, cb);
+			arrOpt.setmMap(this.mMap);
+			loops.setmMap(this.mMap);
+			
 			loops.performLoopInvariantOptimization();
 			
 //			System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%");
@@ -58,9 +63,6 @@ public class PostDataFlowOptimizer {
 //			System.out.println("***********************");
 //			this.cb.printCFG(System.out);
 //			System.out.println("=========================");
-			
-			this.mMap = MethodIR.generateMethodIRs(pf, cb);
-			arrOpt.setmMap(this.mMap);
 			
 			if (!isChanged()) {
 				break;
