@@ -14,6 +14,7 @@ import decaf.codegen.flatir.LoadStmt;
 import decaf.codegen.flatir.Name;
 import decaf.codegen.flatir.PopStmt;
 import decaf.codegen.flatir.PushStmt;
+import decaf.codegen.flatir.QuadrupletOp;
 import decaf.codegen.flatir.QuadrupletStmt;
 import decaf.codegen.flatir.RegisterName;
 import decaf.codegen.flatir.StoreStmt;
@@ -38,8 +39,8 @@ public class WebGenerator {
 	private HashMap<String, List<Web>> webMap;
 	private HashMap<Name, List<Web>> nameToWebs; // Webs currently mapping to that name
 	private HashMap<LIRStatement, Web> defToWeb; // Web associated with definition
-	private QuadrupletArgReorderer qArg;
 	private String currentMethod;
+	private List<Name> namesDeadAtOutStmt;
 	
 	public WebGenerator(HashMap<String, MethodIR> mMap) {
 		this.mMap = mMap;
@@ -48,11 +49,11 @@ public class WebGenerator {
 		this.webMap = new HashMap<String, List<Web>>();
 		this.nameToWebs = new HashMap<Name, List<Web>>();
 		this.defToWeb = new HashMap<LIRStatement, Web>();
-		this.qArg = new QuadrupletArgReorderer(mMap);
+		this.namesDeadAtOutStmt = new ArrayList<Name>();
 	}
 	
 	public void generateWebs() {	
-		this.qArg.reorder();
+		Web.ID = 0;
 		
 		this.reachingDef.analyze();
 		this.liveAnalysis.analyze();
@@ -70,24 +71,6 @@ public class WebGenerator {
 		unionWebs();
 		indexWebs(); // Don't use this to generate interference graph
 		removeDeadCodedLoads();
-		assignIdsToWebs();
-		
-		for (CFGBlock block: this.liveAnalysis.getCfgBlocksState().keySet()) {
-			System.out.println(this.liveAnalysis.getCfgBlocksState().get(block));
-		}
-	}
-	
-	private void assignIdsToWebs() {
-		int id = 0;
-		
-		for (String methodName: this.webMap.keySet()) {
-			if (methodName.equals(ProgramFlattener.exceptionHandlerLabel)) continue;
-			
-			for (Web w: this.webMap.get(methodName)) {
-				w.setId(id);
-				id++;
-			}
-		}
 	}
 
 	private void removeDeadCodedLoads() {		
@@ -192,10 +175,10 @@ public class WebGenerator {
 				}
 				
 				if (w.getUses().isEmpty()) { // Empty webs
-					if (w.getDefinitions().isEmpty()) {
+					if (w.getDefinitions().isEmpty()) { // No def
 						temp.add(w);
 					}
-					else if (w.getDefinitions().size() == 1) {
+					else if (w.getDefinitions().size() == 1) { // Single def which is load
 						LIRStatement stmt = w.getDefinitions().get(0);
 						if (stmt.getClass().equals(LoadStmt.class)) {
 							stmt.setDead(true);
@@ -246,11 +229,13 @@ public class WebGenerator {
 //		System.out.println("BLOW: " + this.nameToWebs);
 		String mName = block.getMethodName();
 		
-		for (LIRStatement stmt: block.getStatements()) {
+		for (int i = 0; i < block.getStatements().size(); i++) {
+			LIRStatement stmt = block.getStatements().get(i);
 			
 //			System.out.println("*************");
 //			System.out.println(stmt);
 //			System.out.println(stmt.getInSet());
+			updateLiveWebs(block, i);
 			
 			if (stmt.getClass().equals(QuadrupletStmt.class)) {
 				QuadrupletStmt qStmt = (QuadrupletStmt) stmt;
@@ -273,7 +258,7 @@ public class WebGenerator {
 				}
 				
 				if (isValidWebName(mName, dest)) {		
-					this.nameToWebs.get(dest).clear();
+					this.nameToWebs.put(dest, new ArrayList<Web>());
 					
 					if (!this.defToWeb.containsKey(qStmt)) {
 						Web w = new Web(dest);
@@ -333,7 +318,7 @@ public class WebGenerator {
 				Name dest = lStmt.getVariable();
 				
 				if (isValidWebName(mName, dest)) {
-					this.nameToWebs.get(dest).clear();
+					this.nameToWebs.put(dest, new ArrayList<Web>());
 					
 					if (!this.defToWeb.containsKey(lStmt)) {
 						Web w = new Web(dest);
@@ -387,6 +372,92 @@ public class WebGenerator {
 		}
 	}
 
+	private void updateLiveWebs(CFGBlock block, int i) {
+		LIRStatement stmt = block.getStatements().get(i);
+		
+		this.namesDeadAtOutStmt.clear();
+		
+		if (block.getStatements().size() > i+1) { // Has next statement
+			LIRStatement next = block.getStatements().get(i+1);
+			
+			for (int j = 0; j < this.liveAnalysis.getUniqueVariables().get(this.currentMethod).size(); j++) {
+				Name name = this.liveAnalysis.getUniqueVariables().get(this.currentMethod).get(j);
+				
+				if (stmt.getInSet().get(j) && !next.getInSet().get(j)) { // Live now but not live at start of next stmt
+					this.namesDeadAtOutStmt.add(name);
+				}
+			}
+		}
+		
+		tryReducingInterference(stmt);
+		
+		for (int j = 0; j < this.liveAnalysis.getUniqueVariables().get(this.currentMethod).size(); j++) {
+			Name name = this.liveAnalysis.getUniqueVariables().get(this.currentMethod).get(j);
+			
+			if (!stmt.getInSet().get(j)) { // Not live, so clear all *reaching* webs
+				this.nameToWebs.remove(name);
+			}
+		}
+	}
+
+	// Tries to remove webs which can't interfere with because this statement is last use
+	private void tryReducingInterference(LIRStatement stmt) {
+		if (this.namesDeadAtOutStmt.isEmpty()) return; // Can't do anything
+		
+		List<Name> temp = new ArrayList<Name>();
+		
+		if (stmt.getClass().equals(QuadrupletStmt.class)) {
+			QuadrupletStmt qStmt = (QuadrupletStmt) stmt;
+			
+			// Unary
+			if (qStmt.getOperator() == QuadrupletOp.NOT || qStmt.getOperator() == QuadrupletOp.MINUS) {
+				this.nameToWebs.remove(qStmt.getArg1()); // If last use of arg, can reuse its register
+			}
+			// Binary
+			else {
+				// Divide/Mod is a bitch, no idea how to handle at this point
+				if (qStmt.getOperator() != QuadrupletOp.DIV && qStmt.getOperator() != QuadrupletOp.MOD) {
+					if (this.namesDeadAtOutStmt.contains(qStmt.getArg1())) {
+						//this.nameToWebs.remove(qStmt.getArg1()); // If last use of arg1, reuse reg
+						temp.add(qStmt.getArg1());
+					}
+					
+					if (qStmt.getOperator() == QuadrupletOp.ADD || qStmt.getOperator() == QuadrupletOp.MUL) {
+						if (this.namesDeadAtOutStmt.contains(qStmt.getArg2())) {
+							//this.nameToWebs.remove(qStmt.getArg2()); // If last use of arg2, then switch with arg1 and reuse reg
+							temp.add(qStmt.getArg2());
+							Name arg1 = qStmt.getArg1();
+							qStmt.setArg1(qStmt.getArg2());
+							qStmt.setArg2(arg1);
+						}
+					}
+					// For conditionals can reuse either
+					else if (qStmt.getOperator() != QuadrupletOp.MINUS) {
+						if (this.namesDeadAtOutStmt.contains(qStmt.getArg2())) {
+							//this.nameToWebs.remove(qStmt.getArg2());
+							temp.add(qStmt.getArg2());
+						}
+					}
+				}
+			}
+		}
+		else if (stmt.getClass().equals(LoadStmt.class)) {
+			LoadStmt lStmt = (LoadStmt) stmt;
+			ArrayName aName = (ArrayName) lStmt.getVariable(); // If index variable dead after this use, then reuse reg
+			//this.nameToWebs.remove(aName.getIndex());
+			temp.add(aName.getIndex());
+		}
+		else if (stmt.getClass().equals(StoreStmt.class)) {
+			StoreStmt sStmt = (StoreStmt) stmt;
+			ArrayName aName = (ArrayName) sStmt.getVariable(); // If index variable dead after this use, then reuse reg
+			//this.nameToWebs.remove(aName.getIndex());
+			temp.add(aName.getIndex());
+		}
+		
+		this.namesDeadAtOutStmt.clear();
+		this.namesDeadAtOutStmt.addAll(temp);
+	}
+
 	private void invalidateFunctionCall() {
 		for (Name name: this.nameToWebs.keySet()) {
 			if (name.isGlobal()) {
@@ -403,19 +474,32 @@ public class WebGenerator {
 	 * @param stmt
 	 */
 	private void addToInterferingGraph(Web web, LIRStatement stmt) {
-		Name skip = web.getVariable();
-		
-		for (int i = 0; i < this.liveAnalysis.getUniqueVariables().get(this.currentMethod).size(); i++) {
-			if (!stmt.getInSet().get(i)) continue; // Not live
-			
-			Name name = this.liveAnalysis.getUniqueVariables().get(this.currentMethod).get(i);
-			
-			if (name.equals(skip) || !this.nameToWebs.containsKey(name)) continue; // Skip own shit, or undefined
+		//Name skip = web.getVariable();
+	
+		for (Name name: this.nameToWebs.keySet()) {
+			//if (name.equals(skip)) continue; // Don't interfere with own webs
 			
 			for (Web w: this.nameToWebs.get(name)) {
+				if (this.namesDeadAtOutStmt.contains(name)) continue;
+				
 				w.addInterferingWeb(web);
 			}
+			
 		}
+		
+//		for (int i = 0; i < this.liveAnalysis.getUniqueVariables().get(this.currentMethod).size(); i++) {
+//			if (!stmt.getInSet().get(i)) continue; // Not live
+//			
+//			Name name = this.liveAnalysis.getUniqueVariables().get(this.currentMethod).get(i);
+//			
+//			//if (name == skip || !this.nameToWebs.containsKey(name)) continue; // Skip own shit, or undefined
+//			if (!this.nameToWebs.containsKey(name)) continue; // Skip undefined
+//			
+//			for (Web w: this.nameToWebs.get(name)) {
+//				//System.out.println("ADD : " + w.getIdentifier() + ", "+  web.getIdentifier());
+//				w.addInterferingWeb(web);
+//			}
+//		}
 	}
 
 	private void setReachingDefinitions(CFGBlock block) {
@@ -476,6 +560,12 @@ public class WebGenerator {
 		if (name != null && 
 				!name.getClass().equals(RegisterName.class) && 
 				!name.getClass().equals(ConstantName.class)) {
+			
+			if (name.getClass().equals(VarName.class)) {
+				VarName var = (VarName) name;
+				if (var.isString()) return false;
+			}
+			
 			// Process for Global, Param (on stack)
 			if (!this.nameToWebs.containsKey(name)) {
 				this.nameToWebs.put(name, new ArrayList<Web>());

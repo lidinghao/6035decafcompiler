@@ -193,10 +193,10 @@ public class LivenessAnalysis {
 			if (stmt.getClass().equals(QuadrupletStmt.class)) {
 				QuadrupletStmt qStmt = (QuadrupletStmt)stmt;
 				
+				updateKillGenSet(methodName, qStmt, bFlow);
+				
 				markLive(methodName, qStmt.getArg1(), bFlow);
 				markLive(methodName, qStmt.getArg2(), bFlow);
-				
-				updateKillGenSet(methodName, qStmt, bFlow);
 			}
 			else if (stmt.getClass().equals(LoadStmt.class)) {
 				LoadStmt lStmt = (LoadStmt) stmt;
