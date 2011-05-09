@@ -9,15 +9,23 @@ public abstract class LIRStatement {
 	protected boolean isLeader;
 	protected int depth;
 	protected boolean isDead;
-	protected BitSet inSet;
+	protected BitSet liveInSet;
+	protected BitSet reachingDefInSet;
 	
-	
-	public BitSet getInSet() {
-		return inSet;
+	public BitSet getReachingDefInSet() {
+		return reachingDefInSet;
 	}
 
-	public void setInSet(BitSet inSet) {
-		this.inSet = inSet;
+	public void setReachingDefInSet(BitSet reachingDefInSet) {
+		this.reachingDefInSet = reachingDefInSet;
+	}
+
+	public BitSet getLiveInSet() {
+		return liveInSet;
+	}
+
+	public void setLiveInSet(BitSet inSet) {
+		this.liveInSet = inSet;
 	}
 
 	public boolean isDead() {
