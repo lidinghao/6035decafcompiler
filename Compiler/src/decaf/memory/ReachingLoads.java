@@ -194,6 +194,7 @@ public class ReachingLoads {
 			stmt.setDead(true);
 		}
 		else {
+			stmt.setDead(false);
 			gen.set(this.globalLoads.get(methodName).indexOf(stmt.getVariable()));	
 		}
 	}

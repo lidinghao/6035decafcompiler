@@ -23,19 +23,19 @@ public class ReachingStores {
 	private HashSet<CFGBlock> cfgBlocksToProcess;
 	private HashMap<CFGBlock, BlockDataFlowState> cfgBlocksState;
 	private HashMap<String, MethodIR> mMap;
-	private HashMap<String, List<Name>> globalLoads;
+	private HashMap<String, List<Name>> globalStores;
 	
 	public ReachingStores(HashMap<String, MethodIR> mMap) {
 		this.mMap = mMap;
 		this.cfgBlocksToProcess = new HashSet<CFGBlock>();
 		this.cfgBlocksState = new HashMap<CFGBlock, BlockDataFlowState>();
-		this.globalLoads = new HashMap<String, List<Name>>();
+		this.globalStores = new HashMap<String, List<Name>>();
 	}
 	
 	// Each QuadrupletStmt will have a unique ID
 	public void analyze() {
 		this.cfgBlocksState.clear();
-		this.globalLoads.clear();
+		this.globalStores.clear();
 		
 		for (String methodName: this.mMap.keySet()) {
 			if (methodName.equals(ProgramFlattener.exceptionHandlerLabel)) continue;
@@ -46,7 +46,7 @@ public class ReachingStores {
 	}
 
 	private void runWorkList(String methodName) {
-		int totalGlobals = this.globalLoads.get(methodName).size();
+		int totalGlobals = this.globalStores.get(methodName).size();
 		
 		CFGBlock exit = this.getExitBlock(methodName);
 		BlockDataFlowState entryBlockFlow = new BlockDataFlowState(totalGlobals); // IN = GEN for entry block
@@ -97,12 +97,12 @@ public class ReachingStores {
 			this.cfgBlocksToProcess.add(block);
 		}
 		
-		this.globalLoads.put(methodName, new ArrayList<Name>());
-		this.globalLoads.get(methodName).addAll(temp);
+		this.globalStores.put(methodName, new ArrayList<Name>());
+		this.globalStores.get(methodName).addAll(temp);
 	}
 	
 	private BlockDataFlowState generateDFState(CFGBlock block) {
-		int totalGlobals = this.globalLoads.get(block.getMethodName()).size();
+		int totalGlobals = this.globalStores.get(block.getMethodName()).size();
 		// Get the original out BitSet for this block
 		BitSet origIn;
 		if (this.cfgBlocksState.containsKey(block)) {
@@ -190,12 +190,13 @@ public class ReachingStores {
 		
 		BitSet gen = bFlow.getGen();
 		
-		int i = this.globalLoads.get(methodName).indexOf(stmt.getVariable());
+		int i = this.globalStores.get(methodName).indexOf(stmt.getVariable());
 		if (bFlow.getOut().get(i) || bFlow.getGen().get(i)) {
 			stmt.setDead(true);
 		}
 		else {
-			gen.set(this.globalLoads.get(methodName).indexOf(stmt.getVariable()));	
+			stmt.setDead(false);
+			gen.set(this.globalStores.get(methodName).indexOf(stmt.getVariable()));	
 		}
 	}
 
@@ -205,8 +206,8 @@ public class ReachingStores {
 		BitSet in = bFlow.getIn();
 		BitSet gen = bFlow.getGen();
 		
-		for (Name name : this.globalLoads.get(methodName)) {
-			int i = this.globalLoads.get(methodName).indexOf(name);
+		for (Name name : this.globalStores.get(methodName)) {
+			int i = this.globalStores.get(methodName).indexOf(name);
 			
 			boolean resetName = false;
 			
@@ -256,10 +257,10 @@ public class ReachingStores {
 	}
 
 	public HashMap<String, List<Name>> getUniqueGlobals() {
-		return globalLoads;
+		return globalStores;
 	}
 
 	public void setUniqueGlobals(HashMap<String, List<Name>> uniqueGlobals) {
-		this.globalLoads = uniqueGlobals;
+		this.globalStores = uniqueGlobals;
 	}
 }
