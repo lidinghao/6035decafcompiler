@@ -30,10 +30,6 @@ public class PostDataFlowOptimizer {
 		this.cb.setMergeBoundChecks(true);
 		this.cb.generateCFGs();
 		this.mMap = MethodIR.generateMethodIRs(pf, cb);
-		
-		this.arrOpt = new ArrayAccessOptimizer(this.mMap);
-		this.sje = new StaticJumpEvaluator(pf, cb);
-		this.loops = new LoopInvariantOptimizer(this.mMap);
 	}
 	
 	public void optimize() {
@@ -45,15 +41,15 @@ public class PostDataFlowOptimizer {
 			//System.out.println("SPO PASS: " + i);
 			//this.cb.printCFG(System.out);
 			
-			
+			this.arrOpt = new ArrayAccessOptimizer(this.mMap);
 			arrOpt.optimize(CLI.opts);
+			
+
+			this.sje = new StaticJumpEvaluator(pf, cb);
 			sje.staticEvaluateJumps();
-			
-			// MUST DO FOR EVERYTHING THAT USES mMap
 			this.mMap = MethodIR.generateMethodIRs(pf, cb);
-			arrOpt.setmMap(this.mMap);
-			loops.setmMap(this.mMap);
 			
+			this.loops = new LoopInvariantOptimizer(this.mMap);
 			loops.performLoopInvariantOptimization();
 			
 //			System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%");
