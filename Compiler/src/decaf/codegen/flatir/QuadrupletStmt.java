@@ -183,7 +183,7 @@ public class QuadrupletStmt extends LIRStatement {
 		moveToRegister(out, falseLiteral, Register.RDX);
 		moveToRegister(out, this.getArg1(), Register.RAX);
 		moveToRegister(out, this.getArg2(), Register.R10);
-		out.println("\tidiv\t" + Register.R10);
+		out.println("\tdiv\t" + Register.R10);
 		
 		if(op == QuadrupletOp.DIV) {
 			moveFromRegister(out, Register.RAX, this.getDestination(), Register.R10);
