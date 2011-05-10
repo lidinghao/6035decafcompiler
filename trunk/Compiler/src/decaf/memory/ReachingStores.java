@@ -46,21 +46,38 @@ public class ReachingStores {
 	}
 
 	private void runWorkList(String methodName) {
-		int totalGlobals = this.globalStores.get(methodName).size();
+//		int totalGlobals = this.globalStores.get(methodName).size();
 		
-		CFGBlock exit = this.getExitBlock(methodName);
-		BlockDataFlowState entryBlockFlow = new BlockDataFlowState(totalGlobals); // IN = GEN for entry block
-		calculateGenKillSets(exit, entryBlockFlow);
-		entryBlockFlow.setIn(entryBlockFlow.getGen());
-		cfgBlocksToProcess.remove(exit);
+		this.setExitBlock(methodName);
 		
-		this.cfgBlocksState.put(exit, entryBlockFlow);
+//		CFGBlock exit = this.getExitBlock(methodName);
+//		BlockDataFlowState entryBlockFlow = new BlockDataFlowState(totalGlobals); // IN = GEN for entry block
+//		calculateGenKillSets(exit, entryBlockFlow);
+//		entryBlockFlow.setIn(entryBlockFlow.getGen());
+//		cfgBlocksToProcess.remove(exit);
+		
+//		this.cfgBlocksState.put(exit, entryBlockFlow);
 		
 		while (cfgBlocksToProcess.size() != 0) {
 			CFGBlock block = (CFGBlock)(cfgBlocksToProcess.toArray())[0];
 			BlockDataFlowState bFlow = generateDFState(block);
 			this.cfgBlocksState.put(block, bFlow);
 		}		
+	}
+	
+	private void setExitBlock(String methodName) {
+		for (CFGBlock block: this.mMap.get(methodName).getCfgBlocks()) {
+			if (block.getSuccessors().size() == 0) {
+//				return block;
+				CFGBlock exit = block;
+				BlockDataFlowState entryBlockFlow = new BlockDataFlowState(this.globalStores.get(methodName).size()); // IN = GEN for entry block
+				calculateGenKillSets(exit, entryBlockFlow);
+				entryBlockFlow.setIn(entryBlockFlow.getGen());
+				cfgBlocksToProcess.remove(exit);
+				
+				this.cfgBlocksState.put(exit, entryBlockFlow);
+			}
+		}
 	}
 	
 	private CFGBlock getExitBlock(String name) {
