@@ -50,6 +50,8 @@ public abstract class LIRStatement {
 
 	public abstract void generateAssembly(PrintStream out);
 	
+	public abstract void generateRegAllocAssembly(PrintStream out);
+	
 	public boolean isLeader() {
 		return isLeader;
 	}

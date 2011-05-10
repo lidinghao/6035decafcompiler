@@ -56,4 +56,10 @@ public class PopStmt extends LIRStatement {
 	public Object clone() {
 		return new PopStmt(this.name);
 	}
+
+	@Override
+	public void generateRegAllocAssembly(PrintStream out) {
+		out.println("\t; " + this.toString());
+		out.println("\tpop\t" + this.name.getRegister());
+	}
 }

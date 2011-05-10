@@ -19,9 +19,18 @@ public abstract class Name {
 	public void setRegister(Register register) {
 		this.register = register;
 	}
+	
+	public Register getMyRegister() {
+		return this.register;
+	}
 
-	public Register getRegister() {
-		return register;
+	public String getRegister() {
+		if (register != null) {
+			return register.toString();
+		}
+		else {
+			return "f*ck";
+		}
 	}
 	
 	public boolean isGlobal() {

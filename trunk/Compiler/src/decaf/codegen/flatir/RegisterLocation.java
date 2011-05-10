@@ -8,7 +8,7 @@ public class RegisterLocation extends Location {
 	}
 	
 	public RegisterLocation(RegisterName register) {
-		this.setRegister(register.getRegister());
+		this.setRegister(register.getMyRegister());
 	}
 
 	public void setRegister(Register register) {

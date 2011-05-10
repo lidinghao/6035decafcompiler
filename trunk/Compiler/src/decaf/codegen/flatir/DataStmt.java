@@ -106,4 +106,9 @@ public class DataStmt extends LIRStatement {
 		d.setType(this.type);
 		return d;
 	}
+
+	@Override
+	public void generateRegAllocAssembly(PrintStream out) {
+		this.generateAssembly(out);
+	}
 }

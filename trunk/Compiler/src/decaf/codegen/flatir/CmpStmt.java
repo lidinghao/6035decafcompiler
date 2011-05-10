@@ -88,4 +88,10 @@ public class CmpStmt extends LIRStatement {
 	public boolean isUseStatement() {
 		return true;
 	}
+
+	@Override
+	public void generateRegAllocAssembly(PrintStream out) {
+		out.println("\t; " + this.toString());
+		out.println("\tcmp\t" + this.arg1.getRegister() + ", " + this.arg2.getRegister());
+	}
 }

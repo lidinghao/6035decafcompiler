@@ -20,7 +20,7 @@ public class StoreStmt extends LIRStatement {
 	}
 
 	public Register getRegister() {
-		return this.variable.getRegister();
+		return this.variable.getMyRegister();
 	}
 	
 	@Override
@@ -70,5 +70,33 @@ public class StoreStmt extends LIRStatement {
 
 	public int getMyId() {
 		return myId;
+	}
+
+	@Override
+	public void generateRegAllocAssembly(PrintStream out) {
+		out.println("\t;" + this.toString());
+		String to = "";
+		
+		if (this.variable.isGlobal()) {
+			if (this.variable.isArray()) {
+				ArrayName arr = (ArrayName) this.variable;
+				
+				to = arr.getId() + "(, " + arr.getIndex().getRegister() + ", 8)";
+			}
+			else {
+				VarName var = (VarName) this.variable;
+				if (var.isString()) {
+					to = "$." + var.getId();
+				}
+				else {
+					to = var.getId();
+				}
+			}
+		}
+		else {
+			to = this.variable.getLocation().getASMRepresentation();
+		}
+		
+		out.println("\tmov\t" + this.variable.getRegister() + ", " + to);
 	}
 }

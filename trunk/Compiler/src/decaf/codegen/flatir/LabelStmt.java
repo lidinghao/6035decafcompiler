@@ -65,4 +65,9 @@ public class LabelStmt extends LIRStatement {
 	public Object clone() {
 		return new LabelStmt(this.label);
 	}
+
+	@Override
+	public void generateRegAllocAssembly(PrintStream out) {
+		this.generateAssembly(out);
+	}
 }

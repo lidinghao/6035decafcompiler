@@ -11,7 +11,12 @@ public class RegisterName extends Name {
 		this.register = register;
 	}
 
-	public Register getRegister() {
+	@Override
+	public String getRegister() {
+		return register.toString();
+	}
+	
+	public Register getMyRegister() {
 		return register;
 	}
 	
