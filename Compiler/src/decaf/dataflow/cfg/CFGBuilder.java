@@ -2,6 +2,7 @@ package decaf.dataflow.cfg;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
@@ -17,12 +18,14 @@ public class CFGBuilder {
 	private HashMap<String, List<CFGBlock>> cfgMap;
 	private LeaderElector le;
 	private boolean mergeBoundChecks;
+	private boolean regenerate;
 
 	public CFGBuilder(ProgramFlattener pf) {
 		this.pf = pf;
 		this.cfgMap = new HashMap<String, List<CFGBlock>>();
 		le = new LeaderElector(pf);
 		this.setMergeBoundChecks(false);
+		this.regenerate = true;
 	}
 	
 	public HashMap<String, List<CFGBlock>> getCfgMap() {
@@ -47,6 +50,33 @@ public class CFGBuilder {
 		}
 		
 		fixForReturn();
+		regeneratePf();
+		
+		if (regenerate) {
+			regenerate = false;
+			this.generateCFGs();
+		}
+	}
+
+	private void regeneratePf() {
+		for (String methodName: this.cfgMap.keySet()) {
+			List<Integer> indices = new ArrayList<Integer>();
+			for (CFGBlock block: this.cfgMap.get(methodName)) {
+				indices.add(block.getIndex());
+			}
+			
+			Collections.sort(indices);
+			
+			List<LIRStatement> newStmts = new ArrayList<LIRStatement>();
+			for (Integer i: indices) {
+				for (CFGBlock block: this.cfgMap.get(methodName)) {
+					if (block.getIndex() == i) {
+						newStmts.addAll(block.getStatements());
+					}
+				}
+			}
+			this.pf.getLirMap().put(methodName, newStmts);
+		}
 	}
 
 	private List<CFGBlock> generateCFGBlocks(String methodName) {
