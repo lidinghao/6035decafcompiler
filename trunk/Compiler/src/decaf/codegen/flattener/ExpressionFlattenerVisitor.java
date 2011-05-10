@@ -518,8 +518,9 @@ public class ExpressionFlattenerVisitor implements ASTVisitor<Name> {
 		
 		//index = loc.getExpr().accept(this); // Re-eval expressions
 		this.statements.add(new CmpStmt(index, new ConstantName(0)));
-		this.statements.add(new JumpStmt(JumpCondOp.LT, arrayCheckFail)); // size >= 0? --> pass, else flow to fail
-		this.statements.add(new JumpStmt(JumpCondOp.NONE, arrayCheckPass)); // passed
+		this.statements.add(new JumpStmt(JumpCondOp.GTE, arrayCheckPass));
+//		this.statements.add(new JumpStmt(JumpCondOp.LT, arrayCheckFail)); // size >= 0? --> pass, else flow to fail
+//		this.statements.add(new JumpStmt(JumpCondOp.NONE, arrayCheckPass)); // passed
 		
 		// Exception Handler
 		this.statements.add(arrayCheckFail);
