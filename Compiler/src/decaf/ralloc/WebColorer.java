@@ -3,12 +3,16 @@ package decaf.ralloc;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.Stack;
 
 import decaf.codegen.flatir.LIRStatement;
 import decaf.codegen.flatir.LoadStmt;
+import decaf.codegen.flatir.QuadrupletStmt;
 import decaf.codegen.flatir.Register;
+import decaf.codegen.flatir.RegisterName;
 import decaf.codegen.flattener.ProgramFlattener;
 import decaf.dataflow.cfg.MethodIR;
 
@@ -16,20 +20,22 @@ public class WebColorer {
 	public static int regCount = 3; //Register.availableRegs.length;
 	private HashMap<String, MethodIR> mMap;
 	private WebGenerator webGen;
-	private Stack<Web> coloringStack;
+	private HashMap<String, Stack<Web>> coloringStack;
 	private HashMap<Web, List<Web>> adjacencyList;
 	private List<Web> splitList;
 	private List<Web> graph;
 	private WebSplitter splitter;
+	private HashMap<String, List<Register>> registersUsed;
 	
 	public WebColorer(HashMap<String, MethodIR> mMap) {
 		this.mMap = mMap;
 		this.webGen = new WebGenerator(this.mMap);
-		this.coloringStack = new Stack<Web>();	
+		this.coloringStack = new HashMap<String, Stack<Web>>();	
 		this.adjacencyList = new HashMap<Web, List<Web>>();
 		this.splitList = new ArrayList<Web>();
 		this.graph = new ArrayList<Web>();
 		this.splitter = new WebSplitter(mMap, this.webGen.getDefAnalyzer(), this.webGen.getLivenessAnalyzer());
+		this.registersUsed = new HashMap<String, List<Register>>();
 	}
 	
 	public void colorWebs() {
@@ -38,7 +44,7 @@ public class WebColorer {
 			
 			// Make graph colorable (if not already)
 			int i = 0;
-			while (i < 1) {
+			while (true) {
 				this.webGen.generateWebs();
 				
 				for (LIRStatement stmt : this.mMap.get(methodName).getStatements()) {
@@ -62,12 +68,106 @@ public class WebColorer {
 				System.out.println("SPLIT LIST: " + this.getWebIdentifiers(this.splitList));
 				
 				splitWebs(methodName);
+//				break;
 				i++;
 			}
 			
-			// Color graph
-			System.out.println("COLORING COMPLETED SUCCESSFULLY! \n");
+			this.mMap.get(methodName).regenerateStmts();
+			
+			System.out.println("SPLITTING COMPLETED SUCCESSFULLY! \n");
 		}
+		
+		System.out.println("COLORING METHODS");
+		
+		// Color graph
+		colorGraph();
+		
+		System.out.println("COLORING COMPLETED SUCCESSFULLY");
+		
+		this.prettyPrintWebsWithRegisters(System.out);
+	}
+
+	private void colorGraph() {
+		this.webGen.generateWebs();
+		
+		for (String methodName: this.webGen.getWebMap().keySet()) {
+			System.out.println("COLORING: " + methodName);
+			colorMethodWebs(methodName, this.webGen.getWebMap().get(methodName));
+		}
+	}
+
+	private void colorMethodWebs(String methodName, List<Web> list) {
+		System.out.println("IS THERE ERROR!: " + list.size() + "; " + this.coloringStack.get(methodName).size());
+		
+		List<Web> webs = new ArrayList<Web>();
+		webs.addAll(list);
+		
+		// Coloring stack already has list
+		Web webToColor = this.getWebToColor(methodName, list);
+		
+		while (webToColor != null) {
+			colorWeb(webToColor);
+			webToColor = this.getWebToColor(methodName, list);
+		}
+		
+		Set<Register> used = new HashSet<Register>();
+		for (Web w: this.webGen.getWebMap().get(methodName)) {
+			if (w.getRegister() == null) {
+				System.out.println("WEB NOT ASSIGNED REGISTER F*CK!");
+			}
+			else {
+				used.add(w.getRegister());
+			}
+		}
+		
+		this.registersUsed.put(methodName, new ArrayList<Register>());
+		this.registersUsed.get(methodName).addAll(used);
+	}
+
+	public HashMap<String, List<Register>> getRegistersUsed() {
+		return registersUsed;
+	}
+
+	private void colorWeb(Web webToColor) {
+		List<Register> colors = new ArrayList<Register>();
+		for (int i = 0; i < Register.availableRegs.length; i++) {
+			colors.add(Register.availableRegs[i]);
+		}
+		
+		for (Web neighbor: webToColor.getInterferingWebs()) {
+			if (neighbor.getRegister() != null) {
+				colors.remove(neighbor.getRegister());
+			}
+		}
+		
+		for (LIRStatement def: webToColor.getDefinitions()) {
+			if (def.getClass().equals(QuadrupletStmt.class)) {
+				QuadrupletStmt qStmt = (QuadrupletStmt) def;
+				if (qStmt.getArg1().getClass().equals(RegisterName.class)) {
+					RegisterName rName = (RegisterName) qStmt.getArg1();
+					if (colors.contains(rName.getMyRegister())) {
+						webToColor.setRegister(rName.getMyRegister());
+						return;
+					}
+				}
+			}
+		}
+		
+		webToColor.setRegister(colors.get(0));
+	}
+
+	private Web getWebToColor(String methodName, List<Web> list) {
+		if (this.coloringStack.get(methodName).isEmpty()) return null;
+		
+		Web top = this.coloringStack.get(methodName).pop();
+		
+		for (Web w: list) {
+			if (w.equals(top)) {
+				return w;
+			}
+		}
+		
+		return null;
 	}
 
 	private void splitWebs(String methodName) {
@@ -78,14 +178,18 @@ public class WebColorer {
 
 	private boolean tryColoring(String methodName) {
 		System.out.println("COLORING...");
+		this.coloringStack.put(methodName, new Stack<Web>());
 		this.splitList.clear();
 		makeGraph(methodName);
+		
+		preColorGraph(methodName);
 		
 		while (true) {
 			Web webToRemove = null;
 			
 			for (Web w: this.graph) {
-				if (w.getInterferingWebs().size() < regCount) {
+				if (w.getInterferingWebs().size() < regCount
+						&& noColorConflict(w)) {
 					System.out.println("CAN COLOR: " + w.getIdentifier());
 					webToRemove = w;
 					break;
@@ -95,7 +199,7 @@ public class WebColorer {
 			if (webToRemove != null) { // Found web to remove
 				this.saveAdjacencyList(webToRemove);
 				this.removeFromGraph(webToRemove);
-				this.coloringStack.push(webToRemove);
+				this.coloringStack.get(methodName).push(webToRemove);
 				System.out.println("NEW GRAPH: ");
 				prettyPrintGraph(System.out);
 				System.out.println();
@@ -111,6 +215,47 @@ public class WebColorer {
 				
 				return false;
 			}
+		}
+	}
+	
+	private void preColorGraph(String methodName) {
+		for (Web w: this.graph) {
+			for (LIRStatement def: w.getDefinitions()) {
+				if (def.getClass().equals(QuadrupletStmt.class)) {
+					QuadrupletStmt qStmt = (QuadrupletStmt) def;
+					if (qStmt.getArg1().getClass().equals(RegisterName.class)) {
+						RegisterName rName = (RegisterName) qStmt.getArg1();
+						w.setRegister(rName.getMyRegister());
+						break;
+					}
+				}
+			}
+		}
+	}
+
+	private boolean noColorConflict(Web w) {
+		Register color = w.getRegister();
+		
+		if (color == null) return true;
+		
+		for (Web neighbor: w.getInterferingWebs()) {
+			if (color == neighbor.getRegister()) {
+				return false;
+			}
+		}
+		
+		return true;
+	}
+
+	private void prettyPrintWebsWithRegisters(PrintStream out) {
+		for (String methodName: this.webGen.getWebMap().keySet()) {
+			System.out.println("WEBS FOR: " + methodName);
+			for (Web w: this.webGen.getWebMap().get(methodName)) {
+				String rtn = w.getIdentifier() + " -> " + w.getRegister();
+				out.println(rtn);
+			}
+
+			out.println();
 		}
 	}
 	

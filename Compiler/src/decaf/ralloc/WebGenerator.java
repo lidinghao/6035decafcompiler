@@ -10,6 +10,7 @@ import decaf.codegen.flatir.CallStmt;
 import decaf.codegen.flatir.CmpStmt;
 import decaf.codegen.flatir.ConstantName;
 import decaf.codegen.flatir.LIRStatement;
+import decaf.codegen.flatir.LabelStmt;
 import decaf.codegen.flatir.LoadStmt;
 import decaf.codegen.flatir.Name;
 import decaf.codegen.flatir.PopStmt;
@@ -33,6 +34,7 @@ import decaf.dataflow.global.BlockDataFlowState;
  *
  */
 public class WebGenerator {
+   private static String CallBeginRegex = "[a-zA-z_]\\w*.mcall.[a-zA-z_]\\w*.\\d+.begin";
 	private HashMap<String, MethodIR> mMap;
 	private ReachingDefinitions reachingDef;
 	private LivenessAnalysis liveAnalysis;
@@ -41,6 +43,7 @@ public class WebGenerator {
 	private HashMap<LIRStatement, Web> defToWeb; // Web associated with definition
 	private String currentMethod;
 	private List<Name> namesDeadAtOutStmt;
+	private List<Web> websLiveAtCall;
 	
 	public WebGenerator(HashMap<String, MethodIR> mMap) {
 		this.mMap = mMap;
@@ -401,7 +404,23 @@ public class WebGenerator {
 				CallStmt cStmt = (CallStmt) stmt;
 				if (cStmt.getMethodLabel().equals(ProgramFlattener.exceptionHandlerLabel)) continue;
 				
-				invalidateFunctionCall();
+				invalidateFunctionCall(cStmt);
+			}
+			else if (stmt.getClass().equals(LabelStmt.class)) {
+				LabelStmt lStmt = (LabelStmt) stmt;
+				if (lStmt.getLabelString().matches(CallBeginRegex)) {
+					generateLiveWebsAtCall();
+				}
+			}
+		}
+	}
+
+	private void generateLiveWebsAtCall() {
+		// Store all live webs (for caller saving shit)
+		this.websLiveAtCall = new ArrayList<Web>();
+		for (Name name: this.nameToWebs.keySet()) {
+			for (Web w: this.nameToWebs.get(name)) {
+				this.websLiveAtCall.add(w);
 			}
 		}
 	}
@@ -434,7 +453,7 @@ public class WebGenerator {
 		}
 	}
 
-	// Tries to remove webs which can't interfere with because this statement is last use
+	// Keep in namesdead at out stmt, the shit that can be reused
 	private void tryReducingInterference(LIRStatement stmt) {
 		if (this.namesDeadAtOutStmt.isEmpty()) return; // Can't do anything
 		
@@ -445,7 +464,11 @@ public class WebGenerator {
 			
 			// Unary
 			if (qStmt.getOperator() == QuadrupletOp.NOT || qStmt.getOperator() == QuadrupletOp.MINUS) {
-				this.nameToWebs.remove(qStmt.getArg1()); // If last use of arg, can reuse its register
+				//this.nameToWebs.remove(qStmt.getArg1()); // If last use of arg, can reuse its register
+				if (this.namesDeadAtOutStmt.contains(qStmt.getArg1())) {
+					//this.nameToWebs.remove(qStmt.getArg1()); // If last use of arg1, reuse reg
+					temp.add(qStmt.getArg1());
+				}
 			}
 			// Binary
 			else {
@@ -466,7 +489,7 @@ public class WebGenerator {
 						}
 					}
 					// For conditionals can reuse either
-					else if (qStmt.getOperator() != QuadrupletOp.MINUS) {
+					else if (qStmt.getOperator() != QuadrupletOp.MOVE) {
 						if (this.namesDeadAtOutStmt.contains(qStmt.getArg2())) {
 							//this.nameToWebs.remove(qStmt.getArg2());
 							temp.add(qStmt.getArg2());
@@ -479,16 +502,19 @@ public class WebGenerator {
 			LoadStmt lStmt = (LoadStmt) stmt;
 			if (lStmt.getVariable().isArray()) {
 				ArrayName aName = (ArrayName) lStmt.getVariable(); // If index variable dead after this use, then reuse reg
-				//this.nameToWebs.remove(aName.getIndex());
-				temp.add(aName.getIndex());
+				if (this.namesDeadAtOutStmt.contains(aName.getIndex())) {
+					temp.add(aName.getIndex());
+				}
 			}
 		}
 		else if (stmt.getClass().equals(StoreStmt.class)) {
 			StoreStmt sStmt = (StoreStmt) stmt;
 			if (sStmt.getVariable().isArray()) {
 				ArrayName aName = (ArrayName) sStmt.getVariable(); // If index variable dead after this use, then reuse reg
-				//this.nameToWebs.remove(aName.getIndex());
-				temp.add(aName.getIndex());
+				if (this.namesDeadAtOutStmt.contains(aName.getIndex())) {
+					//this.nameToWebs.remove(aName.getIndex());
+					temp.add(aName.getIndex());
+				}
 			}
 		}
 		
@@ -496,7 +522,9 @@ public class WebGenerator {
 		this.namesDeadAtOutStmt.addAll(temp);
 	}
 
-	private void invalidateFunctionCall() {
+	private void invalidateFunctionCall(CallStmt call) {		
+		call.setWebsLive(this.websLiveAtCall);
+		
 		for (Name name: this.nameToWebs.keySet()) {
 			if (name.isGlobal()) {
 				this.nameToWebs.get(name).clear();
