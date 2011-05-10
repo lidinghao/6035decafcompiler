@@ -60,9 +60,10 @@ public class ExpressionFlattenerVisitor implements ASTVisitor<Name> {
 	private int inArrayLocation;
 	private int arrayBoundId;
 	private int callCount;
+	private ClassDecl classDecl;
 
 	public ExpressionFlattenerVisitor(List<LIRStatement> statements,
-			String methodName) {
+			String methodName, ClassDecl cd) {
 		this.statements = statements;
 		this.methodName = methodName;
 		this.andCount = 0;
@@ -72,6 +73,7 @@ public class ExpressionFlattenerVisitor implements ASTVisitor<Name> {
 		this.strCount = 0;
 		this.inArrayLocation = 0;
 		this.callCount = 0;
+		this.classDecl = cd;
 	}
 
 	@Override
@@ -396,6 +398,20 @@ public class ExpressionFlattenerVisitor implements ASTVisitor<Name> {
 		String id = loc.getId();
 		VarName varName = new VarName(id);
 		varName.setBlockId(loc.getBlockId());
+		
+		if (loc.getBlockId() == -2) { // Set stack param field
+			for (MethodDecl md: this.classDecl.getMethodDeclarations()) {
+				if (md.getId().equals(this.methodName)) {
+					for (int i = 0; i < md.getParameters().size(); i++) {
+						Parameter param =  md.getParameters().get(i);
+						if (param.getId().equals(id) && i > 5) { // 7th param onward
+							varName.setStackParam(true);
+						}
+					}
+				}
+			}
+		}
+				
 		return varName;
 	}
 
@@ -502,8 +518,8 @@ public class ExpressionFlattenerVisitor implements ASTVisitor<Name> {
 		
 		//index = loc.getExpr().accept(this); // Re-eval expressions
 		this.statements.add(new CmpStmt(index, new ConstantName(0)));
-		this.statements.add(new JumpStmt(JumpCondOp.LT, arrayCheckFail)); // size < 0?
-		this.statements.add(new JumpStmt(JumpCondOp.NONE, arrayCheckPass)); // passed
+		this.statements.add(new JumpStmt(JumpCondOp.GTE, arrayCheckFail)); // size >= 0? --> pass, else flow to fail
+		//this.statements.add(new JumpStmt(JumpCondOp.NONE, arrayCheckPass)); // passed
 		
 		// Exception Handler
 		this.statements.add(arrayCheckFail);
