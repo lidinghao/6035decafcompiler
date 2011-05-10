@@ -46,15 +46,17 @@ public class LiveGlobalStores {
 	}
 
 	private void runWorkList(String methodName) {
-		int totalGlobals = this.uniqueGlobals.get(methodName).size();
+		//int totalGlobals = this.uniqueGlobals.get(methodName).size();
 		
-		CFGBlock exit = this.getExitBlock(methodName);
-		BlockDataFlowState entryBlockFlow = new BlockDataFlowState(totalGlobals); // IN = GEN for entry block
-		calculateGenKillSets(exit, entryBlockFlow);
-		entryBlockFlow.setIn(entryBlockFlow.getGen());
-		cfgBlocksToProcess.remove(exit);
+		this.setExitBlock(methodName);
 		
-		this.cfgBlocksState.put(exit, entryBlockFlow);
+//		CFGBlock exit = this.setExitBlock(methodName);
+//		BlockDataFlowState entryBlockFlow = new BlockDataFlowState(totalGlobals); // IN = GEN for entry block
+//		calculateGenKillSets(exit, entryBlockFlow);
+//		entryBlockFlow.setIn(entryBlockFlow.getGen());
+//		cfgBlocksToProcess.remove(exit);
+		
+//		this.cfgBlocksState.put(exit, entryBlockFlow);
 		
 		while (cfgBlocksToProcess.size() != 0) {
 			CFGBlock block = (CFGBlock)(cfgBlocksToProcess.toArray())[0];
@@ -63,12 +65,19 @@ public class LiveGlobalStores {
 		}		
 	}
 	
-	private CFGBlock getExitBlock(String methodName) {
+	private void setExitBlock(String methodName) {
 		for (CFGBlock block: this.mMap.get(methodName).getCfgBlocks()) {
-			if (block.getSuccessors().size() == 0) return block;
+			if (block.getSuccessors().size() == 0) {
+//				return block;
+				CFGBlock exit = block;
+				BlockDataFlowState entryBlockFlow = new BlockDataFlowState(this.uniqueGlobals.get(methodName).size()); // IN = GEN for entry block
+				calculateGenKillSets(exit, entryBlockFlow);
+				entryBlockFlow.setIn(entryBlockFlow.getGen());
+				cfgBlocksToProcess.remove(exit);
+				
+				this.cfgBlocksState.put(exit, entryBlockFlow);
+			}
 		}
-		
-		return null;
 	}
 
 	private void initialize(String methodName) {
