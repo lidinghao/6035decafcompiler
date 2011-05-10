@@ -46,7 +46,10 @@ public class StaticJumpEvaluator {
 			while (!prev.equals(current)) {
 				// Regen cfg
 				cb.generateCFGs();
-								
+				
+				System.out.println("BEFORE COND OPTIMIZE");
+				this.cb.printCFG(System.out);
+				
 				optimize(methodName);
 				dcBlocksAndFixLIR(methodName);
 				
@@ -63,11 +66,21 @@ public class StaticJumpEvaluator {
 		
 		this.deadBlocks.clear();
 		
+
+		System.out.println("BEFORE DC CFG");
+		this.cb.printCFG(System.out);
+		
 		// Gen dead CFG block
 		getDeadCFGBlocks(methodName);
+
+		System.out.println("BEFORE DC STATEMENTS");
+		this.cb.printCFG(System.out);
 		
 		// Remove from LIR lists	
 		removeDeadStmtsFromLIR(methodName);
+		
+		System.out.println("BEFORE REDUNDANT JMPS");
+		this.cb.printCFG(System.out);
 		
 		// Remove redundant jumps
 		removeRedundantJumps(methodName);
@@ -210,7 +223,7 @@ public class StaticJumpEvaluator {
 		this.pf.getLirMap().put(methodName, newStmts);
 	}
 
-	private void removeRedundantJumps(String methodName) {
+	private void removeRedundantJumps(String methodName) {		
 		List<LIRStatement> newStmts = new ArrayList<LIRStatement>();
 		
 		for (int i = 0; i < this.pf.getLirMap().get(methodName).size(); i++) {
@@ -218,6 +231,7 @@ public class StaticJumpEvaluator {
 			
 			if (stmt.getClass().equals(JumpStmt.class)) {
 				JumpStmt jStmt = (JumpStmt) stmt;
+				
 				LIRStatement next = this.pf.getLirMap().get(methodName).get(i+1);
 				
 				if (jStmt.getLabel().equals(next)) { // Conditional or unconitional jump to very next stmt
@@ -248,9 +262,7 @@ public class StaticJumpEvaluator {
 	private void removeDeadStmtsFromLIR(String methodName) {
 		List<LIRStatement> newStmts = new ArrayList<LIRStatement>();
 		
-		for (int i = 0; i < this.pf.getLirMap().get(methodName).size(); i++) {
-			LIRStatement stmt = this.pf.getLirMap().get(methodName).get(i);
-			
+		for (LIRStatement stmt: this.pf.getLirMap().get(methodName)) {			
 			if (!isDead(stmt)) {
 				newStmts.add(stmt);
 			}
@@ -297,6 +309,7 @@ public class StaticJumpEvaluator {
 
 	private int optimizeConditionalJump(String methodName, List<LIRStatement> newStmts, int i) {
 		CmpStmt cStmt = (CmpStmt) this.pf.getLirMap().get(methodName).get(i);
+		
 		if (cStmt.getArg1().getClass().equals(ConstantName.class) 
 				&& cStmt.getArg2().getClass().equals(ConstantName.class)) {
 			int arg1 = Integer.parseInt(((ConstantName)cStmt.getArg1()).getValue());
