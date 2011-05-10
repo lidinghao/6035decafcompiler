@@ -190,61 +190,91 @@ public class NaiveLoadOptimizer {
 			else if (stmt.getClass().equals(QuadrupletStmt.class)) {
 				QuadrupletStmt qStmt = (QuadrupletStmt) stmt;
 
-				if (qStmt.getArg1().isGlobal()) {
-					if (!checkName(qStmt.getArg1(), block)) {
+				if (!checkName(qStmt.getArg1(), block)) {
 						return false;
-					}
 				}
-				if (qStmt.getArg2() != null && qStmt.getArg2().isGlobal()) {
-					if (!checkName(qStmt.getArg2(), block)) {
+				if (!checkName(qStmt.getArg2(), block)) {
 						return false;
-					}
 				}
 				
 				killGlobals(qStmt, block);
 				
-				if (qStmt.getDestination().isGlobal()) {
+				// Add globals, stack params
+				if (isValidName(qStmt.getDestination())) {
 					this.globalsInBlock.add(qStmt.getDestination());
-				}				
+				}			
 			} 
 			else if (stmt.getClass().equals(CmpStmt.class)) {
 				CmpStmt cStmt = (CmpStmt) stmt;
-				if (cStmt.getArg1().isGlobal()) {
-					if (!checkName(cStmt.getArg1(), block))
+				if (!checkName(cStmt.getArg1(), block)) {
 						return false;
 				}
-				if (cStmt.getArg2().isGlobal()) {
-					if (!checkName(cStmt.getArg2(), block))
+				if (!checkName(cStmt.getArg2(), block)) {
 						return false;
 				}
 			} 
 			else if (stmt.getClass().equals(PushStmt.class)) {
 				PushStmt pStmt = (PushStmt) stmt;
 
-				if (pStmt.getName().isGlobal()) {
-					if (!checkName(pStmt.getName(), block))
+				if (!checkName(pStmt.getName(), block)) {
 						return false;
 				}
 			} 
 			else if (stmt.getClass().equals(PopStmt.class)) {
 				PopStmt pStmt = (PopStmt) stmt;
 
-				if (pStmt.getName().isGlobal()) {
-					if (!checkName(pStmt.getName(), block))
+				if (!checkName(pStmt.getName(), block)) {
 						return false;
 				}
 			}
 			else if (stmt.getClass().equals(CallStmt.class)) {
 				if (((CallStmt)stmt).getMethodLabel().equals(ProgramFlattener.exceptionHandlerLabel)) continue;
-				this.globalsInBlock.clear();
-				this.seenCall = true;
+				invalidateFunctionCall();
 			}
 		}
 
 		return true;
 	}
 	
+	private void invalidateFunctionCall() {
+		List<Name> args = new ArrayList<Name>();
+		
+		// DONT INVALIDATE ARGS
+		for (Name name: this.globalsInBlock) {
+			if (name.getClass().equals(VarName.class)) {
+				VarName var = (VarName) name;
+				if (var.getBlockId() == -2) {
+					args.add(var);
+				}
+			}
+		}
+		
+		this.globalsInBlock.clear();
+		this.globalsInBlock.addAll(args);
+		
+		this.seenCall = true;
+	}
+	
+	private boolean isValidName(Name name) {
+		if (name == null) return false;
+		
+		if (name.isGlobal()) return true;
+		
+		if (name.getClass().equals(VarName.class)) {
+			VarName var = (VarName) name;
+			if (var.isString()) return false;
+			
+			if (var.isStackParam() && var.getBlockId() == -2) {
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	
 	private boolean checkName(Name name, CFGBlock block) {
+		if (!isValidName(name)) return true;
+		
 		if (name.getClass().equals(VarName.class)) {
 			VarName var = (VarName)name;
 			if (var.isString()) return true;

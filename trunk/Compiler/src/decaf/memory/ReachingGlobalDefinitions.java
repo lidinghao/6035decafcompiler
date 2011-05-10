@@ -18,6 +18,7 @@ import decaf.codegen.flatir.PushStmt;
 import decaf.codegen.flatir.QuadrupletStmt;
 import decaf.codegen.flatir.RegisterName;
 import decaf.codegen.flatir.StoreStmt;
+import decaf.codegen.flatir.VarName;
 import decaf.codegen.flattener.ProgramFlattener;
 import decaf.dataflow.cfg.CFGBlock;
 import decaf.dataflow.cfg.MethodIR;
@@ -88,24 +89,24 @@ public class ReachingGlobalDefinitions {
 				if (stmt.getClass().equals(QuadrupletStmt.class)) {
 					QuadrupletStmt qStmt = (QuadrupletStmt)stmt;
 					
-					if (qStmt.getDestination().isGlobal()) temp.add(qStmt.getDestination());
-					if (qStmt.getArg1().isGlobal()) temp.add(qStmt.getArg1());
-					if (qStmt.getArg2() != null && qStmt.getArg2().isGlobal()) temp.add(qStmt.getArg2());
+					if (isValidName(qStmt.getDestination())) temp.add(qStmt.getDestination());
+					if (isValidName(qStmt.getArg1())) temp.add(qStmt.getArg1());
+					if (isValidName(qStmt.getArg2())) temp.add(qStmt.getArg2());
 				}
 				else if (stmt.getClass().equals(CmpStmt.class)) {
 					CmpStmt cStmt = (CmpStmt) stmt;
-					if (cStmt.getArg1().isGlobal()) temp.add(cStmt.getArg1());
-					if (cStmt.getArg2().isGlobal()) temp.add(cStmt.getArg2());
+					if (isValidName(cStmt.getArg1())) temp.add(cStmt.getArg1());
+					if (isValidName(cStmt.getArg2())) temp.add(cStmt.getArg2());
 				}
 				else if (stmt.getClass().equals(PushStmt.class)) {
 					PushStmt pStmt = (PushStmt) stmt;
 					
-					if (pStmt.getName().isGlobal()) temp.add(pStmt.getName());
+					if (isValidName(pStmt.getName())) temp.add(pStmt.getName());
 				}
 				else if (stmt.getClass().equals(PopStmt.class)) {
 					PopStmt pStmt = (PopStmt) stmt;
 					
-					if (pStmt.getName().isGlobal()) temp.add(pStmt.getName());
+					if (isValidName(pStmt.getName())) temp.add(pStmt.getName());
 				}
 				else if (stmt.getClass().equals(LoadStmt.class)) {
 					LoadStmt lStmt = (LoadStmt) stmt;
@@ -122,6 +123,21 @@ public class ReachingGlobalDefinitions {
 		
 		this.uniqueGlobals.put(methodName, new ArrayList<Name>());
 		this.uniqueGlobals.get(methodName).addAll(temp);
+	}
+	
+	private boolean isValidName(Name name) {
+		if (name == null) return false;
+		
+		if (name.isGlobal()) return true;
+		
+		if (name.getClass().equals(VarName.class)) {
+			VarName var = (VarName) name;
+			if (var.isStackParam() && var.getBlockId() == -2) {
+				return true;
+			}
+		}
+		
+		return false;
 	}
 	
 	private BlockDataFlowState generateDFState(CFGBlock block) {
@@ -199,6 +215,10 @@ public class ReachingGlobalDefinitions {
 		// Kill all globals!
 		for (int i = 0; i < bFlow.getIn().size(); i++) {
 			if (bFlow.getIn().get(i)) {
+				if (this.uniqueGlobals.get(methodName).get(i).getClass().equals(VarName.class)) {
+					VarName var = (VarName) this.uniqueGlobals.get(methodName).get(i);
+					if (var.getBlockId() == -1) continue; // dont kill stack param
+				}
 				bFlow.getKill().set(i);
 			}
 		}
