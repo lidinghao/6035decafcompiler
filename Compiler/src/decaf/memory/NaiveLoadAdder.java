@@ -30,7 +30,7 @@ public class NaiveLoadAdder {
    private static String ArrayFailLabelRegex = "[a-zA-z_]\\w*.array.[a-zA-z_]\\w*.\\d+.fail";
 	private ReachingGlobalDefinitions df;
 	private HashMap<String, MethodIR> mMap;
-	private HashSet<Name> globalsInBlock;
+	private HashSet<Name> globalsInBlock; // HACK: also includes method params on stack (they need explicit load)
 	private boolean seenCall;
 	private HashMap<CFGBlock, String> blockState;
 
@@ -102,56 +102,69 @@ public class NaiveLoadAdder {
 			else if (stmt.getClass().equals(QuadrupletStmt.class)) {
 				QuadrupletStmt qStmt = (QuadrupletStmt) stmt;
 
-				if (qStmt.getArg1().isGlobal()) {
-					if (processName(qStmt.getArg1(), block, i))
+				if (processName(qStmt.getArg1(), block, i)) {
 						return true;
 				}
-				if (qStmt.getArg2() != null && qStmt.getArg2().isGlobal()) {
-					if (processName(qStmt.getArg2(), block, i))
+				if (processName(qStmt.getArg2(), block, i)) {
 						return true;
 				}
 				
-				killLocalGlobals(qStmt);
+				killArrayGlobals(qStmt);
 				
-				if (qStmt.getDestination().isGlobal()) {
+				// Add globals, stack params
+				if (isValidName(qStmt.getDestination())) {
 					this.globalsInBlock.add(qStmt.getDestination());
 				}				
 			} else if (stmt.getClass().equals(CmpStmt.class)) {
 				CmpStmt cStmt = (CmpStmt) stmt;
-				if (cStmt.getArg1().isGlobal()) {
-					if (processName(cStmt.getArg1(), block, i))
+				if (processName(cStmt.getArg1(), block, i)) {
 						return true;
 				}
-				if (cStmt.getArg2().isGlobal()) {
-					if (processName(cStmt.getArg2(), block, i))
+				if (processName(cStmt.getArg2(), block, i)) {
 						return true;
 				}
 			} else if (stmt.getClass().equals(PushStmt.class)) {
 				PushStmt pStmt = (PushStmt) stmt;
 
-				if (pStmt.getName().isGlobal()) {
-					if (processName(pStmt.getName(), block, i))
+				if (processName(pStmt.getName(), block, i)) {
 						return true;
 				}
 			} else if (stmt.getClass().equals(PopStmt.class)) {
 				PopStmt pStmt = (PopStmt) stmt;
 
-				if (pStmt.getName().isGlobal()) {
-					if (processName(pStmt.getName(), block, i))
+				if (processName(pStmt.getName(), block, i)) {
 						return true;
 				}
 			}
 			else if (stmt.getClass().equals(CallStmt.class)) {
 				if (((CallStmt)stmt).getMethodLabel().equals(ProgramFlattener.exceptionHandlerLabel)) continue;
-				this.globalsInBlock.clear();
-				this.seenCall = true;
+				invalidateFunctionCall();
 			}
 		}
 
 		return false;
 	}
 
-	private void killLocalGlobals(QuadrupletStmt qStmt) {
+	private void invalidateFunctionCall() {
+		List<Name> args = new ArrayList<Name>();
+		
+		// DONT INVALIDATE ARGS
+		for (Name name: this.globalsInBlock) {
+			if (name.getClass().equals(VarName.class)) {
+				VarName var = (VarName) name;
+				if (var.getBlockId() == -2) {
+					args.add(var);
+				}
+			}
+		}
+		
+		this.globalsInBlock.clear();
+		this.globalsInBlock.addAll(args);
+		
+		this.seenCall = true;
+	}
+
+	private void killArrayGlobals(QuadrupletStmt qStmt) {
 		HashSet<Name> remove = new HashSet<Name>();
 		for (Name name: this.globalsInBlock) {
 			boolean resetName = false;
@@ -188,12 +201,32 @@ public class NaiveLoadAdder {
 		
 		this.globalsInBlock.removeAll(remove);
 	}
+	
+	private boolean isValidName(Name name) {
+		System.out.println("CHECK NAME!");
+		
+		if (name == null) return false;
+		
+		if (name.isGlobal()) return true;
+		
+		if (name.getClass().equals(VarName.class)) {
+			VarName var = (VarName) name;
+			
+			System.out.println("VAR: " + var + " " + var.getBlockId() + "; " + var.isStackParam());
+			
+			if (var.isString()) return false;
+			
+			if (var.isStackParam() && var.getBlockId() == -2) {
+				System.out.println("STACK PARAM!");
+				return true;
+			}
+		}
+		
+		return false;
+	}
 
 	private boolean processName(Name name, CFGBlock block, int index) {
-		if (name.getClass().equals(VarName.class)) {
-			VarName var = (VarName)name;
-			if (var.isString()) return false;
-		}
+		if (!isValidName(name)) return false;
 		
 		if (this.globalsInBlock.contains(name)) return false;
 		
