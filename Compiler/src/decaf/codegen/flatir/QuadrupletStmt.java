@@ -349,4 +349,130 @@ public class QuadrupletStmt extends LIRStatement {
 	public boolean hasTwoArgs() {
 		return this.operator != QuadrupletOp.MOVE && this.operator != QuadrupletOp.NOT && this.operator != QuadrupletOp.MINUS;
 	}
+	
+	/**
+	 * REGISTER ALLOCATOR ASM
+	 */
+
+	@Override
+	public void generateRegAllocAssembly(PrintStream out) {
+		out.println("\t; " + this.toString());
+		switch(this.operator) {
+			case MOVE:
+				asmMoveQuadruplet(out);
+				break;
+			case MINUS:
+			case NOT:
+				asmUnaryQuadruplet(out, this.operator);
+				break;
+			case MOD:
+			case DIV:
+				asmDivModQuadruplet(out, this.operator);
+				break;
+			case LT:
+			case LTE:
+			case GT:
+			case GTE:
+			case EQ:
+			case NEQ:
+				asmConditionalQuadruplet(out, this.operator);
+				break;
+			default:
+				asmArithmeticQuadruplet(out, this.operator);
+				break;
+		}
+		out.println("\t;");
+	}
+	
+	private void asmDivModQuadruplet(PrintStream out, QuadrupletOp op) {
+		// TODO : Just doing naive shit right now
+		
+		out.println("\tpush\t" + Register.RDX);
+		out.println("\tpush\t" + Register.RAX);
+		
+		out.println("\tmov\t" + "$0" + ", " + Register.RDX);
+		out.println("\tmov\t" + this.arg1.getRegister() + ", " + Register.RAX);
+		out.println("\tdiv\t" + this.arg2.getRegister());
+		
+		if(op == QuadrupletOp.DIV) {
+			out.println("\tmov\t" + Register.RAX + ", " + this.dest.getRegister());
+		} 
+		else {
+			out.println("\tmov\t" + Register.RDX + ", " + this.dest.getRegister());
+		}
+		
+		out.println("\tpop\t" + Register.RAX);
+		out.println("\tpop\t" + Register.RDX);
+	}
+
+	private void asmArithmeticQuadruplet(PrintStream out, QuadrupletOp op) {
+		String instr = "\t";
+		
+		switch(op) {
+			case ADD:
+				instr += "add\t";
+				break;
+			case SUB:
+				instr += "sub\t";
+				break;
+			case MUL:
+				instr += "imul\t";
+				break;
+		}
+		
+		this.asmMove(arg1, dest, out);
+		out.println(instr + arg2.getRegister() + ", " + dest.getRegister());
+	}
+
+	private void asmConditionalQuadruplet(PrintStream out, QuadrupletOp op) {
+		out.println("\tcmp\t" + this.arg1.getRegister() + ", " + this.arg2.getRegister());
+		out.println("\tmov\t" + "$0" + ", " + dest.getRegister());
+		
+		String instr = "\tcmov";
+		switch (op) {
+			case LT:
+				instr += "l\t";
+				break;
+			case LTE:
+				instr += "le\t";
+				break;
+			case GT:
+				instr += "g\t";
+				break;
+			case GTE:
+				instr += "ge\t";
+				break;
+			case EQ:
+				instr += "e\t";
+				break;
+			case NEQ:
+				instr += "ne\t";
+				break;
+		}
+		
+
+		out.println(instr + "$1" + ", " + dest.getRegister());		
+	}
+
+	private void asmMove(Name from, Name dest, PrintStream out) {
+		//if (!from.getRegister().equals(dest.getRegister())) {
+			out.println("\tmov\t" + from.getRegister() + ", " + dest.getRegister());
+		//}
+	}
+
+	private void asmUnaryQuadruplet(PrintStream out, QuadrupletOp operator2) {
+		if (operator == QuadrupletOp.MINUS) {
+			this.asmMove(arg1, dest, out);
+			out.println("\tneg\t" + dest.getRegister());
+		} 
+		else if (operator == QuadrupletOp.NOT) {
+			out.println("\tcmp\t" + "$0" + ", " + arg1.getRegister());
+			out.println("\tmov\t" + "$0" + ", " + dest.getRegister());
+			out.println("\tcmove\t" + "$1" + ", " + dest.getRegister());
+		}		
+	}
+
+	private void asmMoveQuadruplet(PrintStream out) {
+		this.asmMove(arg1, dest, out);
+	}
 }

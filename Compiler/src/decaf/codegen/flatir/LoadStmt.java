@@ -7,6 +7,7 @@ public class LoadStmt extends LIRStatement {
 	private Name variable;
 	private int myId;
 	private List<LIRStatement> boundCheck;
+	private Register explicitLoad;
 
 	public LoadStmt(Name variable) {
 		this.setVariable(variable);
@@ -23,7 +24,7 @@ public class LoadStmt extends LIRStatement {
 	}
 
 	public Register getRegister() {
-		return this.variable.getRegister();
+		return this.variable.getMyRegister();
 	}
 	
 	@Override
@@ -82,5 +83,50 @@ public class LoadStmt extends LIRStatement {
 
 	public List<LIRStatement> getBoundCheck() {
 		return boundCheck;
+	}
+
+	@Override
+	public void generateRegAllocAssembly(PrintStream out) {
+		out.println("\t;" + this.toString());
+		String from = "";
+		
+		if (this.variable.isGlobal()) {
+			if (this.variable.isArray()) {
+				ArrayName arr = (ArrayName) this.variable;
+				
+				from = arr.getId() + "(, " + arr.getIndex().getRegister() + ", 8)";
+			}
+			else {
+				VarName var = (VarName) this.variable;
+				if (var.isString()) {
+					from = "$." + var.getId();
+				}
+				else {
+					from = var.getId();
+				}
+			}
+		}
+		else {
+			from = this.variable.getLocation().getASMRepresentation();
+		}
+		
+		String to = "";
+		
+		if (this.explicitLoad != null) {
+			to = this.explicitLoad.toString();
+		}
+		else {
+			to = this.variable.getRegister();
+		}
+		
+		out.println("\tmov\t" + from + ", " + to);
+	}
+
+	public void setExplicitLoadRegister(Register explicitLoad) {
+		this.explicitLoad = explicitLoad;
+	}
+
+	public Register getExplicitLoad() {
+		return explicitLoad;
 	}
 }

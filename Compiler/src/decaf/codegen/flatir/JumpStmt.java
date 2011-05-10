@@ -122,4 +122,9 @@ public class JumpStmt extends LIRStatement {
 	public Object clone() {
 		return new JumpStmt(this.condition, this.label);
 	}
+
+	@Override
+	public void generateRegAllocAssembly(PrintStream out) {
+		this.generateAssembly(out);		
+	}
 }

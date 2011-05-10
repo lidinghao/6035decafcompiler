@@ -1,9 +1,13 @@
 package decaf.codegen.flatir;
 
 import java.io.PrintStream;
+import java.util.List;
+
+import decaf.ralloc.Web;
 
 public class CallStmt extends LIRStatement {
 	private String methodLabel;
+	private List<Web> websLive;
 	
 	public CallStmt(String methodLabel) {
 		this.setMethodLabel(methodLabel);
@@ -53,5 +57,18 @@ public class CallStmt extends LIRStatement {
 			out.println("\tcall\t" + methodLabel.substring(1,methodLabel.length()-1));		
 		else
 			out.println("\tcall\t" + methodLabel);
+	}
+
+	@Override
+	public void generateRegAllocAssembly(PrintStream out) {
+		this.generateAssembly(out);
+	}
+
+	public void setWebsLive(List<Web> websLive) {
+		this.websLive = websLive;
+	}
+
+	public List<Web> getLiveWebs() {
+		return websLive;
 	}
 }

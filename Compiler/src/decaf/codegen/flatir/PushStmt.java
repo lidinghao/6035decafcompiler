@@ -56,4 +56,10 @@ public class PushStmt extends LIRStatement {
 	public Object clone() {
 		return new PushStmt(this.name);
 	}
+
+	@Override
+	public void generateRegAllocAssembly(PrintStream out) {
+		out.println("\t; " + this.toString());
+		out.println("\tpush\t" + this.name.getRegister());
+	}
 }

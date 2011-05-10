@@ -47,4 +47,9 @@ public class InterruptStmt extends LIRStatement {
 	public Object clone() {
 		return new InterruptStmt(this.interruptId);
 	}
+
+	@Override
+	public void generateRegAllocAssembly(PrintStream out) {
+		this.generateAssembly(out);
+	}
 }

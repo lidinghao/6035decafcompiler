@@ -58,4 +58,9 @@ public class ConstantName extends Name { // Hack for array index
 		c.setLocation(this.getLocation());
 		return c;
 	}
+	
+	@Override
+	public String getRegister() {
+		return "$" + this.value;
+	}
 }

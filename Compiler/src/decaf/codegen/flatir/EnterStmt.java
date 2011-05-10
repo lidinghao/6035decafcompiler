@@ -62,4 +62,9 @@ public class EnterStmt extends LIRStatement {
 	public Object clone() {
 		return new EnterStmt(this.stackSize);
 	}
+
+	@Override
+	public void generateRegAllocAssembly(PrintStream out) {
+		this.generateAssembly(out);
+	}
 }

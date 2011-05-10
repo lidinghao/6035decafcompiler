@@ -38,4 +38,9 @@ public class LeaveStmt extends LIRStatement {
 	public Object clone() {
 		return new LeaveStmt();
 	}
+
+	@Override
+	public void generateRegAllocAssembly(PrintStream out) {
+		this.generateAssembly(out);
+	}
 }
