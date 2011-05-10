@@ -1,17 +1,19 @@
 package decaf.ralloc;
 
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Stack;
 
+import decaf.codegen.flatir.LIRStatement;
 import decaf.codegen.flatir.LoadStmt;
 import decaf.codegen.flatir.Register;
 import decaf.codegen.flattener.ProgramFlattener;
 import decaf.dataflow.cfg.MethodIR;
 
 public class WebColorer {
-	private static int regCount = 3; //Register.availableRegs.length;
+	public static int regCount = 3; //Register.availableRegs.length;
 	private HashMap<String, MethodIR> mMap;
 	private WebGenerator webGen;
 	private Stack<Web> coloringStack;
@@ -36,10 +38,15 @@ public class WebColorer {
 			
 			// Make graph colorable (if not already)
 			int i = 0;
-			while (i < 2) {
+			while (i < 1) {
 				this.webGen.generateWebs();
 				
-				System.out.println("WEBS GENERATED:");
+				for (LIRStatement stmt : this.mMap.get(methodName).getStatements()) {
+					System.out.println(stmt);
+				}
+				
+				System.out.println("\nWEBS GENERATED: " + methodName);
+				System.out.println("VARS : " + this.webGen.getLivenessAnalyzer().getUniqueVariables().get(methodName) + "\n");
 				for (Web w: this.webGen.getWebMap().get(methodName)) {
 					System.out.println(w + "\n");
 				}
@@ -59,6 +66,7 @@ public class WebColorer {
 			}
 			
 			// Color graph
+			System.out.println("COLORING COMPLETED SUCCESSFULLY! \n");
 		}
 	}
 
@@ -88,10 +96,12 @@ public class WebColorer {
 				this.saveAdjacencyList(webToRemove);
 				this.removeFromGraph(webToRemove);
 				this.coloringStack.push(webToRemove);
+				System.out.println("NEW GRAPH: ");
+				prettyPrintGraph(System.out);
+				System.out.println();
 			}
 			else { // Could not remove
 				if (this.graph.isEmpty()) { // Graph empty, done coloring
-					System.out.println("COLORING COMPLETED SUCCESSFULLY!");
 					return true;
 				}
 				
@@ -104,6 +114,18 @@ public class WebColorer {
 		}
 	}
 	
+	public void prettyPrintGraph(PrintStream out) {
+		for (Web w: this.graph) {
+			String rtn = "";
+			rtn += w.getIdentifier() + " : [";
+			for (Web w2: w.getInterferingWebs()) {
+				rtn += w2.getIdentifier() + ", ";
+			}
+			rtn += "]";
+			out.println(rtn);
+		}
+	}
+
 	private void makeGraph(String methodName) {
 		this.graph.clear();
 		

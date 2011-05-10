@@ -255,7 +255,7 @@ public class Web {
 	}
 	
 	public String getIdentifier() {
-		return this.variable.toString() + "{" + this.id + "}";
+		return this.id + ":" +this.variable.toString();
 	}
 	
 	@Override 

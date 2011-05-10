@@ -52,6 +52,7 @@ public class LivenessAnalysis {
 		BlockDataFlowState exitBlockFlow = new BlockDataFlowState(totalDefs); // IN = GEN for exit block
 		calculateGenKillSets(exit, exitBlockFlow);
 		exitBlockFlow.setIn(exitBlockFlow.getGen());
+		exitBlockFlow.getOut().clear();
 		cfgBlocksToProcess.remove(exit);
 		
 		this.cfgBlocksState.put(exit, exitBlockFlow);
@@ -121,8 +122,6 @@ public class LivenessAnalysis {
 			
 			this.uniqueVariables.get(methodName).add(n);
 		}
-		
-		System.out.println("VARS : " + this.uniqueVariables.get(methodName));
 	}
 	
 	private BlockDataFlowState generateDFState(CFGBlock block) {
@@ -133,7 +132,7 @@ public class LivenessAnalysis {
 			origIn = this.cfgBlocksState.get(block).getIn();
 		} else {
 			origIn = new BitSet(totalVars);
-			origIn.set(0, totalVars);
+			//origIn.set(0, totalVars);
 		}
 		
 		// Calculate the in BitSet by taking union of predecessors
@@ -141,13 +140,14 @@ public class LivenessAnalysis {
 		
 		// If there exist at least one successor, set Out to all True
 		if (block.getSuccessors().size() > 0) {
-			bFlow.getOut().set(0, totalVars);
+			//bFlow.getOut().set(0, totalVars);
+			bFlow.getOut().clear();
 		}
 		
 		BitSet out = bFlow.getOut();
 		for (CFGBlock succ : block.getSuccessors()) {
 			if (this.cfgBlocksState.containsKey(succ)) {
-				out.and(this.cfgBlocksState.get(succ).getIn());
+				out.or(this.cfgBlocksState.get(succ).getIn());
 			}
 		}
 		
@@ -234,6 +234,7 @@ public class LivenessAnalysis {
 			
 			// Set to stmt in set
 			stmt.setLiveInSet(getCurrentInSet(bFlow, methodName));
+//			System.out.println("=====> " + stmt + "  ::  " + stmt.getLiveInSet());
 		}
 	}
 	
@@ -242,6 +243,7 @@ public class LivenessAnalysis {
 		if (name.getClass().equals(RegisterName.class) || name.getClass().equals(ConstantName.class)) return;
 		
 		int index = this.uniqueVariables.get(methodName).indexOf(name);
+		
 		bFlow.getGen().set(index);
 	}
 	
