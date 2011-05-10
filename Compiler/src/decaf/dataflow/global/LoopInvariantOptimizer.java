@@ -202,16 +202,14 @@ public class LoopInvariantOptimizer {
 		String loopId = lqs.getLoopBodyBlockId();
 		CFGBlock loopInitBlock = loopIdToLoopInitCFGBlock.get(loopId);
 		List<LIRStatement> loopInitStmtList = loopInitBlock.getStatements();
-		boolean addAfterInit = false;
 		if (lqs.getNeedConditionalCheck()) {
-			addAfterInit = true;
 			CFGBlock loopTestBlock = loopIdToLoopTestCFGBlock.get(loopId);
-			List<LIRStatement> testStmts = loopTestBlock.getStatements();
-			for (int i = 1; i < testStmts.size(); i++) {
-				loopInitBlock.getStatements().add(testStmts.get(i));
-			}
+			List<LIRStatement> testStmts = new ArrayList<LIRStatement>(loopTestBlock.getStatements());
+			// Remove label
+			testStmts.remove(0);
+			loopInitStmtList.addAll(testStmts);
 		}
-		hoistArrayBoundsChecks(lqs.getqStmt(), loopInitBlock);
+		hoistArrayBoundsChecks(lqs.getqStmt(), loopId);
 		for (String s : mMap.keySet()) {
 			for (CFGBlock block : mMap.get(s).getCfgBlocks()) {
 				List<LIRStatement> blockStmts =  block.getStatements();
@@ -222,11 +220,8 @@ public class LoopInvariantOptimizer {
 						blockStmts.remove(i);
 						// Add statement to init block
 						lqs.getqStmt().setDepth(loopInitStmtList.get(0).getDepth());
-						if (addAfterInit) {
-							loopInitStmtList.add(lqs.getqStmt());
-						} else {
-							loopInitStmtList.add(0, lqs.getqStmt());
-						}
+						// Add statement right before the init label
+						loopInitStmtList.add(lqs.getqStmt());
 					}
 				}
 			}
@@ -238,8 +233,25 @@ public class LoopInvariantOptimizer {
 		}
 	}
 	
-	private void hoistArrayBoundsChecks(QuadrupletStmt qStmt, CFGBlock loopInitBlock) {
+//	private int findInitLabelIndex(String loopId) {
+//		CFGBlock loopInitBlock = loopIdToLoopInitCFGBlock.get(loopId);
+//		List<LIRStatement> loopInitStmtList = loopInitBlock.getStatements();
+//		// Find the init label index
+//		for (int j = 0; j < loopInitStmtList.size(); j++) {
+//			LIRStatement initStmt = loopInitStmtList.get(j);
+//			if (initStmt.getClass().equals(LabelStmt.class)) {
+//				String labelStr = ((LabelStmt)initStmt).getLabelString();
+//				if (labelStr.equals(loopId+".init")) {
+//					return j;
+//				}
+//			}
+//		}
+//		return -1;
+//	}
+	
+	private void hoistArrayBoundsChecks(QuadrupletStmt qStmt, String loopId) {
 		// Find the CFGBlock and the statement index within the CFGBlock for the qStmt
+		CFGBlock loopInitBlock = loopIdToLoopInitCFGBlock.get(loopId);
 		CFGBlock blockWithQStmt = null;
 		int indexOfQStmtInBlock = -1;
 		pf:
