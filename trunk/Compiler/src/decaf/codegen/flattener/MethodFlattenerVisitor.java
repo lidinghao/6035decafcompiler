@@ -61,11 +61,13 @@ public class MethodFlattenerVisitor implements ASTVisitor<Integer> {
 	private int currentIfId;
 	private int currentForId;
 	private int totalLocalVars;
+	private ClassDecl classDecl;
 
-	public MethodFlattenerVisitor(String methodName) {
+	public MethodFlattenerVisitor(String methodName, ClassDecl cd) {
+		this.classDecl = cd;
 		this.statements = new ArrayList<LIRStatement>();
 		this.exprFlatenner = new ExpressionFlattenerVisitor(statements,
-				methodName);
+				methodName, this.classDecl);
 		this.methodName = methodName;
 		this.reset();
 	}
@@ -311,7 +313,7 @@ public class MethodFlattenerVisitor implements ASTVisitor<Integer> {
 
 		// Save callee-saved registers
 		for (int i = 0; i < Register.calleeSaved.length; i++) {
-			this.statements.add(new PushStmt(new RegisterName(Register.calleeSaved[i])));
+			//this.statements.add(new PushStmt(new RegisterName(Register.calleeSaved[i])));
 		}
 
 		// Save params on stack (first 6)
@@ -404,7 +406,7 @@ public class MethodFlattenerVisitor implements ASTVisitor<Integer> {
 		
 		// Restore callee-saved regs (reverse order as saved!)
 		for (int i = Register.calleeSaved.length - 1; i >= 0; i--) {
-			this.statements.add(new PopStmt(new RegisterName(Register.calleeSaved[i])));
+			//this.statements.add(new PopStmt(new RegisterName(Register.calleeSaved[i])));
 		}
 		
 		this.statements.add(new LeaveStmt());
@@ -435,7 +437,7 @@ public class MethodFlattenerVisitor implements ASTVisitor<Integer> {
 		this.totalLocalVars = 0;
 		this.statements = new ArrayList<LIRStatement>();
 		this.exprFlatenner = new ExpressionFlattenerVisitor(statements,
-				methodName);
+				methodName, this.classDecl);
 		MethodFlattenerVisitor.DEPTH = 0;
 	}
 
