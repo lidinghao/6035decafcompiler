@@ -233,22 +233,6 @@ public class LoopInvariantOptimizer {
 		}
 	}
 	
-//	private int findInitLabelIndex(String loopId) {
-//		CFGBlock loopInitBlock = loopIdToLoopInitCFGBlock.get(loopId);
-//		List<LIRStatement> loopInitStmtList = loopInitBlock.getStatements();
-//		// Find the init label index
-//		for (int j = 0; j < loopInitStmtList.size(); j++) {
-//			LIRStatement initStmt = loopInitStmtList.get(j);
-//			if (initStmt.getClass().equals(LabelStmt.class)) {
-//				String labelStr = ((LabelStmt)initStmt).getLabelString();
-//				if (labelStr.equals(loopId+".init")) {
-//					return j;
-//				}
-//			}
-//		}
-//		return -1;
-//	}
-	
 	private void hoistArrayBoundsChecks(QuadrupletStmt qStmt, String loopId) {
 		// Find the CFGBlock and the statement index within the CFGBlock for the qStmt
 		CFGBlock loopInitBlock = loopIdToLoopInitCFGBlock.get(loopId);

@@ -147,7 +147,7 @@ public class LoopInvariantGenerator {
 		return false;
 	}
 	
-	private boolean argSatisfiesLoopInvariant(Name arg, BitSet reachingDefForQStmt, 
+	public boolean argSatisfiesLoopInvariant(Name arg, BitSet reachingDefForQStmt, 
 			HashSet<QuadrupletStmt> loopQStmts) {
 		boolean argSatisfiesLoopInvariant = false;
 		System.out.println("FOR ARG: " + arg);
@@ -250,5 +250,14 @@ public class LoopInvariantGenerator {
 	public void setLoopIdToBodyStmtIndex(
 			HashMap<String, Integer> loopIdToBodyStmtIndex) {
 		this.loopIdToBodyStmtIndex = loopIdToBodyStmtIndex;
+	}
+	
+	public HashMap<QuadrupletStmt, BitSet> getReachingDefForQStmts() {
+		return reachingDefForQStmts;
+	}
+
+	public void setReachingDefForQStmts(
+			HashMap<QuadrupletStmt, BitSet> reachingDefForQStmts) {
+		this.reachingDefForQStmts = reachingDefForQStmts;
 	}
 }
