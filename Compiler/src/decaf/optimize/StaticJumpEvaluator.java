@@ -235,7 +235,7 @@ public class StaticJumpEvaluator {
 				LIRStatement next = this.pf.getLirMap().get(methodName).get(i+1);
 				
 				if (jStmt.getLabel().equals(next)) { // Conditional or unconitional jump to very next stmt
-					i++;
+					//i++;
 					continue;
 				}
 				
