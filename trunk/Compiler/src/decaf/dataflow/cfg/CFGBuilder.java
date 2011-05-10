@@ -9,6 +9,7 @@ import decaf.codegen.flatir.JumpCondOp;
 import decaf.codegen.flatir.JumpStmt;
 import decaf.codegen.flatir.LIRStatement;
 import decaf.codegen.flatir.LabelStmt;
+import decaf.codegen.flatir.LeaveStmt;
 import decaf.codegen.flattener.ProgramFlattener;
 
 public class CFGBuilder {
@@ -41,9 +42,11 @@ public class CFGBuilder {
 		
 		for (String methodName: pf.getLirMap().keySet()) {
 			List<CFGBlock> cfgList = generateCFGBlocks(methodName);
-			generateCFG(cfgList);
+			generateCFG(cfgList);			
 			cfgMap.put(methodName, cfgList);
 		}
+		
+		fixForReturn();
 	}
 
 	private List<CFGBlock> generateCFGBlocks(String methodName) {
@@ -118,6 +121,44 @@ public class CFGBuilder {
 		}
 		
 		return null;
+	}
+	
+	public void fixForReturn() {
+		for (String methodName: this.cfgMap.keySet()) {
+			for (CFGBlock block: this.cfgMap.get(methodName)) {
+				if (!block.getStatements().isEmpty()) {
+					LIRStatement stmt = block.getStatements().get(block.getStatements().size() - 1);
+					if (stmt.getClass().equals(LeaveStmt.class)) {
+						if (!block.getSuccessors().isEmpty()) {
+							CFGBlock succ = block.getSuccessors().get(0);
+							block.setSuccessors(new ArrayList<CFGBlock>());
+							succ.removePredecessor(block);
+						}
+					}
+				}
+			}
+			
+			int oldSize = 0;
+			while (this.cfgMap.get(methodName).size() != oldSize) {
+				oldSize = this.cfgMap.get(methodName).size();
+				CFGBlock toRemove = null;
+				for (CFGBlock block: this.cfgMap.get(methodName)) {
+					if (block.getPredecessors().isEmpty() && block.getIndex() != 0) {
+						for (CFGBlock succ: block.getSuccessors()) {
+							succ.removePredecessor(block);
+						}
+						
+						toRemove = block; 
+						break;
+					}
+				}
+				
+				if (toRemove != null) {
+					System.out.println("REMOVING: " + toRemove.getIndex());
+					this.cfgMap.get(methodName).remove(toRemove);
+				}
+			}
+		}
 	}
 	
 	public void printCFG(PrintStream out) {

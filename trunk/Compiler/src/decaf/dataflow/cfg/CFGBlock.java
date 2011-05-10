@@ -111,6 +111,10 @@ public class CFGBlock {
 	public void setMethodName(String methodName) {
 		this.methodName = methodName;
 	}
+	
+	public void removePredecessor(CFGBlock cfg) {
+		this.predecessors.remove(cfg);
+	}
 
 	@Override
 	public int hashCode() {
