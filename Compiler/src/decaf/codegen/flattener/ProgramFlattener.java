@@ -37,7 +37,7 @@ public class ProgramFlattener {
 
 	public ProgramFlattener(ClassDecl cd) {
 		this.classDecl = cd;
-		this.mfv = new MethodFlattenerVisitor(null);
+		this.mfv = new MethodFlattenerVisitor(null, this.classDecl);
 		this.lirMap = new HashMap<String, List<LIRStatement>>();
 		this.dataStmtList = new ArrayList<DataStmt>();
 		this.tni = new TempNameIndexer();
