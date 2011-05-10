@@ -179,6 +179,14 @@ public class Web {
 
 	public void setRegister(Register register) {
 		this.register = register;
+		this.variable.setRegister(register);
+		
+		for (LIRStatement use: this.uses) {
+			processUse(use);
+		}
+		for (LIRStatement def: this.definitions) {
+			processDefinition(def);
+		}
 	}
 	
 	@Override
@@ -217,8 +225,7 @@ public class Web {
 			}
 			
 			if (add) {
-				processUse(s1);
-				this.uses.add(s1);
+				this.addUse(s1);
 			}
 		}
 		
@@ -229,8 +236,7 @@ public class Web {
 			}
 			
 			if (add) {
-				processDefinition(s1);
-				this.definitions.add(s1);
+				this.addDefinition(s1);
 			}
 		}
 		
