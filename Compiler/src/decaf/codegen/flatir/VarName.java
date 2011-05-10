@@ -5,8 +5,18 @@ public class VarName extends Name {
 	private int blockId; // -1 for global field, -2 for parameter
 	private boolean isString;
 	private String stringValue; // non-null only for string var names
+	private boolean isStackParam;
 	
+	public boolean isStackParam() {
+		return isStackParam;
+	}
+
+	public void setStackParam(boolean isStackParam) {
+		this.isStackParam = isStackParam;
+	}
+
 	public VarName(String id) {
+		this.isStackParam = false;
 		this.setId(id);
 		this.setBlockId(-1);
 		this.setIsString(false);
@@ -14,6 +24,7 @@ public class VarName extends Name {
 	}
 	
 	public VarName(String id, boolean forString, String val) {
+		this.isStackParam = false;
 		this.setId(id);
 		this.setBlockId(-1);
 		this.setIsString(forString);
@@ -94,7 +105,19 @@ public class VarName extends Name {
 	
 	@Override
 	public boolean isGlobal() {
-		if (this.blockId == -1) return true;
+		return (this.blockId == -1);
+	}
+	
+	@Override
+	public boolean needsLoad() {
+		if (this.blockId == -1) {
+			return true;
+		}
+		else if (this.blockId == -2) {
+			
+		}
+		
 		return false;
+		
 	}
 }
