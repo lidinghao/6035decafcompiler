@@ -27,4 +27,8 @@ public abstract class Name {
 	public boolean isGlobal() {
 		return false;
 	}
+	
+	public boolean needsLoad() {
+		return false;
+	}
 }

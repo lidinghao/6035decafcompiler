@@ -74,4 +74,9 @@ public class ArrayName extends Name {
 	public boolean isGlobal() {
 		return true;
 	}
+	
+	@Override
+	public boolean needsLoad() {
+		return true;
+	}
 }
