@@ -165,7 +165,10 @@ public class ReachingDefinitions {
 			}
 			else if (stmt.getClass().equals(CallStmt.class)) {
 				CallStmt cStmt = (CallStmt) stmt;
-				if (cStmt.getMethodLabel().equals(ProgramFlattener.exceptionHandlerLabel)) continue;
+				if (cStmt.getMethodLabel().equals(ProgramFlattener.exceptionHandlerLabel)) {
+					stmt.setReachingDefInSet(getReachingInSet(bFlow, block.getMethodName()));
+					continue;
+				}
 				
 				invalidateFunctionCall(block, bFlow);
 			}

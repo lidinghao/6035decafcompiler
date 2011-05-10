@@ -67,13 +67,13 @@ public class WebGenerator {
 			this.generateWeb(methodName);
 		}
 		
-		removeRedundantWebs();
 		unionWebs();
+		removeRedundantWebs();
 		indexWebs(); // Don't use this to generate interference graph
-		removeDeadCodedLoads();
+		removeDeadCodedInstructions();
 	}
 
-	private void removeDeadCodedLoads() {		
+	private void removeDeadCodedInstructions() {		
 		for (String methodName: this.mMap.keySet()) {
 			for (CFGBlock block: this.mMap.get(methodName).getCfgBlocks()) {
 				List<LIRStatement> newStmts = new ArrayList<LIRStatement>();
@@ -178,13 +178,42 @@ public class WebGenerator {
 					if (w.getDefinitions().isEmpty()) { // No def
 						temp.add(w);
 					}
-					else if (w.getDefinitions().size() == 1) { // Single def which is load
-						LIRStatement stmt = w.getDefinitions().get(0);
-						if (stmt.getClass().equals(LoadStmt.class)) {
-							stmt.setDead(true);
-							temp.add(w);
-						}
+				}
+				
+				// Not global web with only single def and no use (DC!)
+				if (w.getDefinitions().size() == 1 && w.getUses().isEmpty()) {
+					if (!w.getVariable().isGlobal()) {
+						//temp.add(w);
+						//w.getDefinitions().get(0).setDead(true);
 					}
+				}
+				
+				// Loads/Stores only
+				boolean onlyLoads = true, onlyStores = true;
+				for (LIRStatement def: w.getDefinitions()) { // Only load defs
+					if (!def.getClass().equals(LoadStmt.class)) {
+						onlyLoads = false;
+						break;
+					}
+				}
+				
+				for (LIRStatement use: w.getUses()) {
+					if (!use.getClass().equals(StoreStmt.class)) { // Only store uses
+						onlyStores = false;
+						break;
+					}
+				}
+				
+				if (onlyLoads && onlyStores) {
+					for (LIRStatement def: w.getDefinitions()) { // Only load defs
+						def.setDead(true);
+					}
+					
+					for (LIRStatement use: w.getUses()) {
+						use.setDead(true);
+					}
+					
+					temp.add(w);
 				}
 			}
 			
@@ -235,6 +264,11 @@ public class WebGenerator {
 //			System.out.println("*************");
 //			System.out.println(stmt);
 //			System.out.println(stmt.getInSet());
+			
+//			System.out.println("STMT: " + stmt);
+//			System.out.println("LIVE: " + stmt.getLiveInSet());
+//			System.out.println("REACH: " + stmt.getReachingDefInSet() + "\n");
+			
 			updateLiveWebs(block, i);
 			
 			if (stmt.getClass().equals(QuadrupletStmt.class)) {
@@ -394,7 +428,7 @@ public class WebGenerator {
 		for (int j = 0; j < this.liveAnalysis.getUniqueVariables().get(this.currentMethod).size(); j++) {
 			Name name = this.liveAnalysis.getUniqueVariables().get(this.currentMethod).get(j);
 			
-			if (!stmt.getLiveInSet().get(j)) { // Not live, so clear all *reaching* webs
+			if (!stmt.getLiveInSet().get(j)) { // Not live at in, so clear all *reaching* webs
 				this.nameToWebs.remove(name);
 			}
 		}
@@ -424,11 +458,11 @@ public class WebGenerator {
 					
 					if (qStmt.getOperator() == QuadrupletOp.ADD || qStmt.getOperator() == QuadrupletOp.MUL) {
 						if (this.namesDeadAtOutStmt.contains(qStmt.getArg2())) {
-							//this.nameToWebs.remove(qStmt.getArg2()); // If last use of arg2, then switch with arg1 and reuse reg
-							temp.add(qStmt.getArg2());
-							Name arg1 = qStmt.getArg1();
-							qStmt.setArg1(qStmt.getArg2());
-							qStmt.setArg2(arg1);
+//							//this.nameToWebs.remove(qStmt.getArg2()); // If last use of arg2, then switch with arg1 and reuse reg
+//							temp.add(qStmt.getArg2());
+//							Name arg1 = qStmt.getArg1();
+//							qStmt.setArg1(qStmt.getArg2());
+//							qStmt.setArg2(arg1);
 						}
 					}
 					// For conditionals can reuse either
@@ -443,15 +477,19 @@ public class WebGenerator {
 		}
 		else if (stmt.getClass().equals(LoadStmt.class)) {
 			LoadStmt lStmt = (LoadStmt) stmt;
-			ArrayName aName = (ArrayName) lStmt.getVariable(); // If index variable dead after this use, then reuse reg
-			//this.nameToWebs.remove(aName.getIndex());
-			temp.add(aName.getIndex());
+			if (lStmt.getVariable().isArray()) {
+				ArrayName aName = (ArrayName) lStmt.getVariable(); // If index variable dead after this use, then reuse reg
+				//this.nameToWebs.remove(aName.getIndex());
+				temp.add(aName.getIndex());
+			}
 		}
 		else if (stmt.getClass().equals(StoreStmt.class)) {
 			StoreStmt sStmt = (StoreStmt) stmt;
-			ArrayName aName = (ArrayName) sStmt.getVariable(); // If index variable dead after this use, then reuse reg
-			//this.nameToWebs.remove(aName.getIndex());
-			temp.add(aName.getIndex());
+			if (sStmt.getVariable().isArray()) {
+				ArrayName aName = (ArrayName) sStmt.getVariable(); // If index variable dead after this use, then reuse reg
+				//this.nameToWebs.remove(aName.getIndex());
+				temp.add(aName.getIndex());
+			}
 		}
 		
 		this.namesDeadAtOutStmt.clear();
@@ -480,7 +518,11 @@ public class WebGenerator {
 			//if (name.equals(skip)) continue; // Don't interfere with own webs
 			
 			for (Web w: this.nameToWebs.get(name)) {
+				//System.out.println("TRY: "+ name+ " with " + w.getVariable());
 				if (this.namesDeadAtOutStmt.contains(name)) continue;
+				
+				//System.out.println("INTERFERING: "+ name+ " with " + w.getVariable());
+				//System.out.println("***************");
 				
 				w.addInterferingWeb(web);
 			}
@@ -505,8 +547,8 @@ public class WebGenerator {
 	private void setReachingDefinitions(CFGBlock block) {
 		BlockDataFlowState dfState = this.reachingDef.getCfgBlocksState().get(block);
 		
-		for (int i = 0; i < dfState.getIn().size(); i++) {
-			if (dfState.getIn().get(i)) {
+		for (int i = 0; i < this.reachingDef.getUniqueDefinitions().get(block.getMethodName()).size(); i++) {
+			if (dfState.getIn().get(i)) {				
 				LIRStatement stmt = findStmtWithId(block.getMethodName(), i);
 				
 				Name dest = null;
@@ -537,6 +579,7 @@ public class WebGenerator {
 	
 	private LIRStatement findStmtWithId(String methodName, int id) {
 		for (LIRStatement stmt: this.reachingDef.getUniqueDefinitions().get(methodName)) {
+			
 			if (stmt.getClass().equals(LoadStmt.class)) {
 				if (((LoadStmt)stmt).getMyId() == id) return stmt;
 			}
