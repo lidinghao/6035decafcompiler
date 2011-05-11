@@ -1,0 +1,19 @@
+class Program {
+	int a[10];
+	
+	void main() {
+		int i;
+		for i = 0, 10  {
+			int j, k, l, m;
+			j = 2*i;
+			if (i < 5) {
+				k = 9;
+			} else {
+				k = 6;
+			}
+			l = j+k;
+			m = l+10;
+			a[m] = 5; // resolves to null, k is undetermined
+		}
+	}
+}

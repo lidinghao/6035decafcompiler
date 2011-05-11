@@ -1,0 +1,11 @@
+class Program {
+	int A[10];
+	
+	void main() {
+		int i, a;
+		for i = 0, 10  {
+			A[i] = 5; // resolves to [1,0]
+			A[5] = 5; // resolves to [0,5]
+		}
+	}
+}

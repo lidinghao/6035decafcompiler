@@ -1,0 +1,10 @@
+class Program {
+	int A[10];
+	
+	void main() {
+		int i, a;
+		for i = 0, 10  {
+			A[A[i]] = 5; // resolves to null, index is array
+		}
+	}
+}
