@@ -35,6 +35,9 @@ public class LoopInvariantOptimizer {
 	// Loop body id => CFGBlock map where the CFGBlock is the block containing the
 	// body label for the loop with the given id
 	private HashMap<String, CFGBlock> loopIdToLoopBodyCFGBlock;
+	// Set of loop id init blocks which have the test block stmts so that the same test
+	// is not added multiple times
+	private HashSet<String> loopIdInitWhichHaveTest;
 	// Loop body id => CFGBlock map where the CFGBlock is the block containing the
 	// test label for the loop with the given id
 	private HashMap<String, CFGBlock> loopIdToLoopTestCFGBlock;
@@ -52,6 +55,7 @@ public class LoopInvariantOptimizer {
 		this.loopInvariantGenerator = new LoopInvariantGenerator(mMap);
 		this.reachingDefGenerator = new BlockReachingDefinitionGenerator(mMap, ConfluenceOperator.AND);
 		this.livenessGenerator = new BlockLivenessGenerator(mMap);
+		this.loopIdInitWhichHaveTest = new HashSet<String>();
 	}
 	
 	public void performLoopInvariantOptimization() {
@@ -72,10 +76,6 @@ public class LoopInvariantOptimizer {
 		// Add all hoisted LoopQuadrupletStmts at the end of the loop init block
 		for (LoopQuadrupletStmt lqs : hoistedLQStmts) {
 			hoist(lqs);
-		}
-		// Regenerate statements
-		for (String s : mMap.keySet()) {
-			mMap.get(s).regenerateStmts();
 		}
 	}
 	
@@ -114,7 +114,7 @@ public class LoopInvariantOptimizer {
 					boolean destUsed = false;
 					LIRStatement stmt;
 					List<LIRStatement> methodStmts = mMap.get(loopIdToMethod.get(loopId)).getStatements();
-					int bodyLabelIndex = loopInvariantGenerator.getLoopIdToBodyStmtIndex().get(loopId);
+					int bodyLabelIndex = getForLabelStmtIndexInMethod(loopId, ForBodyLabelRegex);
 					for (int i = bodyLabelIndex; i < stmtIndex; i++) {
 						stmt = methodStmts.get(i);
 						if (stmtUsesName(stmt, qStmt.getDestination())) {
@@ -198,16 +198,20 @@ public class LoopInvariantOptimizer {
 	
 	// Hoist the given LoopQuadrupletStmt outside of the loop it is in
 	// If the QuadrupletStmt contains array references, move the associated bound checks as well
+	// Add these statements befoe the for test label
 	private void hoist(LoopQuadrupletStmt lqs) {
 		String loopId = lqs.getLoopBodyBlockId();
+		CFGBlock loopTestBlock = loopIdToLoopTestCFGBlock.get(loopId);
 		CFGBlock loopInitBlock = loopIdToLoopInitCFGBlock.get(loopId);
 		List<LIRStatement> loopInitStmtList = loopInitBlock.getStatements();
+		List<LIRStatement> methodStmts = mMap.get((loopId.split("\\."))[0]).getStatements();
+		int testLabelIndex = getForLabelStmtIndexInMethod(loopId, ForTestLabelRegex);
 		if (lqs.getNeedConditionalCheck()) {
-			CFGBlock loopTestBlock = loopIdToLoopTestCFGBlock.get(loopId);
-			List<LIRStatement> testStmts = new ArrayList<LIRStatement>(loopTestBlock.getStatements());
-			// Remove label
-			testStmts.remove(0);
-			loopInitStmtList.addAll(testStmts);
+			if (!loopIdInitWhichHaveTest.contains(loopId)) {
+				List<LIRStatement> testStmts = getStatementsAfterTestLabel(loopTestBlock);
+				methodStmts.addAll(testLabelIndex, testStmts);
+				loopIdInitWhichHaveTest.add(loopId);
+			}
 		}
 		hoistArrayBoundsChecks(lqs.getqStmt(), loopId);
 		for (String s : mMap.keySet()) {
@@ -217,25 +221,90 @@ public class LoopInvariantOptimizer {
 					LIRStatement stmt = blockStmts.get(i);
 					if (stmt == lqs.getqStmt()) {
 						// Remove statement from existing location
-						blockStmts.remove(i);
+						methodStmts.remove(stmt);
 						// Add statement to init block
 						lqs.getqStmt().setDepth(loopInitStmtList.get(0).getDepth());
 						// Add statement right before the init label
-						loopInitStmtList.add(lqs.getqStmt());
+						testLabelIndex = getForLabelStmtIndexInMethod(loopId, ForTestLabelRegex);
+						methodStmts.add(testLabelIndex, lqs.getqStmt());
 					}
 				}
 			}
 		}
-		if (lqs.getNeedConditionalCheck()) {
+		// Delete the jmp to body statement between the init and test labels in method IR
+		// since new statements could have been added which should not be preceded by the jmp to body stmt
+		int i = getForLabelStmtIndexInMethod(loopId, ForInitLabelRegex);
+		testLabelIndex = getForLabelStmtIndexInMethod(loopId, ForTestLabelRegex);
+		while (i < methodStmts.size()) {
+			if (i >= testLabelIndex) {
+				break;
+			}
+			LIRStatement stmt = methodStmts.get(i);
+			if (stmt.getClass().equals(JumpStmt.class)) {
+				JumpStmt jStmt = (JumpStmt)stmt;
+				String label = jStmt.getLabel().getLabelString();
+				if (label.matches(ForBodyLabelRegex)) {
+					// Label points to this for loop's id
+					if (getIdFromForLabel(label).equals(loopId)) {
+						methodStmts.remove(i);
+						break;
+					}
+				}
+			}
+			i++;
+		}
+		if (loopIdInitWhichHaveTest.contains(loopId)) {
 			// Add jmp statement to body
 			JumpStmt jmp = new JumpStmt(JumpCondOp.NONE, new LabelStmt(loopId + "." + "body"));
-			loopInitStmtList.add(jmp);
+			testLabelIndex = getForLabelStmtIndexInMethod(loopId, ForTestLabelRegex);
+			methodStmts.add(testLabelIndex, jmp);
 		}
+	}
+	
+	private int getForLabelStmtIndexInMethod(String loopId, String label) {
+		String[] loopInfo = loopId.split("\\.");
+		List<LIRStatement> methodStmts = mMap.get(loopInfo[0]).getStatements();
+		for (int i = 0; i < methodStmts.size(); i++) {
+			LIRStatement stmt = methodStmts.get(i);
+			if (stmt.getClass().equals(LabelStmt.class)) {
+				LabelStmt lStmt = (LabelStmt)stmt;
+				String labelStr = lStmt.getLabelString();
+				if (labelStr.matches(label)) {
+					// Label points to this for loop's id
+					if (getIdFromForLabel(labelStr).equals(loopId)) {
+						return i;
+					}
+				}
+			}
+		}
+		return -1;
+	}
+	
+	private List<LIRStatement> getStatementsAfterTestLabel(CFGBlock loopTestBlock) {
+		List<LIRStatement> testBlockStmts = loopTestBlock.getStatements();
+		List<LIRStatement> testBlockStmtsAfterLabel = new ArrayList<LIRStatement>();
+		String forLabel;
+		LIRStatement stmt;
+		boolean inRegion = false;
+		for (int i = 0; i < testBlockStmts.size(); i++) {
+			stmt = testBlockStmts.get(i);
+			if (inRegion) {
+				testBlockStmtsAfterLabel.add(stmt);
+			} else if (stmt.getClass().equals(LabelStmt.class)) {
+				forLabel = ((LabelStmt)stmt).getLabelString();
+				if (forLabel.matches(ForTestLabelRegex)) {
+					inRegion = true;
+				}
+			}
+		}
+		return testBlockStmtsAfterLabel;
 	}
 	
 	private void hoistArrayBoundsChecks(QuadrupletStmt qStmt, String loopId) {
 		// Find the CFGBlock and the statement index within the CFGBlock for the qStmt
 		CFGBlock loopInitBlock = loopIdToLoopInitCFGBlock.get(loopId);
+		List<LIRStatement> methodStmts = mMap.get((loopId.split("\\."))[0]).getStatements();
+		
 		CFGBlock blockWithQStmt = null;
 		int indexOfQStmtInBlock = -1;
 		pf:
@@ -258,25 +327,29 @@ public class LoopInvariantOptimizer {
 		
 		// NOTE: The array bound checks are not removed from the loop body since the array bounds DC
 		// optimizer will take care of that
+		int testLabelIndex;
 		if (boundCheck != null) {
 			for (LIRStatement bcStmt : boundCheck) {
 				bcStmt.setDepth(loopInitStmtList.get(0).getDepth());
 			}
-			loopInitStmtList.addAll(boundCheck);
+			testLabelIndex = getForLabelStmtIndexInMethod(loopId, ForTestLabelRegex);
+			methodStmts.addAll(testLabelIndex, boundCheck);
 		}
 		boundCheck = getBoundCheck(qStmt.getArg1(), blockWithQStmt, indexOfQStmtInBlock);
 		if (boundCheck != null) {
 			for (LIRStatement bcStmt : boundCheck) {
 				bcStmt.setDepth(loopInitStmtList.get(0).getDepth());
 			}
-			loopInitStmtList.addAll(boundCheck);
+			testLabelIndex = getForLabelStmtIndexInMethod(loopId, ForTestLabelRegex);
+			methodStmts.addAll(testLabelIndex, boundCheck);
 		}
 		boundCheck = getBoundCheck(qStmt.getArg2(), blockWithQStmt, indexOfQStmtInBlock);
 		if (boundCheck != null) {
 			for (LIRStatement bcStmt : boundCheck) {
 				bcStmt.setDepth(loopInitStmtList.get(0).getDepth());
 			}
-			loopInitStmtList.addAll(boundCheck);
+			testLabelIndex = getForLabelStmtIndexInMethod(loopId, ForTestLabelRegex);
+			methodStmts.addAll(testLabelIndex, boundCheck);
 		}
 	}
 	
@@ -380,7 +453,6 @@ public class LoopInvariantOptimizer {
 	}
 	
 	// Following methods are copied from NaiveLoadAdder.java
-	// TODO: Put this logic into a utility class so it does not have to be copied
 	
 	private List<LIRStatement> getBoundCheck(Name name, CFGBlock block, int stmtIndex) {
 		if (name == null) return null;
@@ -425,8 +497,11 @@ public class LoopInvariantOptimizer {
 				}
 			}
 		}
-		
-		List<LIRStatement> stmts = new ArrayList<LIRStatement>();
+		if (startIndex == -1) {
+			// Nothing was found
+			return null;
+		}
+		List<LIRStatement> stmts = new ArrayList<LIRStatement>();	
 		for (int i = startIndex; i < block.getStatements().size(); i++) {
 			LIRStatement stmt = block.getStatements().get(i);			
 			if (stmt.getClass().equals(LabelStmt.class)) {
