@@ -8,6 +8,7 @@ import decaf.dataflow.cfg.CFGBlock;
 import decaf.dataflow.cfg.CFGBuilder;
 import decaf.dataflow.cfg.MethodIR;
 import decaf.dataflow.global.LoopInvariantOptimizer;
+import decaf.dataflow.global.LoopStrengthReductionOptimizer;
 
 public class PostDataFlowOptimizer {
 	private ArrayAccessOptimizer arrOpt;
@@ -15,7 +16,8 @@ public class PostDataFlowOptimizer {
 	private HashMap<String, MethodIR> mMap;
 	private ProgramFlattener pf;
 	private CFGBuilder cb;
-	private LoopInvariantOptimizer loops;
+	private LoopInvariantOptimizer loopInvariants;
+	private LoopStrengthReductionOptimizer loopStrRed;
 	private HashMap<CFGBlock, String> blockState;
 	
 	public PostDataFlowOptimizer(ProgramFlattener pf, CFGBuilder cb) {
@@ -51,11 +53,19 @@ public class PostDataFlowOptimizer {
 			sje.staticEvaluateJumps();
 			this.mMap = MethodIR.generateMethodIRs(pf, cb);
 			
+			System.out.println("BEFORE LOOP STRENGTH REDUCTION");
+			this.cb.printCFG(System.out);
+			
+			this.loopStrRed = new LoopStrengthReductionOptimizer(this.mMap);
+			loopStrRed.performStrengthReductionOptimization();
+			cb.generateCFGs();
+			
 			System.out.println("BEFORE LOOP INVARIANTS");
 			this.cb.printCFG(System.out);
 			
-			this.loops = new LoopInvariantOptimizer(this.mMap);
-			loops.performLoopInvariantOptimization();
+			this.loopInvariants = new LoopInvariantOptimizer(this.mMap);
+			loopInvariants.performLoopInvariantOptimization();
+			cb.generateCFGs();
 			
 			System.out.println("AFTER LOOP INVARIANTS");
 			this.cb.printCFG(System.out);
