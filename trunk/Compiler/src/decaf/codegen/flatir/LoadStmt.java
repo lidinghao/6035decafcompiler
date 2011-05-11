@@ -7,6 +7,7 @@ public class LoadStmt extends LIRStatement {
 	private Name variable;
 	private int myId;
 	private List<LIRStatement> boundCheck;
+	private boolean bcAdded;
 	private Register explicitLoad;
 
 	public LoadStmt(Name variable) {
@@ -128,5 +129,13 @@ public class LoadStmt extends LIRStatement {
 
 	public Register getExplicitLoad() {
 		return explicitLoad;
+	}
+
+	public void setBcAdded(boolean bcAdded) {
+		this.bcAdded = bcAdded;
+	}
+
+	public boolean isBcAdded() {
+		return bcAdded;
 	}
 }
