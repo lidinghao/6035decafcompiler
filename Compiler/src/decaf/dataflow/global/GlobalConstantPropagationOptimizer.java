@@ -22,12 +22,12 @@ import decaf.dataflow.cfg.MethodIR;
 public class GlobalConstantPropagationOptimizer {
 	private HashMap<String, MethodIR> mMap;
 	// The reaching definition bitset at the program point of the qstmt
-	private HashMap<QuadrupletStmt, BitSet> reachingDefForQStmts;
+	private HashMap<LIRStatement, BitSet> reachingDefForStmts;
 	private BlockReachingDefinitionGenerator reachingDefGenerator;
 	
 	public GlobalConstantPropagationOptimizer(HashMap<String, MethodIR> mMap) {
 		this.mMap = mMap;
-		this.reachingDefForQStmts = new HashMap<QuadrupletStmt, BitSet>();
+		this.reachingDefForStmts = new HashMap<LIRStatement, BitSet>();
 		this.reachingDefGenerator = new BlockReachingDefinitionGenerator(mMap, ConfluenceOperator.OR);
 		this.reachingDefGenerator.generate();
 	}
@@ -67,6 +67,10 @@ public class GlobalConstantPropagationOptimizer {
 		for (LIRStatement stmt: block.getStatements()) {
 			// Reset kill set
 			bFlow.getKill().clear();
+			
+			// Update the map for LIRStatement -> reaching defs for stmt (the current IN BitSet)
+			reachingDefForStmts.put(stmt, (BitSet)bFlow.getIn().clone());
+			
 			if (stmt.getClass().equals(CallStmt.class)) {
 				CallStmt callStmt = (CallStmt) stmt;
 				if (callStmt.getMethodLabel().equals(ProgramFlattener.exceptionHandlerLabel)) continue;
@@ -80,8 +84,6 @@ public class GlobalConstantPropagationOptimizer {
 				
 				System.out.println("reaching defs for qstmt: " + qStmt + " -> " + bFlow.getIn());
 
-				// Update the map for QuadrupletStmt -> reaching defs for stmt (the current IN BitSet)
-				reachingDefForQStmts.put(qStmt, (BitSet)bFlow.getIn().clone());
 				// Update BlockDataFlowState kill set
 				reachingDefGenerator.updateKillSet(qStmt.getDestination(), bFlow);
 				// Update BlockDataFlowState in set by using updated kill set
@@ -301,12 +303,12 @@ public class GlobalConstantPropagationOptimizer {
 		return reachingDefGenerator;
 	}
 	
-	public HashMap<QuadrupletStmt, BitSet> getReachingDefForQStmts() {
-		return reachingDefForQStmts;
+	public HashMap<LIRStatement, BitSet> getReachingDefForStmts() {
+		return reachingDefForStmts;
 	}
 
-	public void setReachingDefForQStmts(
-			HashMap<QuadrupletStmt, BitSet> reachingDefForQStmts) {
-		this.reachingDefForQStmts = reachingDefForQStmts;
+	public void setReachingDefForStmts(
+			HashMap<LIRStatement, BitSet> reachingDefForQStmts) {
+		this.reachingDefForStmts = reachingDefForQStmts;
 	}
 }
