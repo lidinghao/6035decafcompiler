@@ -36,10 +36,15 @@ public class LoopInductionVariableGenerator {
 			numFound = inductionVariables.size();
 			for (String s : loopQStmts.keySet()) {
 				for (LoopQuadrupletStmt lqStmt : loopQStmts.get(s)) {
+					if (isInductionVariable(lqStmt.getqStmt().getDestination(), s)) {
+						continue;
+					}
+					System.out.println("IV checking " + lqStmt);
 					if (hasMoreThanOneDefinitionInLoopBody(lqStmt, loopInvariantGen.getQuadrupletStmtsInLoopBody(s))) {
 						// More than one definition is not allowed for induction variables
 						continue;
 					}
+					System.out.println("has one definition... continuing");
 					// Determine whether the statement is definition of basic induction variable
 					if (addBasicInductionVariable(lqStmt, loopInvariantGen.getQuadrupletStmtsInLoopBody(s))) {
 						continue;
@@ -59,7 +64,7 @@ public class LoopInductionVariableGenerator {
 		QuadrupletStmt qStmt = lqStmt.getqStmt();
 		Name dest = qStmt.getDestination();
 		for (QuadrupletStmt qs : loopQStmts) {
-			if (qs.getDestination().equals(dest)) {
+			if (qs.getDestination().equals(dest) && qs != qStmt) {
 				return true;
 			}
 		}
@@ -72,6 +77,7 @@ public class LoopInductionVariableGenerator {
 	private boolean addBasicInductionVariable(LoopQuadrupletStmt lqStmt, HashSet<QuadrupletStmt> loopQStmts) {
 		if (lqStmt == null)
 			return false;
+		System.out.println("processing possible basic IV" + lqStmt);
 		QuadrupletStmt qStmt = lqStmt.getqStmt();
 		Name dest = qStmt.getDestination();
 		Name arg1 = qStmt.getArg1();
@@ -135,6 +141,7 @@ public class LoopInductionVariableGenerator {
 	// Adds a derived induction variable to the list of induction variables
 	private boolean addDerivedInductionVariable(LoopQuadrupletStmt lqStmt, 
 			HashSet<QuadrupletStmt> loopQStmts, String loopId) {
+		System.out.println("processing possible derived IV " + lqStmt);
 		if (lqStmt == null)
 			return false;
 		QuadrupletStmt qStmt = lqStmt.getqStmt();
