@@ -84,14 +84,14 @@ public class WebColorer {
 			System.out.println("SPLITTING COMPLETED SUCCESSFULLY! \n");
 		}
 		
-		//System.out.println("COLORING METHODS");
+		System.out.println("COLORING METHODS");
 		
 		// Color graph
-		//colorGraph();
+		colorGraph();
 		
-		//System.out.println("COLORING COMPLETED SUCCESSFULLY");
+		System.out.println("COLORING COMPLETED SUCCESSFULLY");
 		
-		//this.prettyPrintWebsWithRegisters(System.out);
+		this.prettyPrintWebsWithRegisters(System.out);
 	}
 
 	private void colorGraph() {
@@ -104,7 +104,7 @@ public class WebColorer {
 	}
 
 	private void colorMethodWebs(String methodName, List<Web> list) {
-		System.out.println("IS THERE ERROR!: " + list.size() + "; " + this.coloringStack.get(methodName).size());
+//		System.out.println("IS THERE ERROR!: " + list.size() + "; " + this.coloringStack.get(methodName).size());
 		
 		List<Web> webs = new ArrayList<Web>();
 		webs.addAll(list);
@@ -136,6 +136,8 @@ public class WebColorer {
 	}
 
 	private void colorWeb(Web webToColor) {
+		if (webToColor.getRegister() != null) return; // Precolored
+		
 		List<Register> colors = new ArrayList<Register>();
 		for (int i = 0; i < Register.availableRegs.length; i++) {
 			colors.add(Register.availableRegs[i]);
