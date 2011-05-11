@@ -104,6 +104,7 @@ public class LoopStrengthReductionOptimizer {
 							canAdd.add(derivedIVar);
 						}
 					}
+					canAdd.remove(iVar);
 				}
 				// Add derived statements to method statement at the appropriate locations
 				// Get the stmt index for the test label of the for loop
@@ -120,6 +121,7 @@ public class LoopStrengthReductionOptimizer {
 			for (InductionVariable i : loopIVars) {
 				if (!i.isDerived()) {
 					inductAssignStmts.add(i.getInductionAssignmentStmt());
+					System.out.println("iv for assignment after body: " + i);
 				}
 			}
 			methodStmts.addAll(bodyLabelIndex+1, inductAssignStmts);
@@ -159,7 +161,6 @@ public class LoopStrengthReductionOptimizer {
 				return i;
 			}
 		}
-		System.out.println("STMT NOT FOUND IN METHOD!!");
 		return -1;
 	}
 	

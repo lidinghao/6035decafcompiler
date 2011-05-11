@@ -125,7 +125,7 @@ public class InductionVariable {
 	// Returns the assignment of j <- j'
 	// This method should only be used for derived induction variables
 	public QuadrupletStmt getInductionAssignmentStmt() {
-		return new QuadrupletStmt(null, this.variable, this.variablePrime, null);
+		return new QuadrupletStmt(QuadrupletOp.MOVE, this.variable, this.variablePrime, null);
 	}
 	
 	private InductionVariable getFamilyInductionVariable() {
