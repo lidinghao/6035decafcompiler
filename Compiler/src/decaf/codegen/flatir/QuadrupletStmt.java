@@ -3,6 +3,7 @@ package decaf.codegen.flatir;
 import java.io.PrintStream;
 
 public class QuadrupletStmt extends LIRStatement {
+	public boolean USERIGIDHASH = false;
 	private static int ID = 0;
 	private QuadrupletOp operator;
 	private int myId;
@@ -255,6 +256,9 @@ public class QuadrupletStmt extends LIRStatement {
 	
 	@Override
 	public int hashCode() {
+		if (USERIGIDHASH) {
+			return toString().hashCode() + 13 * this.myId;
+		}
 		return toString().hashCode();
 	}
 	
@@ -297,6 +301,12 @@ public class QuadrupletStmt extends LIRStatement {
 		} 
 		else {
 			if (stmt.getDestination() != null) {
+				return false;
+			}
+		}
+		
+		if (USERIGIDHASH) {
+			if (stmt.myId != this.myId) {
 				return false;
 			}
 		}
