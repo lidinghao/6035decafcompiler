@@ -14,6 +14,14 @@ public class BlockOptimizer {
 	private BlockVarDCOptimizer dcVar;
 	private HashMap<String, MethodIR> mMap;
 	
+	public BlockVarDCOptimizer getDcVar() {
+		return dcVar;
+	}
+
+	public void setDcVar(BlockVarDCOptimizer dcVar) {
+		this.dcVar = dcVar;
+	}
+
 	public BlockOptimizer(HashMap<String, MethodIR> mMap) {
 		this.mMap = mMap;
 	}
