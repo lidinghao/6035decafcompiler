@@ -37,22 +37,7 @@ public class PostDataFlowOptimizer {
 	public void optimize() {
 		int i = 0;
 		while (i < 100) {
-			updateBlockState();
-			
-			//System.out.println("++++++++++++++++++++++++++++");
-			//System.out.println("SPO PASS: " + i);
-			//this.cb.printCFG(System.out);
-			
-			this.arrOpt = new ArrayAccessOptimizer(this.mMap);
-			arrOpt.optimize(CLI.opts);
-			
-			System.out.println("BEFORE SJE -------------------------");
-			this.cb.printCFG(System.out);
-
-			this.sje = new StaticJumpEvaluator(pf, cb);
-			sje.staticEvaluateJumps();
-			this.mMap = MethodIR.generateMethodIRs(pf, cb);
-			
+			updateBlockState();			
 //			System.out.println("BEFORE LOOP STRENGTH REDUCTION");
 //			this.cb.printCFG(System.out);
 //			
@@ -70,19 +55,22 @@ public class PostDataFlowOptimizer {
 			System.out.println("AFTER LOOP INVARIANTS");
 			this.cb.printCFG(System.out);
 			
-//			System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%");
-//			this.cb.printCFG(System.out);
-//			
-//			System.out.println("***********************");
-//			this.cb.printCFG(System.out);
-//			System.out.println("=========================");
-			
 			if (!isChanged()) {
 				break;
 			}
 				
 			i++;
 		}
+		
+		this.arrOpt = new ArrayAccessOptimizer(this.mMap);
+		arrOpt.optimize(CLI.opts);
+		
+		System.out.println("BEFORE SJE");
+		this.cb.printCFG(System.out);
+
+		this.sje = new StaticJumpEvaluator(pf, cb);
+		sje.staticEvaluateJumps();
+		this.mMap = MethodIR.generateMethodIRs(pf, cb);
 	}
 
 	private boolean isChanged() {
