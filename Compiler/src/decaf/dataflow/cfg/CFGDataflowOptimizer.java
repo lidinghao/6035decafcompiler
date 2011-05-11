@@ -57,6 +57,7 @@ public class CFGDataflowOptimizer {
 			pf.printLIR(System.out);
 			
 			if (!isGlobalChanged()) {
+				bo.getDcVar().performDeadCodeElimination(); // HACK
 				break;
 			}
 			i++;
