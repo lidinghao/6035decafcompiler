@@ -114,8 +114,9 @@ public class NaiveLoadOptimizer {
 						}
 					}
 					
-					if (addBC) {
+					if (addBC && !load.isBcAdded()) {
 						block.getStatements().addAll(i, load.getBoundCheck());
+						load.setBcAdded(true);
 					}
 				}
 			}
