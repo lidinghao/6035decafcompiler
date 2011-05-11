@@ -37,6 +37,8 @@ public class GlobalCopyPropagationOptimizer {
 			for (CFGBlock block: this.mMap.get(s).getCfgBlocks()) {
 				optimize(block);
 			}
+			
+			this.mMap.get(s).regenerateStmts();
 		}
 	}
 
