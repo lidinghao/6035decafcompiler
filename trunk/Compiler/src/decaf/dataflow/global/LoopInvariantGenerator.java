@@ -13,6 +13,7 @@ import decaf.codegen.flatir.LabelStmt;
 import decaf.codegen.flatir.Name;
 import decaf.codegen.flatir.QuadrupletStmt;
 import decaf.codegen.flatir.RegisterName;
+import decaf.codegen.flatir.VarName;
 import decaf.dataflow.cfg.MethodIR;
 
 // Finds loop invariant statements in loops
@@ -31,26 +32,31 @@ public class LoopInvariantGenerator {
 	private HashMap<QuadrupletStmt, BitSet> reachingDefForQStmts;
 	// Map from loop body id to a HashSet of all the LoopQuadrupletStmts in that loop body
 	private HashMap<String, HashSet<LoopQuadrupletStmt>> allLoopBodyQStmts;
-	// Map from loop id to its statement index in ProgramFlattener
-	private HashMap<String, Integer> loopIdToBodyStmtIndex;
+	private HashMap<String, List<LoopQuadrupletStmt>> loopBodyQStmtsList;
+	// Map from loop id to block id
+	private HashMap<String, Integer> loopIdToBlockId;
+
 	// This optimizer isn't related to LoopInvariant optimizations, but it updates the Reaching definitions
 	// which we need for loop optimizations
 	private GlobalConstantPropagationOptimizer gcp;
+	private static String ForIncrLabelRegex = "[a-zA-z_]\\w*.for\\d+.incr";
 	private static String ForEndLabelRegex = "[a-zA-z_]\\w*.for\\d+.end";
 	private static String ForBodyLabelRegex = "[a-zA-z_]\\w*.for\\d+.body";
 	
 	public LoopInvariantGenerator(HashMap<String, MethodIR> mMap) {
 		this.mMap = mMap;
 		this.loopInvariantStmts = new HashSet<LoopQuadrupletStmt>();
-		this.loopIdToBodyStmtIndex = new HashMap<String, Integer>();
-		gcp = new GlobalConstantPropagationOptimizer(mMap);
+		this.loopBodyQStmtsList = new HashMap<String, List<LoopQuadrupletStmt>>();
+		this.allLoopBodyQStmts = new HashMap<String, HashSet<LoopQuadrupletStmt>>();
+		this.loopIdToBlockId = new HashMap<String, Integer>();
+		this.gcp = new GlobalConstantPropagationOptimizer(mMap);
 	}
 	
 	public void generateLoopInvariants() {
 		// Generates the Map of QStmt -> BitSet representing all the QStmts IDs which reach at that point
 		gcp.generateReachingDefsForQStmts();
 		reachingDefForQStmts = gcp.getReachingDefForQStmts();
-		allLoopBodyQStmts = getLoopBodyQuadrupletStmts();
+		generateLoopBodyQuadrupletStmts();
 		// Keep loop until no more loop invariants are added
 		int numLoopInvariants;
 		do {
@@ -68,11 +74,10 @@ public class LoopInvariantGenerator {
 	}
 	
 	// Returns a map which maps a loop CFGBlock to all the QuadrupletStmts in that block
-	public HashMap<String, HashSet<LoopQuadrupletStmt>> getLoopBodyQuadrupletStmts() {
-		HashMap<String, HashSet<LoopQuadrupletStmt>> loopQuadrupletStmts = 
-			new HashMap<String, HashSet<LoopQuadrupletStmt>>();
+	private void generateLoopBodyQuadrupletStmts() {
 		String forLabel;
 		HashSet<LoopQuadrupletStmt> loopStmts;
+		List<LoopQuadrupletStmt> loopStmtsList;
 		for (String s : mMap.keySet()) {
 			boolean inFor = false;
 			List<String> forIdList = new ArrayList<String>();
@@ -81,12 +86,16 @@ public class LoopInvariantGenerator {
 				LIRStatement stmt = stmts.get(i);
 				if (stmt.getClass().equals(LabelStmt.class)) {
 					forLabel = ((LabelStmt)stmt).getLabelString();
-					if (forLabel.matches(ForEndLabelRegex)) {
+					if (forLabel.matches(ForIncrLabelRegex)) {
+						// Set block id from the next statement which initialized loop var
+						QuadrupletStmt initStmt = (QuadrupletStmt)stmts.get(i+1);
+						int blockId = ((VarName)initStmt.getDestination()).getBlockId();
+						loopIdToBlockId.put(getIdFromForLabel(forLabel), blockId);
+					} else if (forLabel.matches(ForEndLabelRegex)) {
 						forIdList.remove(forIdList.size()-1);
 					} else  if (forLabel.matches(ForBodyLabelRegex)) {
 						// Update map of body label to its stmt index
 						forIdList.add(getIdFromForLabel(forLabel));
-						loopIdToBodyStmtIndex.put(getIdFromForLabel(forLabel), i);
 					}
 					inFor = !forIdList.isEmpty();
 					continue;
@@ -94,19 +103,23 @@ public class LoopInvariantGenerator {
 					if (stmt.getClass().equals(QuadrupletStmt.class)) {
 						// Add the QuadrupletStmt to all the loops in the list
 						for (String forId : forIdList) {
-							if (!loopQuadrupletStmts.containsKey(forId)) {
+							if (!allLoopBodyQStmts.containsKey(forId)) {
 								loopStmts = new HashSet<LoopQuadrupletStmt>();
-								loopQuadrupletStmts.put(forId, loopStmts);
+								loopStmtsList = new ArrayList<LoopQuadrupletStmt>();
+								loopBodyQStmtsList.put(forId, loopStmtsList);
+								allLoopBodyQStmts.put(forId, loopStmts);
 							} else {
-								loopStmts = loopQuadrupletStmts.get(forId);
+								loopStmtsList = loopBodyQStmtsList.get(forId);
+								loopStmts = allLoopBodyQStmts.get(forId);
 							}
-							loopStmts.add(new LoopQuadrupletStmt((QuadrupletStmt)stmt, forId, i));
+							LoopQuadrupletStmt lqs = new LoopQuadrupletStmt((QuadrupletStmt)stmt, forId, i);
+							loopStmts.add(lqs);
+							loopStmtsList.add(lqs);
 						}
 					}
 				}
 			}
 		}
-		return loopQuadrupletStmts;
 	}
 	
 	// Returns true if the LoopQuadrupletStmt is a loop invariant stmt, False otherwise
@@ -165,7 +178,6 @@ public class LoopInvariantGenerator {
 						reachingDefsForArg.add(qs);
 					}
 				}
-				System.out.println("Reaching defs for arg: " + reachingDefsForArg);
 				// Check if all defs which are reaching are outside the loop body
 				argSatisfiesLoopInvariant = true;
 				for (QuadrupletStmt reachingQStmt : reachingDefsForArg) {
@@ -221,7 +233,6 @@ public class LoopInvariantGenerator {
 	
 	private String getIdFromForLabel(String label) {
 		String[] forInfo = label.split("\\.");
-		System.out.println(label);
 		return forInfo[0] + "." + forInfo[1];
 	}
 	
@@ -243,15 +254,6 @@ public class LoopInvariantGenerator {
 		this.allLoopBodyQStmts = allLoopBodyQStmts;
 	}
 	
-	public HashMap<String, Integer> getLoopIdToBodyStmtIndex() {
-		return loopIdToBodyStmtIndex;
-	}
-
-	public void setLoopIdToBodyStmtIndex(
-			HashMap<String, Integer> loopIdToBodyStmtIndex) {
-		this.loopIdToBodyStmtIndex = loopIdToBodyStmtIndex;
-	}
-	
 	public HashMap<QuadrupletStmt, BitSet> getReachingDefForQStmts() {
 		return reachingDefForQStmts;
 	}
@@ -259,5 +261,30 @@ public class LoopInvariantGenerator {
 	public void setReachingDefForQStmts(
 			HashMap<QuadrupletStmt, BitSet> reachingDefForQStmts) {
 		this.reachingDefForQStmts = reachingDefForQStmts;
+	}
+
+	public GlobalConstantPropagationOptimizer getGcp() {
+		return gcp;
+	}
+
+	public void setGcp(GlobalConstantPropagationOptimizer gcp) {
+		this.gcp = gcp;
+	}
+
+	public HashMap<String, List<LoopQuadrupletStmt>> getLoopBodyQStmtsList() {
+		return loopBodyQStmtsList;
+	}
+
+	public void setLoopBodyQStmtsList(
+			HashMap<String, List<LoopQuadrupletStmt>> loopBodyQStmtsList) {
+		this.loopBodyQStmtsList = loopBodyQStmtsList;
+	}
+
+	public HashMap<String, Integer> getLoopIdToBlockId() {
+		return loopIdToBlockId;
+	}
+
+	public void setLoopIdToBlockId(HashMap<String, Integer> loopIdToBlockId) {
+		this.loopIdToBlockId = loopIdToBlockId;
 	}
 }

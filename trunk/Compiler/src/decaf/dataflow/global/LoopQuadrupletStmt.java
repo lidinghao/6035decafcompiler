@@ -6,6 +6,7 @@ public class LoopQuadrupletStmt {
 	private QuadrupletStmt qStmt;
 	private String loopBodyBlockId;
 	private int stmtIndex;
+	private int blockId;
 	private boolean needConditionalCheck;
 	
 	public LoopQuadrupletStmt(QuadrupletStmt q, String loopId, int stmtIndex) {
@@ -49,6 +50,14 @@ public class LoopQuadrupletStmt {
 	
 	public boolean getNeedConditionalCheck() {
 		return this.needConditionalCheck;
+	}
+	
+	public int getBlockId() {
+		return blockId;
+	}
+
+	public void setBlockId(int blockId) {
+		this.blockId = blockId;
 	}
 
 	@Override
