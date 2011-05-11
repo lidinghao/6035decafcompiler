@@ -49,6 +49,10 @@ public class LoadStmt extends LIRStatement {
 			return false;
 		}
 		
+		if (this.myId != stmt.myId) {
+			return false;
+		}
+		
 		return true;
 	}
 	
