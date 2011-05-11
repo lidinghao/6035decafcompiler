@@ -38,6 +38,7 @@ public class LoopInvariantOptimizer {
 	// Set of loop id init blocks which have the test block stmts so that the same test
 	// is not added multiple times
 	private HashSet<String> loopIdInitWhichHaveTest;
+	private HashSet<String> loopIdInitWhichHaveHoist;
 	// Loop body id => CFGBlock map where the CFGBlock is the block containing the
 	// test label for the loop with the given id
 	private HashMap<String, CFGBlock> loopIdToLoopTestCFGBlock;
@@ -56,6 +57,7 @@ public class LoopInvariantOptimizer {
 		this.reachingDefGenerator = new BlockReachingDefinitionGenerator(mMap, ConfluenceOperator.AND);
 		this.livenessGenerator = new BlockLivenessGenerator(mMap);
 		this.loopIdInitWhichHaveTest = new HashSet<String>();
+		this.loopIdInitWhichHaveHoist = new HashSet<String>();
 	}
 	
 	public void performLoopInvariantOptimization() {
@@ -206,9 +208,14 @@ public class LoopInvariantOptimizer {
 		List<LIRStatement> loopInitStmtList = loopInitBlock.getStatements();
 		List<LIRStatement> methodStmts = mMap.get((loopId.split("\\."))[0]).getStatements();
 		int testLabelIndex = getForLabelStmtIndexInMethod(loopId, ForTestLabelRegex);
+		if (!loopIdInitWhichHaveHoist.contains(loopId)) {
+			methodStmts.add(testLabelIndex, new LabelStmt(loopId + ".hoist"));
+			loopIdInitWhichHaveHoist.add(loopId);
+		}
 		if (lqs.getNeedConditionalCheck()) {
 			if (!loopIdInitWhichHaveTest.contains(loopId)) {
 				List<LIRStatement> testStmts = getStatementsAfterTestLabel(loopTestBlock);
+				testLabelIndex = getForLabelStmtIndexInMethod(loopId, ForTestLabelRegex);
 				methodStmts.addAll(testLabelIndex, testStmts);
 				loopIdInitWhichHaveTest.add(loopId);
 			}
