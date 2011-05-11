@@ -258,16 +258,17 @@ public class NaiveLoadOptimizer {
 	private boolean isValidName(Name name) {
 		if (name == null) return false;
 		
-		if (name.isGlobal()) return true;
-		
 		if (name.getClass().equals(VarName.class)) {
 			VarName var = (VarName) name;
+		
 			if (var.isString()) return false;
 			
 			if (var.isStackParam() && var.getBlockId() == -2) {
 				return true;
 			}
 		}
+		
+		if (name.isGlobal()) return true;
 		
 		return false;
 	}

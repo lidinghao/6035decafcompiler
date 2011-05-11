@@ -128,14 +128,17 @@ public class ReachingGlobalDefinitions {
 	private boolean isValidName(Name name) {
 		if (name == null) return false;
 		
-		if (name.isGlobal()) return true;
-		
 		if (name.getClass().equals(VarName.class)) {
 			VarName var = (VarName) name;
+			
+			if (var.isString()) return false;
+			
 			if (var.isStackParam() && var.getBlockId() == -2) {
 				return true;
 			}
 		}
+		
+		if (name.isGlobal()) return true;
 		
 		return false;
 	}
@@ -217,7 +220,7 @@ public class ReachingGlobalDefinitions {
 			if (bFlow.getIn().get(i)) {
 				if (this.uniqueGlobals.get(methodName).get(i).getClass().equals(VarName.class)) {
 					VarName var = (VarName) this.uniqueGlobals.get(methodName).get(i);
-					if (var.getBlockId() == -1) continue; // dont kill stack param
+					if (var.getBlockId() == -2) continue; // dont kill stack param
 				}
 				bFlow.getKill().set(i);
 			}
