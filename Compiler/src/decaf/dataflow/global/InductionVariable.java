@@ -99,12 +99,13 @@ public class InductionVariable {
 	// i <- i + c where i is a base induction variable
 	// If j has triple (i,a,b), then j <- j + c*b should be generated
 	// This method should only be used for derived induction variables
-	public List<QuadrupletStmt> getInductionStmts(Name c) {
+	public List<QuadrupletStmt> getInductionStmts() {
 		VarName temp = new VarName("$srtemp" + Integer.toString(StatementId));
 		StatementId++;
 		temp.setBlockId(blockId);
 		List<QuadrupletStmt> stmts = new ArrayList<QuadrupletStmt>();
-		stmts.add(new QuadrupletStmt(QuadrupletOp.MUL, temp, c, this.multiplier));
+		InductionVariable familyVar = getFamilyInductionVariable();
+		stmts.add(new QuadrupletStmt(QuadrupletOp.MUL, temp, familyVar.getAdder(), this.multiplier));
 		stmts.add(new QuadrupletStmt(QuadrupletOp.ADD, this.variablePrime, this.variablePrime, temp));
 		return stmts;
 	}
@@ -125,6 +126,13 @@ public class InductionVariable {
 	// This method should only be used for derived induction variables
 	public QuadrupletStmt getInductionAssignmentStmt() {
 		return new QuadrupletStmt(null, this.variable, this.variablePrime, null);
+	}
+	
+	private InductionVariable getFamilyInductionVariable() {
+		if (!isDerived) {
+			return this;
+		}
+		return derivedFrom.getFamilyInductionVariable();
 	}
 	
 	public Name getAdder() {

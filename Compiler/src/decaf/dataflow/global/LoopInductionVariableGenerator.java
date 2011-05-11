@@ -15,12 +15,10 @@ import decaf.dataflow.cfg.MethodIR;
 
 // Finds all the induction variables in the loops in the program
 public class LoopInductionVariableGenerator {
-	private HashMap<String, MethodIR> mMap;
 	private HashSet<InductionVariable> inductionVariables;
 	private LoopInvariantGenerator loopInvariantGen;
 
 	public LoopInductionVariableGenerator(HashMap<String, MethodIR> mMap) {
-		this.mMap = mMap;
 		this.inductionVariables = new HashSet<InductionVariable>();
 		this.loopInvariantGen = new LoopInvariantGenerator(mMap);
 	}
@@ -283,10 +281,18 @@ public class LoopInductionVariableGenerator {
 							}
 						}
 					}
+					// Ensure that dest does not play a role in the index of name
+					Name nameIndex = name;
+					do {
+						nameIndex = ((ArrayName)nameIndex).getIndex();
+						if (nameIndex.equals(dest)) {
+							return true;
+						}
+					} while (nameIndex.getClass().equals(ArrayName.class));
 				}
 			}
 			if (lqs.getqStmt() == last) {
-				inRegion = false;
+				return false;
 			}
 		}
 		return false;
@@ -314,10 +320,6 @@ public class LoopInductionVariableGenerator {
 			}
 		}
 		return inductionVarsInLoop;
-	}
-	
-	public void setmMap(HashMap<String, MethodIR> mMap) {
-		this.mMap = mMap;
 	}
 	
 	public LoopInvariantGenerator getLoopInvariantGen() {

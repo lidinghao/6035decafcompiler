@@ -7,15 +7,15 @@ import java.util.List;
 import decaf.codegen.flatir.JumpStmt;
 import decaf.codegen.flatir.LIRStatement;
 import decaf.codegen.flatir.LabelStmt;
+import decaf.codegen.flatir.QuadrupletStmt;
 import decaf.dataflow.cfg.MethodIR;
 
+// Perform strength reduction optimizations in loops
 public class LoopStrengthReductionOptimizer {
 	private HashMap<String, MethodIR> mMap;
 	private LoopInductionVariableGenerator loopInductionVarGen;
 	private LoopInvariantGenerator loopInvarGen;
-	private static String ForInitLabelRegex = "[a-zA-z_]\\w*.for\\d+.init";
 	private static String ForBodyLabelRegex = "[a-zA-z_]\\w*.for\\d+.body";
-	private static String ForEndLabelRegex = "[a-zA-z_]\\w*.for\\d+.end";
 	private static String ForTestLabelRegex = "[a-zA-z_]\\w*.for\\d+.test";
 	
 	public LoopStrengthReductionOptimizer(HashMap<String, MethodIR> mMap) {
@@ -48,9 +48,6 @@ public class LoopStrengthReductionOptimizer {
 					}
 				}
 			}
-			// Find the index of the for body label since we will be adding 
-			// the i <- i' statements right afterwards
-			int bodyLabelIndex = getForLabelStmtIndexInMethod(loopId, ForBodyLabelRegex);
 			// Find the basic induction variables
 			List<InductionVariable> basicLoopIVars = new ArrayList<InductionVariable>();
 			for (InductionVariable i : loopIVars) {
@@ -76,16 +73,58 @@ public class LoopStrengthReductionOptimizer {
 			}
 			// Add the derived induction variable statements one by one after the
 			// definition of the associated basic induction variable
+			int basicIVarStmtIndex;
 			for (InductionVariable basicIVar : basicLoopIVars) {
-				int basicIVarStmt = getStmtIndexInMethod(basicIVar.getLqStmt().
-						getLoopBodyBlockId(), basicIVar.getLqStmt().getqStmt());
 				List<InductionVariable> canAdd = new ArrayList<InductionVariable>();
 				for (InductionVariable derivedIVar : basicToDerived.get(basicIVar)) {
-					if (derivedIVar.getDerivedFrom() == basicIVar) {
+					if (derivedIVar.getDerivedFrom().equals(basicIVar)) {
 						canAdd.add(derivedIVar);
 					}
-					//while (derivedIVar)
 				}
+				List<QuadrupletStmt> derivedIVarStmtsAfterBasic = new ArrayList<QuadrupletStmt>();
+				List<QuadrupletStmt> derivedIVarStmtsBeforeTest = new ArrayList<QuadrupletStmt>();
+				while (!canAdd.isEmpty()) {
+					InductionVariable iVar = canAdd.get(0);
+					// Add for adder, for multipler statements
+					if (iVar.getForAdder() != null) {
+						derivedIVarStmtsAfterBasic.add(iVar.getForAdder());
+					}
+					if (iVar.getForMultiplier() != null) {
+						derivedIVarStmtsAfterBasic.add(iVar.getForMultiplier());
+					}
+					// Add derived induction variable increment statements
+					derivedIVarStmtsAfterBasic.addAll(iVar.getInductionStmts());
+					// Add pre-test initialization statement
+					derivedIVarStmtsBeforeTest.addAll(iVar.getLoopPreheaderStmts());
+					// Add derived variables which derive from the newly added induction variable
+					for (InductionVariable derivedIVar : basicToDerived.get(basicIVar)) {
+						if (derivedIVar.getDerivedFrom().equals(iVar)) {
+							canAdd.add(derivedIVar);
+						}
+					}
+				}
+				// Add derived statements to method statement at the appropriate locations
+				// Get the stmt index for the test label of the for loop
+				testLabelIndex = getForLabelStmtIndexInMethod(loopId, ForTestLabelRegex);
+				methodStmts.addAll(testLabelIndex, derivedIVarStmtsBeforeTest);
+				// Get the stmt index for the basic induction variable
+				basicIVarStmtIndex = getStmtIndexInMethod(basicIVar.getLqStmt().
+						getLoopBodyBlockId(), basicIVar.getLqStmt().getqStmt());
+				methodStmts.addAll(basicIVarStmtIndex+1, derivedIVarStmtsAfterBasic);
+			}
+			// Find the index of the for body label and add the i <- i' statements afterwards
+			int bodyLabelIndex = getForLabelStmtIndexInMethod(loopId, ForBodyLabelRegex);
+			List<QuadrupletStmt> inductAssignStmts = new ArrayList<QuadrupletStmt>();
+			for (InductionVariable i : loopIVars) {
+				if (!i.isDerived()) {
+					inductAssignStmts.add(i.getInductionAssignmentStmt());
+				}
+			}
+			methodStmts.addAll(bodyLabelIndex+1, inductAssignStmts);
+			// Add the jump for body statement, if it exists, before the test label
+			if (initBodyJmpStmt != null) {
+				testLabelIndex = getForLabelStmtIndexInMethod(loopId, ForTestLabelRegex);
+				methodStmts.add(testLabelIndex, initBodyJmpStmt);
 			}
 		}
 	}
