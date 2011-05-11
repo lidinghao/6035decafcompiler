@@ -5,9 +5,11 @@ import java.util.BitSet;
 import java.util.HashMap;
 import java.util.List;
 
+import decaf.codegen.flatir.EnterStmt;
 import decaf.codegen.flatir.JumpStmt;
 import decaf.codegen.flatir.LIRStatement;
 import decaf.codegen.flatir.LabelStmt;
+import decaf.codegen.flatir.LeaveStmt;
 import decaf.codegen.flatir.LoadStmt;
 import decaf.codegen.flatir.Name;
 import decaf.codegen.flatir.StoreStmt;
@@ -17,20 +19,20 @@ import decaf.dataflow.cfg.MethodIR;
 public class WebSplitter {
    private static String IfEndRegex = "[a-zA-z_]\\w*.if\\d+.end";
    private static String IfTestRegex = "[a-zA-z_]\\w*.if\\d+.test";
-   private static String ForInitRegex = "[a-zA-z_]\\w*.for\\d+.init";
    private static String ForEndRegex = "[a-zA-z_]\\w*.for\\d+.end";
    private static String ForTestRegex = "[a-zA-z_]\\w*.for\\d+.test";
-   private static String ForBodyRegex = "[a-zA-z_]\\w*.for\\d+.body";
    
 	private HashMap<String, MethodIR> mMap;
 	private String currentMethod;
 	private List<Web> potentialWebs;
 	private int programPointIndex;
+	private LIRStatement ppStmt;
 	private ReachingDefinitions reachingDefinitions;
 	private LivenessAnalysis livenessAnalysis;
 	private HashMap<Web, Integer[]> splitPoints;
 	private Web currentWeb;
-	private CFGBlock ppBlock;
+	private CFGBlock previousUse;
+	private CFGBlock nextUse;
 	
 	public WebSplitter(HashMap<String, MethodIR> mMap, ReachingDefinitions reachingDefinitions, LivenessAnalysis livenessAnalysis) {
 		this.mMap = mMap;
@@ -55,218 +57,346 @@ public class WebSplitter {
 		
 		// Calculate maximal split points for each web
 		generateSplitPoints();
+		calculateInsertPoints();
 		
-		// Select web to split (from potentialWebs)
-		Web splitWeb = this.selectWebToSplit();
-		
-		
-		// Split at right point
+		// Webs to split from
 		for (Web w: this.splitPoints.keySet()) {
 			System.out.println("SPLIT PTS: " + w.getIdentifier() + " :: [" + this.splitPoints.get(w)[0] +", " + this.splitPoints.get(w)[2] + "]");
 		}
+		
+		// Select web to split (from potentialWebs)
+		Web splitWeb = this.selectWebToSplit();
 		
 		System.out.println("\nSPLITTING: " + splitWeb.getIdentifier() + " at [" + this.splitPoints.get(splitWeb)[0] + ", " + this.splitPoints.get(splitWeb)[2] + "]");
 		
 		insertStatements(splitWeb);
 		
-//		if (var.toString().contains("c")) {
-//			System.out.println("***********");
-//			System.out.println(store + " ==> " + this.splitPoints.get(splitWeb)[0]);
-//			System.out.println(load + " ==> " + this.splitPoints.get(splitWeb)[2]);
-//			System.out.println("-----------");
-//			for (LIRStatement stmt : this.mMap.get(this.currentMethod).getStatements()) {
-//				System.out.println(stmt);
-//			}
-//			System.exit(-1);
-//		}
-		
 		// Done
 		System.out.println("SPLITTING COMPLETE!");
 		
-		for (LIRStatement stmt: mMap.get(this.currentMethod).getStatements()){
-			System.out.println(stmt);
+		for (CFGBlock block: mMap.get(this.currentMethod).getCfgBlocks()){
+			System.out.println(block);
 		}
 		
 	}
 	
+	private void calculateInsertPoints() {
+		for (Web w: this.splitPoints.keySet()) {
+			calculateInsertPoint(w);
+		}
+	}
+
+	private void calculateInsertPoint(Web web) {
+		CFGBlock prevBlock = getBlockWithId(this.splitPoints.get(web)[0]);
+		CFGBlock nextBlock = getBlockWithId(this.splitPoints.get(web)[2]);
+		CFGBlock ppBlock = getBlockWithStmtIndex(this.programPointIndex);
+		
+		generateIndicesForStore(web, prevBlock, ppBlock);
+		generateIndicesForLoad(web, nextBlock, ppBlock);
+		
+		// Set global index for distance measurement
+		this.splitPoints.get(web)[0] = getIndexInLIR(prevBlock, this.splitPoints.get(web)[0]);
+		this.splitPoints.get(web)[2] = getIndexInLIR(nextBlock, this.splitPoints.get(web)[2]);
+	}
+
+	private void generateIndicesForStore(Web web, CFGBlock prevBlock,
+			CFGBlock ppBlock) {
+		if (prevBlock.getIndex() == ppBlock.getIndex()) {
+			int ppStmtIndex = getIndexInBlock(prevBlock, this.ppStmt);
+			int prologIndex = getPrologIndex(prevBlock);
+			
+//			System.out.println("******************");
+//			System.out.println(web.getVariable() + "==>" + web.getDefinitions() + ", " + web.getUses());
+//			System.out.println("PPI: " + ppStmtIndex);
+//			System.out.println("POLOGI: " + prologIndex);
+			
+			if (isDef(web, prevBlock, ppStmtIndex)) { // Def so store after it
+				ppStmtIndex++;
+			}
+			
+			boolean added = false;
+			for (int i = ppStmtIndex-1; i >= prologIndex; i--) {
+				LIRStatement stmt = prevBlock.getStatements().get(i);
+				if (isDefUse(web, stmt)) {
+//					System.out.println("STORE AFTER: " + stmt + " at " + (i+1));
+					this.splitPoints.get(web)[0] = i+1;
+					added = true;
+					break;
+				}
+			}
+			
+			
+			if (!added) {
+//				System.out.println("STORE AFTER POLOG at " + prologIndex);
+				this.splitPoints.get(web)[0] = prologIndex;
+			}
+		}
+		else {
+			int epilogIndex = getEpilogIndex(prevBlock);
+			int prologIndex = getPrologIndex(prevBlock);
+			
+			boolean added = false;
+			for (int i = epilogIndex; i >= prologIndex; i--) {
+				LIRStatement stmt = prevBlock.getStatements().get(i);
+				if (isDefUse(web, stmt)) {
+					this.splitPoints.get(web)[0] = i+1;
+					added = true;
+					break;
+				}
+			}
+			
+			if (!added) {
+				this.splitPoints.get(web)[0] = prologIndex;
+			}
+		}
+	}
+
+	private void generateIndicesForLoad(Web web, CFGBlock nextBlock,
+			CFGBlock ppBlock) {
+		if (nextBlock.getIndex() == ppBlock.getIndex()) {
+			int ppStmtIndex = getIndexInBlock(nextBlock, this.ppStmt);
+			int epilogIndex = getEpilogIndex(nextBlock);
+			
+//			System.out.println("PPI: " + ppStmtIndex);
+//			System.out.println("EPILOGI: " + epilogIndex);
+			
+			if (isDef(web, nextBlock, ppStmtIndex)) { // Def so store after it
+				ppStmtIndex++;
+			}
+			
+			boolean added = false;
+			for (int i = ppStmtIndex; i < epilogIndex; i++) {
+				LIRStatement stmt = nextBlock.getStatements().get(i);
+				if (isDefUse(web, stmt)) {
+//					System.out.println("LOAD BEFORE: " + stmt + " at " + i);
+					this.splitPoints.get(web)[2] = i;
+					added = true;
+					break;
+				}
+			}
+			
+			
+			if (!added) {
+//				System.out.println("LOAD BEFORE EPILOG at " + epilogIndex);
+				this.splitPoints.get(web)[2] = epilogIndex+1;
+			}
+		}
+		else {
+			int epilogIndex = getEpilogIndex(nextBlock);
+			int prologIndex = getPrologIndex(nextBlock);
+			
+			boolean added = false;
+			for (int i = prologIndex; i < epilogIndex; i++) {
+				LIRStatement stmt = nextBlock.getStatements().get(i);
+				if (isDefUse(web, stmt)) {
+					this.splitPoints.get(web)[2] = i;
+					added = true;
+					break;
+				}
+			}
+			
+			if (!added) {
+				this.splitPoints.get(web)[2] = epilogIndex+1;
+			}
+		}
+	}
+
 	private void insertStatements(Web splitWeb) {
 		Name var = splitWeb.getVariable();
-		StoreStmt store = new StoreStmt(var);
-		LoadStmt load = new LoadStmt(var);
-		LIRStatement ppStmt = this.mMap.get(this.currentMethod).getStatements().get(this.programPointIndex);
+		StoreStmt storeStmt = new StoreStmt(var);
+		LoadStmt loadStmt = new LoadStmt(var);
 		
-		// Insert store (in CFG)		
-		if (this.ppBlock.getIndex() != this.splitPoints.get(splitWeb)[0]) {
-			// Different block than PP
-			insertStore(store, this.splitPoints.get(splitWeb)[0], 0);
-		}
-		else {
-			// In same block as PP
-			insertStoreInPPBlock(store, ppStmt);
-		}
+		CFGBlock prevBlock = getBlockWithStmtIndex(this.splitPoints.get(splitWeb)[0]);
+		CFGBlock nextBlock = getBlockWithStmtIndex(this.splitPoints.get(splitWeb)[2]);
+		CFGBlock ppBlock = getBlockWithStmtIndex(this.programPointIndex);
 		
-		// Insert load (in CFG)
-		if (this.ppBlock.getIndex() != this.splitPoints.get(splitWeb)[2]) {
-			// Different block than PP
-			insertLoad(load, this.splitPoints.get(splitWeb)[2], 0);
-		}
-		else {
-			// In same block as PP
-			insertLoadInPPBlock(load, ppStmt);
-		}
-		
-		this.mMap.get(this.currentMethod).regenerateStmts();
-	}
-
-	private void insertLoadInPPBlock(LoadStmt load, LIRStatement ppStmt) {
-		// Get block
-		CFGBlock block = null;
-		
-		for (CFGBlock b: this.mMap.get(this.currentMethod).getCfgBlocks()) {
-			if (b.getIndex() == this.ppBlock.getIndex()) {
-				block = b;
-				break;
-			}
-		}
-		
-		// Find pp stmt index
-		int ppIndex = -1;
-		for (int i = 0; i < block.getStatements().size(); i++) {
-			if (block.getStatements().get(i) == ppStmt) {
-				ppIndex = i;
-				break;
-			}
-		}
-		
-		this.insertLoad(load, this.ppBlock.getIndex(), ppIndex+1);
-	}
-
-	private void insertStoreInPPBlock(StoreStmt store, LIRStatement ppStmt) {
-		CFGBlock block = null;
-		
-		for (CFGBlock b: this.mMap.get(this.currentMethod).getCfgBlocks()) {
-			if (b.getIndex() == this.ppBlock.getIndex()) {
-				block = b;
-				break;
-			}
-		}
-		
-		// Find pp stmt index
-		int ppIndex = -1;
-		for (int i = 0; i < block.getStatements().size(); i++) {
-			if (block.getStatements().get(i) == ppStmt) {
-				ppIndex = i;
-				break;
-			}
-		}
-		
-		this.insertStore(store, this.ppBlock.getIndex(), ppIndex-1);
-	}
-
-	private void insertLoad(LoadStmt load, int blockId, int start) {
-		List<LIRStatement> uses = this.currentWeb.getUses();
-		
-		// Get block
-		CFGBlock block = null;
-		
-		for (CFGBlock b: this.mMap.get(this.currentMethod).getCfgBlocks()) {
-			if (b.getIndex() == blockId) {
-				block = b;
-				break;
-			}
-		}
-		
-		int index = -1;
-		int insertableIndex = 0;
-		for (int i = start; i < block.getStatements().size(); i++) {
-			LIRStatement stmt = block.getStatements().get(i);
+		if (prevBlock.getIndex() == ppBlock.getIndex()) {
+			int ppStmtIndex = getIndexInBlock(prevBlock, this.ppStmt);
+			int prologIndex = getPrologIndex(prevBlock);
 			
-			if (stmt.getClass().equals(LabelStmt.class) ||
-					stmt.getClass().equals(JumpStmt.class)) {
-				continue;
+			if (isDef(splitWeb, prevBlock, ppStmtIndex)) { // Def so store after it
+				ppStmtIndex++;
 			}
 			
-			if (insertableIndex == 0) {
-				insertableIndex = i;
+			boolean added = false;
+			for (int i = ppStmtIndex-1; i >= prologIndex; i--) {				
+				LIRStatement stmt = prevBlock.getStatements().get(i);
+				if (isDefUse(splitWeb, stmt)) {
+					prevBlock.getStatements().add(i+1, storeStmt);
+					added = true;
+					break;
+				}
 			}
 			
-			if (uses.contains(stmt)) {
-				index = i;
-				break;
+			if (!added) {
+				prevBlock.getStatements().add(prologIndex, storeStmt);
+			}
+		}
+		else {
+			int epilogIndex = getEpilogIndex(prevBlock);
+			int prologIndex = getPrologIndex(prevBlock);
+			
+			boolean added = false;
+			for (int i = epilogIndex; i >= prologIndex; i--) {
+				LIRStatement stmt = prevBlock.getStatements().get(i);
+				if (isDefUse(splitWeb, stmt)) {
+					prevBlock.getStatements().add(i+1, storeStmt);
+					added = true;
+					break;
+				}
+			}
+			
+			if (!added) {
+				prevBlock.getStatements().add(prologIndex, storeStmt);
 			}
 		}
 		
-		if (index == -1) {
-			block.getStatements().add(insertableIndex, load);
+		// NEXT
+		
+		if (nextBlock.getIndex() == ppBlock.getIndex()) {
+			int ppStmtIndex = getIndexInBlock(nextBlock, this.ppStmt);
+			int epilogIndex = getEpilogIndex(nextBlock);
+			
+			if (isDef(splitWeb, prevBlock, ppStmtIndex)) { // Def so start load after def
+				ppStmtIndex++;
+			}
+			
+			boolean added = false;
+			for (int i = ppStmtIndex; i < epilogIndex; i++) {
+				LIRStatement stmt = nextBlock.getStatements().get(i);
+				if (isUse(splitWeb, stmt)) {
+					nextBlock.getStatements().add(i, loadStmt);
+					added = true;
+					break;
+				}
+			}
+			
+			if (!added) prevBlock.getStatements().add(epilogIndex+1, loadStmt);
 		}
 		else {
-			block.getStatements().add(index, load); // Will add before it
+			int epilogIndex = getEpilogIndex(nextBlock);
+			int prologIndex = getPrologIndex(nextBlock);
+			
+			boolean added = false;
+			for (int i = prologIndex; i < epilogIndex; i++) {
+				LIRStatement stmt = nextBlock.getStatements().get(i);
+				if (isDefUse(splitWeb, stmt)) {
+					nextBlock.getStatements().add(i, loadStmt);
+					added = true;
+					break;
+				}
+			}
+			
+			if (!added) {
+				if (!added) prevBlock.getStatements().add(epilogIndex+1, loadStmt);
+			}
 		}
 	}
 	
-	private void insertStore(StoreStmt store, int blockId, int end) {
-		List<LIRStatement> useDefs = new ArrayList<LIRStatement>();
-		useDefs.addAll(this.currentWeb.getUses());
-		useDefs.addAll(this.currentWeb.getDefinitions());
-		
-		// Get block
-		CFGBlock block = null;
-		
-		for (CFGBlock b: this.mMap.get(this.currentMethod).getCfgBlocks()) {
-			if (b.getIndex() == blockId) {
-				block = b;
-				break;
-			}
-		}
-		
-		int index = -1;
-		int insertableIndex = 0;
-		for (int i = block.getStatements().size()-1; i >= end ; i--) {
+	private int getEpilogIndex(CFGBlock block) {
+		for (int i = block.getStatements().size()-1; i >=0 ; i--) {
 			LIRStatement stmt = block.getStatements().get(i);
+			if (isEpilogStmt(stmt)) continue;
 			
-			if (stmt.getClass().equals(LabelStmt.class) ||
-					stmt.getClass().equals(JumpStmt.class)) {
-				continue;
-			}
-			
-			if (insertableIndex == 0) {
-				insertableIndex = i;
-			}
-			
-			if (useDefs.contains(stmt)) {
-				index = i;
-				break;
-			}
+			return i;
 		}
 		
-		if (index == -1) {
-			block.getStatements().add(insertableIndex, store);
+		return -1;
+	}
+	
+	private boolean isDef(Web w, CFGBlock b, int i) {
+		LIRStatement stmt = b.getStatements().get(i);
+		
+		for (LIRStatement def: w.getDefinitions()) {
+			if (def == stmt) return true;
 		}
-		else if (index+1 != block.getStatements().size()) {
-			block.getStatements().add(index+1, store); // Will add after it
+		
+		return false;
+	}
+	
+	private boolean isUse(Web w, LIRStatement stmt) {
+		for (LIRStatement use: w.getUses()) {
+			if (use == stmt) return true;
 		}
-		else {
-			block.getStatements().add(store);
+		
+		return false;
+	}
+
+	private boolean isDefUse(Web w, LIRStatement stmt) {
+		for (LIRStatement use: w.getUses()) {
+			if (use == stmt) return true;
 		}
+		
+		for (LIRStatement def: w.getDefinitions()) {
+			if (def == stmt) return true;
+		}
+		
+		return false;
+	}
+	
+	private int getPrologIndex(CFGBlock block) {
+		for (int i = 0; i < block.getStatements().size(); i++) {
+			LIRStatement stmt = block.getStatements().get(i);
+			if (isPrologStmt(stmt)) continue;
+			
+			return i;
+		}
+		
+		return -1;
+	}
+	
+	private int getIndexInBlock(CFGBlock block, LIRStatement stmt) {
+		for (int i = 0; i < block.getStatements().size(); i++) {
+			LIRStatement s = block.getStatements().get(i);
+			if (stmt == s) return i;
+		}
+		
+		return -1;
+	}
+	
+	private int getIndexInLIR(CFGBlock block, int index) {
+		LIRStatement stmt = block.getStatements().get(index);
+		for (int i = 0; i < this.mMap.get(this.currentMethod).getStatements().size(); i++) {
+			LIRStatement s = this.mMap.get(this.currentMethod).getStatements().get(i);
+			if (stmt == s) return i;
+		}
+		
+		return -1;
+	}
+	
+	private boolean isEpilogStmt(LIRStatement stmt) {
+		return (stmt.getClass().equals(JumpStmt.class)
+				|| stmt.getClass().equals(LeaveStmt.class));
+	}
+	
+	private boolean isPrologStmt(LIRStatement stmt) {
+		return (stmt.getClass().equals(LabelStmt.class) 
+				|| stmt.getClass().equals(EnterStmt.class));
+	}
+
+	private CFGBlock getBlockWithId(Integer integer) {
+		for (CFGBlock b: this.mMap.get(currentMethod).getCfgBlocks()) {
+			if (b.getIndex() == integer) return b;
+		}
+		
+		return null;
 	}
 
 	private Web selectWebToSplit() {
-		this.generateSplitPoints();
-		
 		Web splitWeb = null;
 		float minHeuristic = 2147483647;
 		
 		for (Web w: this.splitPoints.keySet()) {
 			Integer[] pt = this.splitPoints.get(w);
-			int dist = -1 * (pt[2] - pt[0]); // Dist (want max)
+			int dist = (pt[2] - pt[0]); // Dist
 			
-			if (dist > 0) {
+			if (dist < 0) {
 				System.out.println("ERROR: nextBlock < prevBlock for WEB: " + w.getIdentifier());
 				System.exit(-1);
 			}
 			
 			int depth = pt[1] + pt[3]; // Add depth?
-			float heuristic = calculateHeuristic(dist, depth);
+			float heuristic = calculateHeuristic(dist, depth, w.getInterferingWebs().size());
 			if (heuristic < minHeuristic) {
 				minHeuristic = heuristic;
 				splitWeb = w;
@@ -276,8 +406,15 @@ public class WebSplitter {
 		return splitWeb;
 	}
 	
-	private float calculateHeuristic(int distance, int depth) {
-		return (float) (0.5 * distance + 0.5 * depth);
+	/**
+	 * Want minimum heuristic
+	 * @param distance
+	 * @param depth
+	 * @param neighbors
+	 * @return
+	 */
+	private float calculateHeuristic(int distance, int depth, int neighbors) {
+		return (float) (-0.75 * distance + depth - neighbors);
 	}
 
 	private void generateSplitPoints() {
@@ -294,11 +431,12 @@ public class WebSplitter {
 		this.currentWeb = w;
 		
 		CFGBlock start = findProgramPointBlock();
-		this.ppBlock = start;
 		int previousDefUseIndex = findPreviousDefUse(w);
 		CFGBlock previousUseBlock = getBlockWithStmtIndex(previousDefUseIndex);
+		this.previousUse = previousUseBlock;
 		int nextUseIndex = findNextUse(w);
 		CFGBlock nextUseBlock = getBlockWithStmtIndex(nextUseIndex);
+		this.nextUse = nextUseBlock;
 		
 		/**
 		 * GET EARLIEST PREDECESSOR
@@ -311,11 +449,6 @@ public class WebSplitter {
 			
 			// Find parent common node
 			currentPrevious = getPreviousCommonNode(currentPrevious);
-
-			// Parent went before use
-			if (currentPrevious.getIndex() < previousUseBlock.getIndex()) {
-				currentPrevious = oldPrevious;
-			}
 		}
 		
 		/**
@@ -327,16 +460,8 @@ public class WebSplitter {
 		while (!currentNext.equals(oldNext)) {
 			oldNext = currentNext;
 			
-//			System.out.println("OLD NEXT!");
-//			System.out.println(oldNext);
-			
-			// Find parent common node			
+			// Find parent common node	
 			currentNext = getNextCommonNode(currentNext);
-			
-			// Child went after use
-			if (currentNext.getIndex() > nextUseBlock.getIndex()) {
-				currentNext = oldNext;
-			}
 		}
 		
 		/**
@@ -351,52 +476,40 @@ public class WebSplitter {
 		indices[2] = nextUseBlock.getIndex();
 		indices[3] = nextUseBlock.getStatements().get(0).getDepth();
 		
-		return indices;
-	}
-	
-//	private CFGBlock findCommonParentWithDepth(CFGBlock start, Integer integer) {
-//		// TODO Auto-generated method stub
-//		return null;
-//	}
-//
-//	private CFGBlock findCommonChildWithDepth(CFGBlock start, Integer integer) {
-//		// TODO Auto-generated method stub
-//		return null;
-//	}
-
-	private CFGBlock getPreviousCommonNode(CFGBlock currentPrevious) {
-//		System.out.println("GETTING PREVIOUS OF BLOCK for " + this.currentWeb.getVariable());
-//		System.out.println(currentPrevious);
-		
-		if (isForTestBlock(currentPrevious)) { // FORK (get node on top of for loop)
-			return currentPrevious.getPredecessors().get(0);
+		if (indices[0] > start.getIndex() || indices[2] < start.getIndex()) {
+			System.out.println("INVALID PREV & NEXT BLOCK");
+			System.exit(-1);
 		}
 		
-		if (isForEndNode(currentPrevious)) { // Implicit FORK (get the init block of for loop)
-//			return getForInitBlock(currentPrevious);
-			assert (currentPrevious.getSuccessors().size() == 2);
+		return indices;
+	}
+
+	private CFGBlock getPreviousCommonNode(CFGBlock currentPrevious) {
+		CFGBlock nextPrev = null;
+		
+		if (isForTestBlock(currentPrevious)) { // FORK (get node on top of for loop)
+			CFGBlock init = currentPrevious.getPredecessors().get(0); // init
+			CFGBlock body = currentPrevious.getPredecessors().get(1); // body
+			boolean reachesInit = this.definitionReaches(init);
+			boolean reachesBody = this.definitionReaches(body);
 			
-			CFGBlock left = currentPrevious.getPredecessors().get(0);
-			CFGBlock right = currentPrevious.getPredecessors().get(1);
-			boolean reachesLeft = this.definitionReaches(left);
-			boolean reachesRight = this.definitionReaches(right);
-			
-			if (reachesLeft && reachesRight) {
-				return getForInitBlock(currentPrevious);
+			if (reachesInit && reachesBody) {
+				if (this.previousUse.getIndex() < currentPrevious.getIndex()) {
+					nextPrev = currentPrevious.getPredecessors().get(0);
+				}
+				else {
+					nextPrev = currentPrevious;
+				}
 			}
-			else if (reachesLeft) {
-				return left;
-			}
-			else if (reachesRight) {
-				return right;
+			else if (reachesInit) { // WILL EVER REACH?
+				nextPrev = init; // Move up chain
 			}
 			else {
-				return currentPrevious;
-			}			
+				nextPrev = currentPrevious; // shouldn't happen!!
+			}	
 		}
 		
 		if (isIfEndNode(currentPrevious)) { // FORK (get the init block of conditional)
-//			return getIfTestBlock(currentPrevious);
 			assert (currentPrevious.getSuccessors().size() == 2);
 			
 			CFGBlock left = currentPrevious.getPredecessors().get(0);
@@ -405,27 +518,37 @@ public class WebSplitter {
 			boolean reachesRight = this.definitionReaches(right);
 			
 			if (reachesLeft && reachesRight) {
-				return getIfTestBlock(currentPrevious);
+				CFGBlock test = getIfTestBlock(currentPrevious); // will automatically reject if defined in the middle
+				if (test.getIndex() >= this.previousUse.getIndex()) {
+					nextPrev = test;
+				}
+				else {
+					nextPrev = currentPrevious;
+				}
 			}
 			else if (reachesLeft) {
-				return left;
+				nextPrev = left;
 			}
 			else if (reachesRight) {
-				return right;
+				nextPrev = right;
 			}
 			else {
-				return currentPrevious;
+				nextPrev = currentPrevious; // shouldn't happen
 			}			
 		}
 		
 		if (currentPrevious.getPredecessors().isEmpty()) { // ROOT (return)
-			return currentPrevious;
+			nextPrev = currentPrevious;
 		}
 		if (currentPrevious.getPredecessors().size() == 1) { // SINGLE PRED (go to it)
-			return currentPrevious.getPredecessors().get(0);
+			nextPrev = currentPrevious.getPredecessors().get(0);
 		}
 		
-		return null;
+		if (nextPrev == null || !this.definitionReaches(nextPrev)) {
+			nextPrev = currentPrevious;
+		}
+		
+		return nextPrev;
 	}
 
 	private boolean definitionReaches(CFGBlock block) {
@@ -441,45 +564,42 @@ public class WebSplitter {
 		
 		return false;
 	}
-
-	private CFGBlock getNextCommonNode(CFGBlock currentNext) {
-//		System.out.println("GETTING NEXT OF BLOCK");
-//		System.out.println(currentNext);
-		
+	
+	private boolean isLiveIn(CFGBlock block) {
 		int index = this.livenessAnalysis.getUniqueVariables().get(this.currentMethod).indexOf(this.currentWeb.getVariable());
-		//System.out.println("CHECKING: " + this.currentVariable);
+		return this.livenessAnalysis.getCfgBlocksState().get(block).getIn().get(index);
+	}
+
+	private CFGBlock getNextCommonNode(CFGBlock currentNext) {			
+		CFGBlock next = null;
 		
 		if (isForTestBlock(currentNext)) { // FORK (go to end of loop)
-//			return currentNext.getSuccessors().get(1);
 			assert (currentNext.getSuccessors().size() == 2);
 			
-			CFGBlock left = currentNext.getSuccessors().get(0);
-			CFGBlock right = currentNext.getSuccessors().get(1);
-			boolean liveLeft = this.livenessAnalysis.getCfgBlocksState().get(left).getIn().get(index);
-			boolean liveRight = this.livenessAnalysis.getCfgBlocksState().get(right).getIn().get(index);
+			CFGBlock body = currentNext.getSuccessors().get(0); // body
+			CFGBlock end = currentNext.getSuccessors().get(1); //end
+			boolean liveBody = isLiveIn(body);
+			boolean liveEnd = isLiveIn(end);
 			
-			if (liveLeft && liveRight) {
-				return getIfEndBlock(currentNext);
+			if (liveBody && liveEnd) {
+				CFGBlock myEnd = getForEndBlock(currentNext); // live in both, try end
+				if (myEnd.getIndex() > this.nextUse.getIndex()) {
+					next = currentNext;
+				}
+				else {
+					next = myEnd;
+				}
 			}
-			else if (liveLeft) {
-				return left;
+			else if (liveBody) {
+				next = currentNext; 
 			}
-			else if (liveRight) {
-				return right;
+			else if (liveEnd) {
+				next = getForEndBlock(currentNext);
 			}
 			else {
-				return currentNext;
-			}			
-		}
-		
-		if (isForInitNode(currentNext)) { // Implicit FORK (go to end of loop)
-//			return getForEndBlock(currentNext);
-			return currentNext.getSuccessors().get(0);
-		}
-		
-		if (isForBodyNode(currentNext)) { // Implicit FORK (go to end of loop)
-//			return getForEndBlock(currentNext);
-			return currentNext.getSuccessors().get(0);
+				System.out.println("WTF");
+				next = currentNext; // wtf?
+			}
 		}
 		
 		if (isIfTestNode(currentNext)) { // FORK
@@ -487,31 +607,41 @@ public class WebSplitter {
 			
 			CFGBlock left = currentNext.getSuccessors().get(0);
 			CFGBlock right = currentNext.getSuccessors().get(1);
-			boolean liveLeft = this.livenessAnalysis.getCfgBlocksState().get(left).getIn().get(index);
-			boolean liveRight = this.livenessAnalysis.getCfgBlocksState().get(right).getIn().get(index);
+			boolean liveLeft = isLiveIn(left);
+			boolean liveRight = isLiveIn(right);
 			
 			if (liveLeft && liveRight) {
-				return getIfEndBlock(currentNext);
+				CFGBlock myEnd = getIfEndBlock(currentNext); // live in both, try end
+				if (myEnd.getIndex() > this.nextUse.getIndex()) {
+					next = currentNext;
+				}
+				else {
+					next = myEnd;
+				}
 			}
 			else if (liveLeft) {
-				return left;
+				next = left;
 			}
 			else if (liveRight) {
-				return right;
+				next = right;
 			}
 			else {
-				return currentNext;
-			}			
+				next = currentNext; // wtf?
+			}
 		}
 		
 		if (currentNext.getSuccessors().isEmpty()) { // LEAF (return)
-			return currentNext;
+			next = currentNext;
 		}
 		if (currentNext.getSuccessors().size() == 1) { // SINGLE CHILD (go to it)
-			return currentNext.getPredecessors().get(0);
+			next = currentNext.getSuccessors().get(0);
 		}
 		
-		return null;
+		if (next == null || !isLiveIn(next)) {
+			next = currentNext;
+		}
+		
+		return next;
 	}
 
 	private CFGBlock getBlockWithStmtIndex(int i) {
@@ -555,7 +685,6 @@ public class WebSplitter {
 			LIRStatement stmt = this.mMap.get(this.currentMethod).getStatements().get(i);
 			
 			for (LIRStatement du : defUse) {
-//				System.out.println("VAR: " + w.getVariable() +" DU: " + du + " ==== STMT:" + stmt);
 				if (stmt == du) { // == or .equals()?
 					return i;
 				}
@@ -586,37 +715,29 @@ public class WebSplitter {
 			LIRStatement stmt = this.mMap.get(this.currentMethod).getStatements().get(i);
 			LIRStatement next = null;
 			if (this.mMap.get(this.currentMethod).getStatements().size() > i+1) {
-				stmt = this.mMap.get(this.currentMethod).getStatements().get(i+1);
+				next = this.mMap.get(this.currentMethod).getStatements().get(i+1);
 			}
 			
 			if (stmt.getClass().equals(LabelStmt.class)) continue; // Ignore labels as program points
 			
-			System.out.println("CHECKING STATEMENT: " + stmt);
 			List<Web> potentialLiveWebs = findLiveWebs(stmt, next);
 			
-//			System.out.println("CHECKING: " + stmt + "  ;  " + stmt.getLiveInSet());
-//			System.out.println("# webs: " + potentialLiveWebs.size());
-			
-			//System.out.println("FINDING PROGRAM POINT: POTENTIAL WEBS...");
-			
 			if (potentialLiveWebs.size() <= WebColorer.regCount) {
-				System.out.println("NOT ENOUGH POTENTIAL WEBS");
 				continue; // Not enough potential live webs
 			}
-			
-			//System.out.println("FINDING PROGRAM POINT: POTENTIAL DONE...");
 			
 			List<Web> liveWebs = doDefsReach(stmt, potentialLiveWebs);
 			
 			if (liveWebs.size() <= WebColorer.regCount) {
-				System.out.println("NOT ENGOUH LIVE WEBS");
 				continue; // Not enough live webs
 			}
 			
 			// stmt is the required program point
-			System.out.println("PROGRAM POINT FOUND: " + this.mMap.get(this.currentMethod).getStatements().get(i) + " at " + (i) + " with " + stmt.getLiveInSet());
+			System.out.println("LIVE VARS: " + this.livenessAnalysis.getUniqueVariables().get(this.currentMethod));
+			System.out.println("PROGRAM POINT FOUND: " + this.mMap.get(this.currentMethod).getStatements().get(i) + " at " + i + " with " + stmt.getLiveInSet());
 			
 			this.programPointIndex = i;
+			this.ppStmt = stmt;
 			
 			this.potentialWebs.clear();
 			this.potentialWebs.addAll(liveWebs);
@@ -657,14 +778,8 @@ public class WebSplitter {
 		BitSet liveVars = new BitSet(globalVars.size());
 		liveVars.clear();
 		liveVars.or(stmt.getLiveInSet());
-		if (next != null) {
-			//liveVars.or(next.getLiveInSet());
-		}
 		
 		List<Web> temp = new ArrayList<Web>();
-		
-		System.out.println("GLOABL VARS => " + this.livenessAnalysis.getUniqueVariables().get(this.currentMethod));
-		System.out.println(stmt + " : LIVE => " + stmt.getLiveInSet());
 		
 		for (int i = 0; i < globalVars.size(); i++) {
 			if (liveVars.get(i)) {
@@ -680,30 +795,6 @@ public class WebSplitter {
 		return temp;
 	}
 	
-	private CFGBlock getForInitBlock(CFGBlock block) {
-		LabelStmt label = (LabelStmt) block.getStatements().get(0);
-		
-		String index = getIndexOfFor(label.getLabelString());
-		
-		int found = -1;
-		
-		for (int i = 0; i < this.mMap.get(this.currentMethod).getStatements().size(); i++) {
-			LIRStatement stmt = this.mMap.get(this.currentMethod).getStatements().get(i);
-			
-			if (stmt.getClass().equals(LabelStmt.class)) {
-				LabelStmt l = (LabelStmt) stmt;
-				if (l.getLabelString().matches(ForInitRegex)) {
-					if (l.getLabelString().contains(index)) {
-						found = i;
-						break;
-					}
-				}
-			}
-		}
-		
-		return getBlockWithStmtIndex(found);
-	}
-	
 	private String getIndexOfFor(String name) {
 		int i = name.indexOf(".for");
       name = name.substring(i + 4);
@@ -712,32 +803,6 @@ public class WebSplitter {
       name = name.substring(0, i);
       
       return name; 
-	}
-	
-	private boolean isForEndNode(CFGBlock block) {
-		if (!block.getStatements().isEmpty()) {
-			LIRStatement stmt = block.getStatements().get(0);
-			
-			if (stmt.getClass().equals(LabelStmt.class)) {
-				LabelStmt label = (LabelStmt) stmt;
-				return (label.getLabelString().matches(ForEndRegex));
-			}
-		}
-		
-		return false;
-	}
-	
-	private boolean isForBodyNode(CFGBlock block) {
-		if (!block.getStatements().isEmpty()) {
-			LIRStatement stmt = block.getStatements().get(0);
-			
-			if (stmt.getClass().equals(LabelStmt.class)) {
-				LabelStmt label = (LabelStmt) stmt;
-				return (label.getLabelString().matches(ForBodyRegex));
-			}
-		}
-		
-		return false;
 	}
 	
 	private boolean isForTestBlock(CFGBlock block) {
@@ -753,27 +818,13 @@ public class WebSplitter {
 		return false;
 	}
 	
-	private boolean isForInitNode(CFGBlock block) {
-		for (LIRStatement stmt: block.getStatements()) {
-			if (stmt.getClass().equals(LabelStmt.class)) {
-				LabelStmt l = (LabelStmt) stmt;
-				if (l.getLabelString().matches(ForInitRegex)) {
-					return true;
-				}
-			}
-		}
-		
-		return false;
-	}
-	
 	private CFGBlock getForEndBlock(CFGBlock block) {
 		LabelStmt label = null;
 		
 		for (LIRStatement stmt: block.getStatements()) {
 			if (stmt.getClass().equals(LabelStmt.class)) {
 				LabelStmt l = (LabelStmt) stmt;
-				if (l.getLabelString().matches(ForInitRegex) ||
-						l.getLabelString().matches(ForBodyRegex)) {
+				if (l.getLabelString().matches(ForTestRegex)) {
 					label = l;
 				}
 			}

@@ -14,6 +14,7 @@ import decaf.codegen.flatir.QuadrupletStmt;
 import decaf.codegen.flatir.Register;
 import decaf.codegen.flatir.RegisterName;
 import decaf.codegen.flattener.ProgramFlattener;
+import decaf.dataflow.cfg.CFGBlock;
 import decaf.dataflow.cfg.MethodIR;
 
 public class WebColorer {
@@ -26,6 +27,7 @@ public class WebColorer {
 	private List<Web> graph;
 	private WebSplitter splitter;
 	private HashMap<String, List<Register>> registersUsed;
+	private LocalLoadStoreDC dc;
 	
 	public WebColorer(HashMap<String, MethodIR> mMap) {
 		this.mMap = mMap;
@@ -36,6 +38,7 @@ public class WebColorer {
 		this.graph = new ArrayList<Web>();
 		this.splitter = new WebSplitter(mMap, this.webGen.getDefAnalyzer(), this.webGen.getLivenessAnalyzer());
 		this.registersUsed = new HashMap<String, List<Register>>();
+		this.dc = new LocalLoadStoreDC(mMap);
 	}
 	
 	public void colorWebs() {
@@ -44,12 +47,8 @@ public class WebColorer {
 			
 			// Make graph colorable (if not already)
 			int i = 0;
-			while (i < 4) {
+			while (true) {
 				this.webGen.generateWebs();
-				
-				for (LIRStatement stmt : this.mMap.get(methodName).getStatements()) {
-					System.out.println(stmt);
-				}
 				
 				System.out.println("\nWEBS GENERATED: " + methodName);
 				System.out.println("VARS : " + this.webGen.getLivenessAnalyzer().getUniqueVariables().get(methodName) + "\n");
@@ -65,9 +64,17 @@ public class WebColorer {
 					break;
 				}
 				
+				this.webGen.printInterferenceGraph(System.out, methodName);
+				
 				System.out.println("SPLIT LIST: " + this.getWebIdentifiers(this.splitList));
 				
 				splitWebs(methodName);
+//				dc.dcLoadStores();
+				
+				System.out.println("After Load shit");
+				for (CFGBlock b: this.mMap.get(methodName).getCfgBlocks()) {
+					System.out.println(b);
+				}
 //				break;
 				i++;
 			}
@@ -77,14 +84,14 @@ public class WebColorer {
 			System.out.println("SPLITTING COMPLETED SUCCESSFULLY! \n");
 		}
 		
-		System.out.println("COLORING METHODS");
+		//System.out.println("COLORING METHODS");
 		
 		// Color graph
-		colorGraph();
+		//colorGraph();
 		
-		System.out.println("COLORING COMPLETED SUCCESSFULLY");
+		//System.out.println("COLORING COMPLETED SUCCESSFULLY");
 		
-		this.prettyPrintWebsWithRegisters(System.out);
+		//this.prettyPrintWebsWithRegisters(System.out);
 	}
 
 	private void colorGraph() {
@@ -199,8 +206,8 @@ public class WebColorer {
 				this.saveAdjacencyList(webToRemove);
 				this.removeFromGraph(webToRemove);
 				this.coloringStack.get(methodName).push(webToRemove);
-				System.out.println("NEW GRAPH: ");
-				prettyPrintGraph(System.out);
+//				System.out.println("NEW GRAPH: ");
+//				prettyPrintGraph(System.out);
 				System.out.println();
 			}
 			else { // Could not remove
