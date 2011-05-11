@@ -1,0 +1,19 @@
+class Program {
+	int A[10];
+	int X;
+	
+	void main() {
+		int i, a;
+		for i = 0, 10  {
+			int j, k, l, m, b;
+			b = X+i;
+			j = 2*i+b;
+			for b = 0, 10 {
+				k = 4+3*b;
+				l = j+k;
+				m = l+10;
+				A[m] = 5; // should resolve to null, b is used as non-loop variable in outer loop
+			}
+		}
+	}
+}

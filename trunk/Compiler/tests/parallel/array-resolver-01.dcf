@@ -1,0 +1,15 @@
+class Program {
+	int a[10];
+	
+	void main() {
+		int i;
+		for i = 0, 10  {
+			int j, k, l, m;
+			j = 2*i;
+			k = 4+5;
+			l = j+k;
+			m = l+10;
+			a[m] = 5; // resolves to [2,19]
+		}
+	}
+}

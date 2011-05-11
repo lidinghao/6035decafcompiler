@@ -1,0 +1,17 @@
+class Program {
+	int A[10];
+	int a;
+	
+	void main() {
+		int i, b;
+		b = 2*a;
+		for i = 0, 10  {
+			int j, k, l, m;
+			j = 2*i+b;
+			k = 4+5;
+			l = j+k;
+			m = l+10;
+			A[m] = 5; // resolves to null, b is outside loop
+		}
+	}
+}
