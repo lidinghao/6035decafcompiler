@@ -29,46 +29,19 @@ public class CFGDataflowOptimizer {
 	public void optimizeCFGDataflow() {
 		int i = 0;
 		while (i < 100) {
-			updateLocalBlockState();
 			updateGlobalBlockState();
 			
-			int j = 0;
-			while (j < 100) {
-				updateLocalBlockState();
-				bo.optimizeBlocks(opts);
-				if (!isLocalChanged()) {
-					break;
-				}
-				j++;
-			}
+			bo.optimizeBlocks(opts);
 			
-			int k = 0;
-			while (k < 100) {
-				updateLocalBlockState();
-				go.optimizeBlocks(opts);
-				if (!isLocalChanged()) {
-					break;
-				}
-				k++;
-			}
-			
+			go.optimizeBlocks(opts);			
 			
 			System.out.println("GLOBAL PASS " + i);
 			pf.printLIR(System.out);
 			
 			if (!isGlobalChanged()) {
-				bo.getDcVar().performDeadCodeElimination(); // HACK
 				break;
 			}
 			i++;
-		}
-	}
-	
-	private void updateLocalBlockState() {
-		for (String s : this.mMap.keySet()) {
-			for (CFGBlock block : this.mMap.get(s).getCfgBlocks()) {
-				this.globalBlockState.put(block, block.toString());
-			}
 		}
 	}
 	
@@ -80,21 +53,10 @@ public class CFGDataflowOptimizer {
 		}
 	}
 	
-	private boolean isLocalChanged() {
-		for (String s : this.mMap.keySet()) {
-			for (CFGBlock block : this.mMap.get(s).getCfgBlocks()) {
-				if (!block.toString().equals(this.blockState.get(block).toString())) {
-					return true;
-				}
-			}
-		}
-		return false;
-	}
-	
 	private boolean isGlobalChanged() {
 		for (String s : this.mMap.keySet()) {
 			for (CFGBlock block : this.mMap.get(s).getCfgBlocks()) {
-				if (!block.toString().equals(this.globalBlockState.get(block).toString())) {
+				if (!block.toString().equals(this.globalBlockState.get(block))) {
 					return true;
 				}
 			}
