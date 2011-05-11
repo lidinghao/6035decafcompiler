@@ -207,12 +207,12 @@ public class NaiveLoadAdder {
 		
 		if (name == null) return false;
 		
-		if (name.isGlobal()) return true;
-		
 		if (name.getClass().equals(VarName.class)) {
 			VarName var = (VarName) name;
 			
-			System.out.println("VAR: " + var + " " + var.getBlockId() + "; " + var.isStackParam());
+			if (var.isString()) return false;
+			
+//			System.out.println("VAR: " + var + " " + var.getBlockId() + "; " + var.isStackParam());
 			
 			if (var.isString()) return false;
 			
@@ -221,6 +221,8 @@ public class NaiveLoadAdder {
 				return true;
 			}
 		}
+		
+		if (name.isGlobal()) return true;
 		
 		return false;
 	}

@@ -14,6 +14,7 @@ import decaf.codegen.flatir.LoadStmt;
 import decaf.codegen.flatir.Name;
 import decaf.codegen.flatir.QuadrupletStmt;
 import decaf.codegen.flatir.RegisterName;
+import decaf.codegen.flatir.VarName;
 import decaf.codegen.flattener.ProgramFlattener;
 import decaf.dataflow.cfg.CFGBlock;
 import decaf.dataflow.cfg.MethodIR;
@@ -175,7 +176,14 @@ public class ReachingLoads {
 		if (stmt.getMethodLabel().equals(ProgramFlattener.exceptionHandlerLabel)) return;
 		
 		// Kill all loads!
-		for (int i = 0; i < bFlow.getIn().size(); i++) {
+		for (int i = 0; i < this.globalLoads.get(methodName).size(); i++) {
+			if (this.globalLoads.get(methodName).get(i).getClass().equals(VarName.class)) {
+				VarName var = (VarName) this.globalLoads.get(methodName).get(i);
+				if (var.getBlockId() == -2) {
+					continue;
+				}
+			}
+			
 			if (bFlow.getIn().get(i)) {
 				bFlow.getKill().set(i);
 			}
