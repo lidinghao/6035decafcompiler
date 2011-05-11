@@ -3,6 +3,7 @@ package decaf.dataflow.global;
 import java.util.ArrayList;
 import java.util.List;
 
+import decaf.codegen.flatir.LIRStatement;
 import decaf.codegen.flatir.Name;
 import decaf.codegen.flatir.QuadrupletOp;
 import decaf.codegen.flatir.QuadrupletStmt;
@@ -11,6 +12,9 @@ import decaf.codegen.flatir.VarName;
 public class InductionVariable {
 	private static int StatementId = 0;
 	private LoopQuadrupletStmt lqStmt;
+	private List<LIRStatement> boundCheckStmtForDest;
+	private List<LIRStatement> boundCheckStmtForAdder;
+	private List<LIRStatement> boundCheckStmtForMultiplier;
 	private int blockId;
 	// (familyName, adder, multiplier) make up the triple which
 	// defines the InductionVariable
@@ -75,35 +79,38 @@ public class InductionVariable {
 		this.derivedFrom = derivedFrom;
 	}
 	
-	public void setAdderByAdd(Name a, QuadrupletOp qOp) {
+	public void setAdderByAdd(Name a, QuadrupletOp qOp, List<LIRStatement> boundChecks) {
 		this.adder = new VarName("$srtemp" + Integer.toString(StatementId));
 		((VarName)this.adder).setBlockId(blockId);
+		this.boundCheckStmtForAdder = boundChecks;
 		this.forAdder = new QuadrupletStmt(qOp, this.adder, a, this.derivedFrom.adder);
 		StatementId++;
 	}
 	
-	public void setAdderByMult(Name m) {
+	public void setAdderByMult(Name m, List<LIRStatement> boundChecks) {
 		this.adder = new VarName("$srtemp" + Integer.toString(StatementId));
 		((VarName)this.adder).setBlockId(blockId);
+		this.boundCheckStmtForAdder = boundChecks;
 		this.forAdder = new QuadrupletStmt(QuadrupletOp.MUL, this.adder, m, this.derivedFrom.adder);
 		StatementId++;
 	}
 	
-	public void setMultiplierByMult(Name m) {
+	public void setMultiplierByMult(Name m, List<LIRStatement> boundChecks) {
 		this.multiplier = new VarName("$srtemp" + Integer.toString(StatementId));
 		((VarName)this.multiplier).setBlockId(blockId);
-		this.forMultiplier = new QuadrupletStmt(QuadrupletOp.MUL, this.adder, m, this.derivedFrom.multiplier);
+		this.boundCheckStmtForMultiplier = boundChecks;
+		this.forMultiplier = new QuadrupletStmt(QuadrupletOp.MUL, this.multiplier, m, this.derivedFrom.multiplier);
 		StatementId++;
 	}
 	
 	// i <- i + c where i is a base induction variable
 	// If j has triple (i,a,b), then j <- j + c*b should be generated
 	// This method should only be used for derived induction variables
-	public List<QuadrupletStmt> getInductionStmts() {
+	public List<LIRStatement> getInductionStmts() {
 		VarName temp = new VarName("$srtemp" + Integer.toString(StatementId));
 		StatementId++;
 		temp.setBlockId(blockId);
-		List<QuadrupletStmt> stmts = new ArrayList<QuadrupletStmt>();
+		List<LIRStatement> stmts = new ArrayList<LIRStatement>();
 		InductionVariable familyVar = getFamilyInductionVariable();
 		stmts.add(new QuadrupletStmt(QuadrupletOp.MUL, temp, familyVar.getAdder(), this.multiplier));
 		stmts.add(new QuadrupletStmt(QuadrupletOp.ADD, this.variablePrime, this.variablePrime, temp));
@@ -112,11 +119,11 @@ public class InductionVariable {
 	
 	// If j has triple (i, a, b), the loop preheader should compute j <- a + i*b
 	// This method should only be used for derived induction variables
-	public List<QuadrupletStmt> getLoopPreheaderStmts() {
+	public List<LIRStatement> getLoopPreheaderStmts() {
 		VarName temp = new VarName("$srtemp" + Integer.toString(StatementId));
 		StatementId++;
 		temp.setBlockId(blockId);
-		List<QuadrupletStmt> stmts = new ArrayList<QuadrupletStmt>();
+		List<LIRStatement> stmts = new ArrayList<LIRStatement>();
 		stmts.add(new QuadrupletStmt(QuadrupletOp.MUL, temp, this.familyName, this.multiplier));
 		stmts.add(new QuadrupletStmt(QuadrupletOp.ADD, this.variablePrime, this.adder, temp));
 		return stmts;
@@ -124,7 +131,16 @@ public class InductionVariable {
 	
 	// Returns the assignment of j <- j'
 	// This method should only be used for derived induction variables
-	public QuadrupletStmt getInductionAssignmentStmt() {
+	public List<LIRStatement> getInductionAssignmentStmt() {
+		List<LIRStatement> stmts = new ArrayList<LIRStatement>();
+		if (boundCheckStmtForDest != null) {
+			stmts.addAll(boundCheckStmtForDest);
+		}
+		stmts.add(getInductionAssignmentStmtWithoutBound());
+		return stmts;
+	}
+	
+	public LIRStatement getInductionAssignmentStmtWithoutBound() {
 		return new QuadrupletStmt(QuadrupletOp.MOVE, this.variable, this.variablePrime, null);
 	}
 	
@@ -157,18 +173,29 @@ public class InductionVariable {
 
 	public void setBlockId(int blockId) {
 		this.blockId = blockId;
+		((VarName)this.variablePrime).setBlockId(blockId);
 	}
 	
-	public QuadrupletStmt getForAdder() {
-		return forAdder;
+	public List<LIRStatement> getForAdder() {
+		List<LIRStatement> stmts = new ArrayList<LIRStatement>();
+		if (boundCheckStmtForAdder != null) {
+			stmts.addAll(boundCheckStmtForAdder);
+		}
+		stmts.add(forAdder);
+		return stmts;
 	}
 
 	public void setForAdder(QuadrupletStmt forAdder) {
 		this.forAdder = forAdder;
 	}
 
-	public QuadrupletStmt getForMultiplier() {
-		return forMultiplier;
+	public List<LIRStatement> getForMultiplier() {
+		List<LIRStatement> stmts = new ArrayList<LIRStatement>();
+		if (boundCheckStmtForMultiplier != null) {
+			stmts.addAll(boundCheckStmtForMultiplier);
+		}
+		stmts.add(forMultiplier);
+		return stmts;
 	}
 
 	public void setForMultiplier(QuadrupletStmt forMultiplier) {
@@ -181,6 +208,14 @@ public class InductionVariable {
 
 	public void setVariablePrime(Name variablePrime) {
 		this.variablePrime = variablePrime;
+	}
+
+	public List<LIRStatement> getBoundCheckStmtForDest() {
+		return boundCheckStmtForDest;
+	}
+
+	public void setBoundCheckStmtForDest(List<LIRStatement> boundCheckStmtForDest) {
+		this.boundCheckStmtForDest = boundCheckStmtForDest;
 	}
 	
 	@Override
