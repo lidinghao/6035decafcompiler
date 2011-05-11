@@ -1,6 +1,7 @@
 package decaf.parallel;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.BitSet;
 import java.util.HashMap;
 import java.util.List;
@@ -46,31 +47,53 @@ public class ArrayIndexResolver {
 		}
 		
 		BitSet reachingDefs = reachingDefForStmts.get(stmt);
+		List<Name> newLoopVars = null;
 		if (loopVars == null) {
 			loopVars = loopVariablesForStmt(stmt);
 		} else {
-			// Ensure loopVars are the same, if not, return null
-			List<Name> newLoopVars = loopVariablesForStmt(stmt);
+			// If new Loop vars is empty, return null
+			newLoopVars = loopVariablesForStmt(stmt);
+			if (newLoopVars.size() == 0) {
+				return null;
+			}
+			// Ensure that the loop variables we are looking at are the same
 			if (newLoopVars.size() == loopVars.size()) {
 				for (int i = 0; i < newLoopVars.size(); i++) {
 					if (newLoopVars.get(i) != loopVars.get(i)) {
 						return null;
 					}
 				}
-			} else {
-				return null;
 			}
 		}
 		
-		// If the index is a loop var, trivial case
+		// Initialize coeffs
 		Integer[] coeffs = new Integer[loopVars.size()+1];
+		for (int i = 0; i < coeffs.length; i++) {
+			coeffs[i] = 0;
+		}
+		// If the index is a constant, trivial case
+		if (index.getClass().equals(ConstantName.class)) {
+			coeffs[coeffs.length-1] = Integer.parseInt(((ConstantName)index).getValue());
+			return coeffs;
+		}
+
+		// If the index is a loop var, trivial case
 		if (loopVars.contains(index)) {
-			int indexOfLoopVar = loopVars.indexOf(index);
+			int indexOfLoopVar;
+			if (newLoopVars != null) {
+				indexOfLoopVar = newLoopVars.indexOf(index);
+			} else {
+				indexOfLoopVar = loopVars.indexOf(index);
+			}
 			coeffs[indexOfLoopVar] = 1;
 			return coeffs;
 		}
 		
 		List<QuadrupletStmt> defsForIndex = nameToQStmts.get(index);
+		if (defsForIndex == null) {
+			// No definitions for index... probably a global
+			return null;
+		}
 		QuadrupletStmt reachingDef = null;
 		// If more than one reaching def for index, return null
 		int numReachingDefs = 0;
@@ -88,7 +111,8 @@ public class ArrayIndexResolver {
 		if (reachingDef.getOperator() != QuadrupletOp.ADD && 
 				reachingDef.getOperator() != QuadrupletOp.MUL && 
 				reachingDef.getOperator() != QuadrupletOp.SUB &&
-				reachingDef.getOperator() != QuadrupletOp.MINUS) {
+				reachingDef.getOperator() != QuadrupletOp.MINUS &&
+				reachingDef.getOperator() != QuadrupletOp.MOVE) {
 			return null;
 		}
 		
@@ -157,6 +181,7 @@ public class ArrayIndexResolver {
 				if (arg2Coeffs == null) {
 					return null;
 				}
+
 				if (reachingDef.getOperator() == QuadrupletOp.ADD) {
 					arg2Coeffs[loopVars.size()] += arg1Val;
 					return arg2Coeffs;
@@ -180,6 +205,9 @@ public class ArrayIndexResolver {
 		}
 		if (arg2 != null) {
 			Integer[] arg2Coeffs = resolveIndex(reachingDef, arg2, loopVars);
+			if (arg2Coeffs == null) {
+				return null;
+			}
 			if (reachingDef.getOperator() == QuadrupletOp.ADD) {
 				for (int i = 0; i < loopVars.size()+1; i++) {
 					arg1Coeffs[i] += arg2Coeffs[i];
