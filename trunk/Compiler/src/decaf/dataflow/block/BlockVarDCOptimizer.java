@@ -43,8 +43,16 @@ public class BlockVarDCOptimizer {
 	private void optimize(CFGBlock block) {
 		List<LIRStatement> newStmts = new ArrayList<LIRStatement>();
 		
+		optimizeBlock(block, newStmts);
+		
+		block.setStatements(newStmts);
+	}
+
+	private void optimizeBlock(CFGBlock block, List<LIRStatement> newStmts) {
 		for (LIRStatement stmt: block.getStatements()) {
 			newStmts.add(stmt);
+			
+			System.out.println("START: " + stmt + "  ==>  " + this.lastDefUsed);
 			
 			if (stmt.getClass().equals(QuadrupletStmt.class)) {
 				QuadrupletStmt qStmt = (QuadrupletStmt) stmt;
@@ -58,7 +66,8 @@ public class BlockVarDCOptimizer {
 				}
 				
 				if (this.definitionMap.containsKey(qStmt.getDestination())) {
-					if (this.lastDefUsed.get(qStmt.getDestination()) == false) {
+					if (this.lastDefUsed.get(qStmt.getDestination()) == false ||
+							!this.lastDefUsed.containsKey(qStmt.getDestination())) {
 						// Last definition was not used (Registers assignments will not be removed as they're for calls)
 						if (!qStmt.getDestination().getClass().equals(RegisterName.class)) {
 							newStmts.remove(this.definitionMap.get(qStmt.getDestination()));
@@ -99,9 +108,9 @@ public class BlockVarDCOptimizer {
 					markUsed(pStmt.getName());
 				}
 			}
+			
+			System.out.println("END: " + stmt + "  ==>  " + this.lastDefUsed);
 		}
-		
-		block.setStatements(newStmts);
 	}
 	
 	private void markUsed(Name name) {
