@@ -1,6 +1,7 @@
 package decaf.parallel;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -50,7 +51,6 @@ public class ArrayIndexResolverTest {
 		CmpStmt cStmt;
 		PopStmt popStmt;
 		PushStmt pushStmt;
-		Name dest = null, arg1 = null, arg2 = null;
 		Integer[] res;
 		
 		String[] loopInfo = loopId.split("\\.");
@@ -58,6 +58,8 @@ public class ArrayIndexResolverTest {
 		
 		for (int i = forBodyLabelIndex + 1; i < forEndLabelIndex; i++) {
 			LIRStatement stmt = methodStmts.get(i);
+			Name dest = null, arg1 = null, arg2 = null;
+			
 			if (stmt.getClass().equals(QuadrupletStmt.class)) {
 				qStmt = (QuadrupletStmt)stmt;
 				dest = qStmt.getDestination();
@@ -83,6 +85,11 @@ public class ArrayIndexResolverTest {
 				if (dest.isArray()) {
 					Name index = ((ArrayName)dest).getIndex();
 					res = arrIndexResolver.resolveIndex(stmt, index, null);
+					System.out.println("##############");
+					System.out.println("Loop vars for stmt: " + stmt);
+					System.out.println(arrIndexResolver.loopVariablesForStmt(stmt));
+					System.out.println("Index resolve for stmt: " + stmt + ", for index " + index);
+					System.out.println(Arrays.toString(res));
 					if (res == null) {
 						return false;
 					}
@@ -93,6 +100,11 @@ public class ArrayIndexResolverTest {
 				if (arg1.isArray()) {
 					Name index = ((ArrayName)arg1).getIndex();
 					res = arrIndexResolver.resolveIndex(stmt, index, null);
+					System.out.println("##############");
+					System.out.println("Loop vars for stmt: " + stmt);
+					System.out.println(arrIndexResolver.loopVariablesForStmt(stmt));
+					System.out.println("Index resolve for stmt: " + stmt + ", for index " + index);
+					System.out.println(Arrays.toString(res));
 					if (res == null) {
 						return false;
 					}
@@ -103,6 +115,11 @@ public class ArrayIndexResolverTest {
 				if (arg2.isArray()) {
 					Name index = ((ArrayName)arg2).getIndex();
 					res = arrIndexResolver.resolveIndex(stmt, index, null);
+					System.out.println("##############");
+					System.out.println("Loop vars for stmt: " + stmt);
+					System.out.println(arrIndexResolver.loopVariablesForStmt(stmt));
+					System.out.println("Index resolve for stmt: " + stmt + ", for index " + index);
+					System.out.println(Arrays.toString(res));
 					if (res == null) {
 						return false;
 					}
