@@ -51,6 +51,9 @@ public class WebSplitter {
 		// Identify program point with > N webs (in split list)
 		if (!identifyProgramPoint()) {
 			System.out.println("ERROR: PROGRAM POINT SEARCH FAILED!");
+			for (LIRStatement s: this.mMap.get(this.currentMethod).getStatements()) {
+				System.out.println(s);
+			}
 			System.exit(-1);
 			return;
 		}
@@ -751,6 +754,10 @@ public class WebSplitter {
 	private List<Web> doDefsReach(LIRStatement stmt, List<Web> potentialLiveWebs) {
 		List<LIRStatement> defs = this.reachingDefinitions.getUniqueDefinitions().get(this.currentMethod);
 		
+		System.out.println("GLOBAK DEFS: " + defs);
+		System.out.println("CHECKING FOR DEF REACH AT: " + stmt + " WITH DEF OUT: " + stmt.getReachingDefInSet());
+		System.out.println("POTENTIAL WEBS: " + potentialLiveWebs);
+		
 		List<Web> temp = new ArrayList<Web>();
 
 		for (Web w: potentialLiveWebs) {
@@ -769,15 +776,24 @@ public class WebSplitter {
 			}
 		}
 		
+		System.out.println("DEFS FOUND: " + temp + "\n");
+		
 		return temp;
 	}
 
 	private List<Web> findLiveWebs(LIRStatement stmt, LIRStatement next) {
 		List<Name> globalVars = this.livenessAnalysis.getUniqueVariables().get(this.currentMethod);
 		
+		if (next != null) {
+			stmt = next;
+		}
+		
 		BitSet liveVars = new BitSet(globalVars.size());
 		liveVars.clear();
 		liveVars.or(stmt.getLiveInSet());
+		
+		System.out.println("GLOBAL VARS: " + globalVars);
+		System.out.println("CHECKING FOR POTENTIAL LIVE AT: " + stmt + " WITH LIVE IN: " + stmt.getLiveInSet());
 		
 		List<Web> temp = new ArrayList<Web>();
 		
@@ -791,6 +807,8 @@ public class WebSplitter {
 				}
 			}
 		}
+		
+		System.out.println("POTENTIALS FOUND: " + temp + "\n");
 		
 		return temp;
 	}
