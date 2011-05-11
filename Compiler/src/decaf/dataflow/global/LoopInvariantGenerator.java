@@ -29,7 +29,7 @@ public class LoopInvariantGenerator {
 	// Map from QuadrupletStmt id to LoopQuadrupletStmt
 	private HashSet<LoopQuadrupletStmt> loopInvariantStmts;
 	// Map from QuadrupletStmt to BitSet representing all the QuadrupletStmt IDs which reach that point
-	private HashMap<QuadrupletStmt, BitSet> reachingDefForQStmts;
+	private HashMap<LIRStatement, BitSet> reachingDefForStmts;
 	// Map from loop body id to a HashSet of all the LoopQuadrupletStmts in that loop body
 	private HashMap<String, HashSet<LoopQuadrupletStmt>> allLoopBodyQStmts;
 	private HashMap<String, List<LoopQuadrupletStmt>> loopBodyQStmtsList;
@@ -55,7 +55,7 @@ public class LoopInvariantGenerator {
 	public void generateLoopInvariants() {
 		// Generates the Map of QStmt -> BitSet representing all the QStmts IDs which reach at that point
 		gcp.generateReachingDefsForQStmts();
-		reachingDefForQStmts = gcp.getReachingDefForQStmts();
+		reachingDefForStmts = gcp.getReachingDefForStmts();
 		generateLoopBodyQuadrupletStmts();
 		// Keep loop until no more loop invariants are added
 		int numLoopInvariants;
@@ -130,7 +130,7 @@ public class LoopInvariantGenerator {
 		System.out.println("processing " + loopQStmt.getqStmt());
 		QuadrupletStmt qStmt = loopQStmt.getqStmt();
 		HashSet<QuadrupletStmt> loopQStmts = getQuadrupletStmtsInLoopBody(loopQStmt.getLoopBodyBlockId());
-		BitSet reachingDefForQStmt = reachingDefForQStmts.get(qStmt);
+		BitSet reachingDefForQStmt = reachingDefForStmts.get(qStmt);
 		Name arg1 = qStmt.getArg1();
 		Name arg2 = qStmt.getArg2();
 		// If the dest is array name, check its index argument
@@ -254,13 +254,13 @@ public class LoopInvariantGenerator {
 		this.allLoopBodyQStmts = allLoopBodyQStmts;
 	}
 	
-	public HashMap<QuadrupletStmt, BitSet> getReachingDefForQStmts() {
-		return reachingDefForQStmts;
+	public HashMap<LIRStatement, BitSet> getReachingDefForStmts() {
+		return reachingDefForStmts;
 	}
 
-	public void setReachingDefForQStmts(
-			HashMap<QuadrupletStmt, BitSet> reachingDefForQStmts) {
-		this.reachingDefForQStmts = reachingDefForQStmts;
+	public void setReachingDefForStmts(
+			HashMap<LIRStatement, BitSet> reachingDefForQStmts) {
+		this.reachingDefForStmts = reachingDefForQStmts;
 	}
 
 	public GlobalConstantPropagationOptimizer getGcp() {

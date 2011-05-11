@@ -81,21 +81,21 @@ public class LoopStrengthReductionOptimizer {
 						canAdd.add(derivedIVar);
 					}
 				}
-				List<QuadrupletStmt> derivedIVarStmtsAfterBasic = new ArrayList<QuadrupletStmt>();
-				List<QuadrupletStmt> derivedIVarStmtsBeforeTest = new ArrayList<QuadrupletStmt>();
+				List<LIRStatement> derivedIVarStmtsAfterBasic = new ArrayList<LIRStatement>();
+				List<LIRStatement> derivedIVarStmtsBeforeTest = new ArrayList<LIRStatement>();
 				while (!canAdd.isEmpty()) {
 					InductionVariable iVar = canAdd.get(0);
 					// Add for adder, for multipler statements
 					if (iVar.getForAdder() != null) {
-						derivedIVarStmtsAfterBasic.add(iVar.getForAdder());
+						derivedIVarStmtsAfterBasic.addAll(iVar.getForAdder());
 					}
 					if (iVar.getForMultiplier() != null) {
-						derivedIVarStmtsAfterBasic.add(iVar.getForMultiplier());
+						derivedIVarStmtsAfterBasic.addAll(iVar.getForMultiplier());
 					}
 					// Add derived induction variable increment statements
 					derivedIVarStmtsAfterBasic.addAll(iVar.getInductionStmts());
 					// Add assignment statement, j <- j'
-					derivedIVarStmtsAfterBasic.add(iVar.getInductionAssignmentStmt());
+					derivedIVarStmtsAfterBasic.addAll(iVar.getInductionAssignmentStmt());
 					// Add pre-test initialization statement
 					derivedIVarStmtsBeforeTest.addAll(iVar.getLoopPreheaderStmts());
 					// Add derived variables which derive from the newly added induction variable
@@ -105,6 +105,7 @@ public class LoopStrengthReductionOptimizer {
 						}
 					}
 					canAdd.remove(iVar);
+					methodStmts.remove(iVar.getLqStmt().getqStmt());
 				}
 				// Add derived statements to method statement at the appropriate locations
 				// Get the stmt index for the test label of the for loop
@@ -117,11 +118,10 @@ public class LoopStrengthReductionOptimizer {
 			}
 			// Find the index of the for body label and add the i <- i' statements afterwards
 			int bodyLabelIndex = getForLabelStmtIndexInMethod(loopId, ForBodyLabelRegex);
-			List<QuadrupletStmt> inductAssignStmts = new ArrayList<QuadrupletStmt>();
+			List<LIRStatement> inductAssignStmts = new ArrayList<LIRStatement>();
 			for (InductionVariable i : loopIVars) {
-				if (!i.isDerived()) {
-					inductAssignStmts.add(i.getInductionAssignmentStmt());
-					System.out.println("iv for assignment after body: " + i);
+				if (i.isDerived()) {
+					inductAssignStmts.add(i.getInductionAssignmentStmtWithoutBound());
 				}
 			}
 			methodStmts.addAll(bodyLabelIndex+1, inductAssignStmts);
