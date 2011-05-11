@@ -3,15 +3,12 @@ package decaf.optimize;
 import java.util.ArrayList;
 import java.util.List;
 
-import decaf.codegen.flatir.CallStmt;
 import decaf.codegen.flatir.CmpStmt;
 import decaf.codegen.flatir.ConstantName;
 import decaf.codegen.flatir.JumpCondOp;
 import decaf.codegen.flatir.JumpStmt;
 import decaf.codegen.flatir.LIRStatement;
 import decaf.codegen.flatir.LabelStmt;
-import decaf.codegen.flatir.QuadrupletStmt;
-import decaf.codegen.flatir.VarName;
 import decaf.codegen.flattener.ProgramFlattener;
 import decaf.dataflow.cfg.CFGBlock;
 import decaf.dataflow.cfg.CFGBuilder;
@@ -175,10 +172,8 @@ public class StaticJumpEvaluator {
 	private void removeArrayCheckLeftOvers(String methodName) {
 		List<LIRStatement> newStmts = new ArrayList<LIRStatement>();
 		
-		boolean inArrayCheck = false;
 		boolean add = true;
 		boolean removeArrayLabels = false;
-		boolean skipJunk = false;
 		
 		for (int i = 0; i < this.pf.getLirMap().get(methodName).size(); i++) {
 			LIRStatement stmt = this.pf.getLirMap().get(methodName).get(i);
@@ -188,8 +183,6 @@ public class StaticJumpEvaluator {
 				
 				if (lStmt.getLabelString().matches(ArrayBeginLabelRegex)) {
 					LIRStatement next = this.pf.getLirMap().get(methodName).get(i+1);
-					
-					inArrayCheck = true;
 					
 					if (next.getClass().equals(JumpStmt.class)) {
 						JumpStmt jStmt = (JumpStmt) next;
@@ -206,8 +199,6 @@ public class StaticJumpEvaluator {
 					}
 				}
 				else if (lStmt.getLabelString().matches(ArrayPassLabelRegex)) {
-					inArrayCheck = false;
-					
 					if (!add) {
 						add = true;
 						continue;
@@ -223,31 +214,6 @@ public class StaticJumpEvaluator {
 				}
 				
 			}
-			
-			
-			// HACK to get rid of some repeated shit
-			if (stmt.getClass().equals(QuadrupletStmt.class)) {
-				QuadrupletStmt qStmt = (QuadrupletStmt) stmt;
-				if (qStmt.getArg1().getClass().equals(VarName.class)) {
-					VarName var = (VarName) qStmt.getArg1();
-					
-					if (var.isString() && ProgramFlattener.arrayExceptionErrorLabel.equals(var.getId())) {
-						if (!inArrayCheck) skipJunk = true;
-					}
-				}
-			}
-			
-			if (stmt.getClass().equals(CallStmt.class)) {
-				CallStmt cStmt = (CallStmt) stmt;
-				if (cStmt.getMethodLabel().equals(ProgramFlattener.exceptionHandlerLabel)) {
-					if (skipJunk) {
-						skipJunk = false;
-						continue;
-					}
-				}
-			}
-			
-			if (skipJunk) continue;
 			
 			if (add) {
 				newStmts.add(stmt);
