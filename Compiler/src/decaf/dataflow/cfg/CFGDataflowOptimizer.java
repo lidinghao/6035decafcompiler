@@ -9,6 +9,7 @@ import decaf.dataflow.global.GlobalOptimizer;
 public class CFGDataflowOptimizer {
 	private HashMap<String, MethodIR> mMap;
 	private HashMap<CFGBlock, String> blockState;
+	private HashMap<CFGBlock, String> globalBlockState;
 	private BlockOptimizer bo;
 	private ProgramFlattener pf;
 	private GlobalOptimizer go;
@@ -28,14 +29,33 @@ public class CFGDataflowOptimizer {
 		int i = 0;
 		while (i < 100) {
 			updateBlockState();
+			this.globalBlockState = (HashMap<CFGBlock, String>)this.blockState.clone();
 			
-			bo.optimizeBlocks(opts);
-			go.optimizeBlocks(opts);
+			int j = 0;
+			while (j < 100) {
+				updateBlockState();
+				bo.optimizeBlocks(opts);
+				if (!isLocalChanged()) {
+					break;
+				}
+				j++;
+			}
 			
-			System.out.println("PASS " + i);
+			int k = 0;
+			while (k < 100) {
+				updateBlockState();
+				go.optimizeBlocks(opts);
+				if (!isLocalChanged()) {
+					break;
+				}
+				k++;
+			}
+			
+			
+			System.out.println("GLOBAL PASS " + i);
 			pf.printLIR(System.out);
 			
-			if (!isChanged()) {
+			if (!isGlobalChanged()) {
 				break;
 			}
 			i++;
@@ -50,10 +70,21 @@ public class CFGDataflowOptimizer {
 		}
 	}
 	
-	private boolean isChanged() {
+	private boolean isLocalChanged() {
 		for (String s : this.mMap.keySet()) {
 			for (CFGBlock block : this.mMap.get(s).getCfgBlocks()) {
 				if (!block.toString().equals(this.blockState.get(block).toString())) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	
+	private boolean isGlobalChanged() {
+		for (String s : this.mMap.keySet()) {
+			for (CFGBlock block : this.mMap.get(s).getCfgBlocks()) {
+				if (!block.toString().equals(this.globalBlockState.get(block).toString())) {
 					return true;
 				}
 			}
