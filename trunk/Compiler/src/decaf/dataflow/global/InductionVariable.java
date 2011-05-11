@@ -190,7 +190,7 @@ public class InductionVariable {
 	
 	@Override
 	public String toString() {
-		return lqStmt.toString() + ", derived from: [" + derivedFrom.toString() + 
+		return lqStmt.toString() + ", derived from: [" + derivedFrom + 
 		"], family name: " + familyName.toString();
 	}
 }

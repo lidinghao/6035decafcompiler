@@ -53,12 +53,12 @@ public class PostDataFlowOptimizer {
 			sje.staticEvaluateJumps();
 			this.mMap = MethodIR.generateMethodIRs(pf, cb);
 			
-			System.out.println("BEFORE LOOP STRENGTH REDUCTION");
-			this.cb.printCFG(System.out);
-			
-			this.loopStrRed = new LoopStrengthReductionOptimizer(this.mMap);
-			loopStrRed.performStrengthReductionOptimization();
-			cb.generateCFGs();
+//			System.out.println("BEFORE LOOP STRENGTH REDUCTION");
+//			this.cb.printCFG(System.out);
+//			
+//			this.loopStrRed = new LoopStrengthReductionOptimizer(this.mMap);
+//			loopStrRed.performStrengthReductionOptimization();
+//			cb.generateCFGs();
 			
 			System.out.println("BEFORE LOOP INVARIANTS");
 			this.cb.printCFG(System.out);
