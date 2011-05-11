@@ -73,7 +73,7 @@ public class WebGenerator {
 		unionWebs();
 		removeRedundantWebs();
 		indexWebs(); // Don't use this to generate interference graph
-		removeDeadCodedInstructions();
+		//removeDeadCodedInstructions();
 	}
 
 	private void removeDeadCodedInstructions() {		
@@ -547,7 +547,11 @@ public class WebGenerator {
 			
 			for (Web w: this.nameToWebs.get(name)) {
 				//System.out.println("TRY: "+ name+ " with " + w.getVariable());
-				if (this.namesDeadAtOutStmt.contains(name)) continue;
+				if (this.namesDeadAtOutStmt.contains(web.getVariable())
+						|| this.namesDeadAtOutStmt.contains(name)) continue;
+				
+//				System.out.println("SKIP AT: " + stmt + " ==> " + this.namesDeadAtOutStmt);
+//				System.out.println("ADDING: " + web.getIdentifier() + " TO " + w.getIdentifier());
 				
 				//System.out.println("INTERFERING: "+ name+ " with " + w.getVariable());
 				//System.out.println("***************");

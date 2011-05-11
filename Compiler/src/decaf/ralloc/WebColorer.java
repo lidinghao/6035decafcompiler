@@ -44,7 +44,7 @@ public class WebColorer {
 			
 			// Make graph colorable (if not already)
 			int i = 0;
-			while (true) {
+			while (i < 4) {
 				this.webGen.generateWebs();
 				
 				for (LIRStatement stmt : this.mMap.get(methodName).getStatements()) {
@@ -179,7 +179,6 @@ public class WebColorer {
 	private boolean tryColoring(String methodName) {
 		System.out.println("COLORING...");
 		this.coloringStack.put(methodName, new Stack<Web>());
-		this.splitList.clear();
 		makeGraph(methodName);
 		
 		preColorGraph(methodName);
@@ -208,7 +207,8 @@ public class WebColorer {
 				if (this.graph.isEmpty()) { // Graph empty, done coloring
 					return true;
 				}
-				
+								
+				this.splitList.clear();
 				this.splitList.addAll(this.graph); // Split one of the nodes left in graph
 				
 				System.out.println("COLORING FAILED!");
@@ -218,6 +218,14 @@ public class WebColorer {
 		}
 	}
 	
+	public WebGenerator getWebGen() {
+		return webGen;
+	}
+
+	public void setWebGen(WebGenerator webGen) {
+		this.webGen = webGen;
+	}
+
 	private void preColorGraph(String methodName) {
 		for (Web w: this.graph) {
 			for (LIRStatement def: w.getDefinitions()) {
@@ -274,7 +282,7 @@ public class WebColorer {
 	private void makeGraph(String methodName) {
 		this.graph.clear();
 		
-		List<Web> notAdded = new ArrayList<Web>();
+//		List<Web> notAdded = new ArrayList<Web>();
 		
 		for (Web w: this.webGen.getWebMap().get(methodName)) {
 			if (w.getDefinitions().size() == 1) {
@@ -295,11 +303,11 @@ public class WebColorer {
 		}
 		
 		// Remove edges for webs not added
-		for (Web web: this.graph) {
-			for (Web w: notAdded) {
-				web.removeInterferingWeb(w);
-			}
-		}
+//		for (Web web: this.graph) {
+//			for (Web w: notAdded) {
+//				web.removeInterferingWeb(w);
+//			}
+//		}
 	}
 
 	private void saveAdjacencyList(Web w) {
