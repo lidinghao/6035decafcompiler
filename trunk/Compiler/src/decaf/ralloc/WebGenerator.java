@@ -73,7 +73,7 @@ public class WebGenerator {
 		unionWebs();
 		removeRedundantWebs();
 		indexWebs(); // Don't use this to generate interference graph
-		//removeDeadCodedInstructions();
+		removeDeadCodedInstructions();
 	}
 
 	private void removeDeadCodedInstructions() {		
@@ -472,28 +472,14 @@ public class WebGenerator {
 			}
 			// Binary
 			else {
-				// Divide/Mod is a bitch, no idea how to handle at this point
-				if (qStmt.getOperator() != QuadrupletOp.DIV && qStmt.getOperator() != QuadrupletOp.MOD) {
-					if (this.namesDeadAtOutStmt.contains(qStmt.getArg1())) {
+				if (this.namesDeadAtOutStmt.contains(qStmt.getArg1())) {
 						//this.nameToWebs.remove(qStmt.getArg1()); // If last use of arg1, reuse reg
 						temp.add(qStmt.getArg1());
-					}
-					
-					if (qStmt.getOperator() == QuadrupletOp.ADD || qStmt.getOperator() == QuadrupletOp.MUL) {
-						if (this.namesDeadAtOutStmt.contains(qStmt.getArg2())) {
-//							//this.nameToWebs.remove(qStmt.getArg2()); // If last use of arg2, then switch with arg1 and reuse reg
-//							temp.add(qStmt.getArg2());
-//							Name arg1 = qStmt.getArg1();
-//							qStmt.setArg1(qStmt.getArg2());
-//							qStmt.setArg2(arg1);
-						}
-					}
-					// For conditionals can reuse either
-					else if (qStmt.getOperator() != QuadrupletOp.MOVE) {
-						if (this.namesDeadAtOutStmt.contains(qStmt.getArg2())) {
-							//this.nameToWebs.remove(qStmt.getArg2());
-							temp.add(qStmt.getArg2());
-						}
+				}
+				if (qStmt.getOperator() != QuadrupletOp.MOVE) { // Can ALWAYS do arg2s
+					if (this.namesDeadAtOutStmt.contains(qStmt.getArg2())) {
+						//this.nameToWebs.remove(qStmt.getArg2());
+						temp.add(qStmt.getArg2());
 					}
 				}
 			}
