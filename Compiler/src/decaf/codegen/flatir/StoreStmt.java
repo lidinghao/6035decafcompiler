@@ -36,7 +36,7 @@ public class StoreStmt extends LIRStatement {
 	@Override
 	public boolean equals(Object o) {
 		if (o == null) return false;
-		if (!o.getClass().equals(LoadStmt.class)) return false;
+		if (!o.getClass().equals(StoreStmt.class)) return false;
 		
 		StoreStmt stmt = (StoreStmt) o;
 		if (!this.variable.equals(stmt.variable)) {
