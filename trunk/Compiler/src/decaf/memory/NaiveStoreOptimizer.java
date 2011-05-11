@@ -126,7 +126,8 @@ public class NaiveStoreOptimizer {
 //			}
 //			System.out.println("END TRY: " + sStmt + "\n\n");
 			
-			if (isGlobalDefStateConsistent(methodName)) {
+			if (isGlobalDefStateConsistent(methodName) &&
+					prev.getIndex() != next.getIndex()) {
 				depth = next.getStatements().get(0).getDepth();
 				sStmt.setDepth(depth);
 				prev = next;

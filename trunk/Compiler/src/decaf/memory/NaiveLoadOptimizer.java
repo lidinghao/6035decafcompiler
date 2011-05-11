@@ -113,10 +113,9 @@ public class NaiveLoadOptimizer {
 							addBC = false;
 						}
 					}
-
-					if (addBC && !load.isBCAdded()) {
+					
+					if (addBC) {
 						block.getStatements().addAll(i, load.getBoundCheck());
-						load.setBCAdded(true);
 					}
 				}
 			}
@@ -153,7 +152,8 @@ public class NaiveLoadOptimizer {
 			
 			df.analyze();
 			
-			if (isGlobalDefStateConsistent(methodName)) {
+			if (isGlobalDefStateConsistent(methodName) &&
+					prev.getIndex() != next.getIndex()) {
 				depth = next.getStatements().get(0).getDepth();
 				lStmt.setDepth(depth);
 				prev = next;
