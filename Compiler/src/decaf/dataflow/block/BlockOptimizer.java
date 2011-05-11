@@ -18,6 +18,14 @@ public class BlockOptimizer {
 		return dcVar;
 	}
 
+	public BlockConsPropagationOptimizer getCons() {
+		return cons;
+	}
+
+	public void setCons(BlockConsPropagationOptimizer cons) {
+		this.cons = cons;
+	}
+
 	public void setDcVar(BlockVarDCOptimizer dcVar) {
 		this.dcVar = dcVar;
 	}
