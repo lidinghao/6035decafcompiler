@@ -94,6 +94,8 @@ public class LoopStrengthReductionOptimizer {
 					}
 					// Add derived induction variable increment statements
 					derivedIVarStmtsAfterBasic.addAll(iVar.getInductionStmts());
+					// Add assignment statement, j <- j'
+					derivedIVarStmtsAfterBasic.add(iVar.getInductionAssignmentStmt());
 					// Add pre-test initialization statement
 					derivedIVarStmtsBeforeTest.addAll(iVar.getLoopPreheaderStmts());
 					// Add derived variables which derive from the newly added induction variable
