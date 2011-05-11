@@ -28,12 +28,12 @@ public class CFGDataflowOptimizer {
 	public void optimizeCFGDataflow() {
 		int i = 0;
 		while (i < 100) {
-			updateBlockState();
-			this.globalBlockState = (HashMap<CFGBlock, String>)this.blockState.clone();
+			updateLocalBlockState();
+			updateGlobalBlockState();
 			
 			int j = 0;
 			while (j < 100) {
-				updateBlockState();
+				updateLocalBlockState();
 				bo.optimizeBlocks(opts);
 				if (!isLocalChanged()) {
 					break;
@@ -43,7 +43,7 @@ public class CFGDataflowOptimizer {
 			
 			int k = 0;
 			while (k < 100) {
-				updateBlockState();
+				updateLocalBlockState();
 				go.optimizeBlocks(opts);
 				if (!isLocalChanged()) {
 					break;
@@ -62,7 +62,15 @@ public class CFGDataflowOptimizer {
 		}
 	}
 	
-	private void updateBlockState() {
+	private void updateLocalBlockState() {
+		for (String s : this.mMap.keySet()) {
+			for (CFGBlock block : this.mMap.get(s).getCfgBlocks()) {
+				this.globalBlockState.put(block, block.toString());
+			}
+		}
+	}
+	
+	private void updateGlobalBlockState() {
 		for (String s : this.mMap.keySet()) {
 			for (CFGBlock block : this.mMap.get(s).getCfgBlocks()) {
 				this.blockState.put(block, block.toString());
