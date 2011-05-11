@@ -70,11 +70,6 @@ public class WebColorer {
 				
 				splitWebs(methodName);
 				dc.dcLoadStores();
-				
-				System.out.println("After Load shit");
-				for (CFGBlock b: this.mMap.get(methodName).getCfgBlocks()) {
-					System.out.println(b);
-				}
 //				break;
 				i++;
 			}
@@ -190,7 +185,7 @@ public class WebColorer {
 		this.coloringStack.put(methodName, new Stack<Web>());
 		makeGraph(methodName);
 		
-		preColorGraph(methodName);
+		//preColorGraph(methodName);
 		
 		while (true) {
 			Web webToRemove = null;

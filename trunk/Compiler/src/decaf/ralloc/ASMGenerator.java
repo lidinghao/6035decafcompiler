@@ -153,7 +153,7 @@ public class ASMGenerator {
 			if (var.isArray()) {
 				ArrayName arr = (ArrayName) var;
 
-				to = arr.getId() + "(, " + arr.getIndex().getRegister() + ", 8)";
+				to = arr.getId() + "(, " + arr.getIndex().getRegister() + ", 8)"; // TODO: CAN FUCK UP?
 			} else {
 				VarName myVar = (VarName) var;
 				if (myVar.isString()) {
