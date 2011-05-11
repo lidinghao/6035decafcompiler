@@ -8,6 +8,7 @@ class Program {
   	for i = 0, 10 {
   		if (c) {
   			A[z] = z + 7;
+  			// store A[z]
   		}
   		else {
   			A[4] = 90;
