@@ -22,6 +22,7 @@ public class CFGDataflowOptimizer {
 		this.go = go;
 		this.pf = pf;
 		this.blockState = new HashMap<CFGBlock, String>();
+		this.globalBlockState = new HashMap<CFGBlock, String>();
 		this.opts = opts;
 	}
 	
