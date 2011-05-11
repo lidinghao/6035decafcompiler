@@ -71,20 +71,22 @@ public class BoundCheckCSEOptimizer {
 				LabelStmt lStmt = (LabelStmt) stmt;
 				if (lStmt.getLabelString().matches(ArrayBeginLabelRegex)) {
 					// Peek to check if already cmp done
-					CmpStmt cStmt = (CmpStmt) block.getStatements().get(i + 1);
-					BoundCheckDef bcDef = this.bc.new BoundCheckDef(getArrayIDFromArrayLabelStmt(lStmt, "begin"), cStmt.getArg1());
-					int index = this.bc.getUniqueIndices().get(block.getMethodName()).indexOf(bcDef);
-					
-					boolean inInSet = false;
-					if (index >= 0) { // In case haven't DC bound checks
-						inInSet = this.bc.getCfgBlocksState().get(block).getIn().get(index);
-					}
-					
-					if (inInSet ||	this.bcInBlock.contains(bcDef)) {
-						addStmt = false;
-					}
-					else {
-						this.bcInBlock.add(bcDef);
+					if (block.getStatements().get(i+1).getClass().equals(CmpStmt.class)) {
+						CmpStmt cStmt = (CmpStmt) block.getStatements().get(i + 1);
+						BoundCheckDef bcDef = this.bc.new BoundCheckDef(getArrayIDFromArrayLabelStmt(lStmt, "begin"), cStmt.getArg1());
+						int index = this.bc.getUniqueIndices().get(block.getMethodName()).indexOf(bcDef);
+						
+						boolean inInSet = false;
+						if (index >= 0) { // In case haven't DC bound checks
+							inInSet = this.bc.getCfgBlocksState().get(block).getIn().get(index);
+						}
+						
+						if (inInSet ||	this.bcInBlock.contains(bcDef)) {
+							addStmt = false;
+						}
+						else {
+							this.bcInBlock.add(bcDef);
+						}
 					}
 				}
 				else if (lStmt.getLabelString().matches(ArrayPassLabelRegex)) {
