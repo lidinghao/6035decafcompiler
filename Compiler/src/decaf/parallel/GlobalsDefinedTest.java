@@ -4,34 +4,36 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import decaf.codegen.flatir.CallStmt;
 import decaf.codegen.flatir.LIRStatement;
 import decaf.codegen.flatir.LabelStmt;
+import decaf.codegen.flatir.Name;
+import decaf.codegen.flatir.QuadrupletStmt;
+import decaf.codegen.flatir.VarName;
 import decaf.dataflow.cfg.MethodIR;
 
-// Finds loops which don't make method calls (but callout is okay)
-public class MethodCallsTest {
+// Finds loops in the program which don't assign global variables
+public class GlobalsDefinedTest {
 	HashMap<String, MethodIR> mMap;
 	private static String ForBodyLabelRegex = "[a-zA-z_]\\w*.for\\d+.body";
 	private static String ForEndLabelRegex = "[a-zA-z_]\\w*.for\\d+.end";
 	
-	public MethodCallsTest(HashMap<String, MethodIR> mMap) {
+	public GlobalsDefinedTest(HashMap<String, MethodIR> mMap) {
 		this.mMap = mMap;	
 	}
 	
-	// Returns string of loop ids whose loops don't make method calls (callouts okay)
+	// Returns string of loop ids whose loops don't assign global variables
 	public List<String> getLoopIDsWhichPass() {
 		List<String> uniqueLoopIds = getAllLoopIds();
 		List<String> parallelizableLoops = new ArrayList<String>();
 		for (String loopId : uniqueLoopIds) {
-			if (passesMethodCallsTest(loopId)) {
+			if (passesGlobalsDefinedTest(loopId)) {
 				parallelizableLoops.add(loopId);
 			}
 		}
 		return parallelizableLoops;
 	}
 	
-	public boolean passesMethodCallsTest(String loopId) {
+	public boolean passesGlobalsDefinedTest(String loopId) {
 		int forBodyLabelIndex = getForLabelStmtIndexInMethod(loopId, ForBodyLabelRegex);
 		int forEndLabelIndex = getForLabelStmtIndexInMethod(loopId, ForEndLabelRegex);
 		String[] loopInfo = loopId.split("\\.");
@@ -39,11 +41,13 @@ public class MethodCallsTest {
 		
 		for (int i = forBodyLabelIndex + 1; i < forEndLabelIndex; i++) {
 			LIRStatement stmt = methodStmts.get(i);
-			if (stmt.getClass().equals(CallStmt.class)) {
-				String methodLabel = ((CallStmt)stmt).getMethodLabel();
-				// If methodLabel does not start with '"', it is method call
-				if (!methodLabel.startsWith("\"")) {
-					return false;
+			if (stmt.getClass().equals(QuadrupletStmt.class)) {
+				Name dest = ((QuadrupletStmt)stmt).getDestination();
+				if (dest.getClass().equals(VarName.class)) {
+					int blockId = ((VarName)dest).getBlockId();
+					if (blockId == -1) {
+						return false;
+					}
 				}
 			}
 		}
