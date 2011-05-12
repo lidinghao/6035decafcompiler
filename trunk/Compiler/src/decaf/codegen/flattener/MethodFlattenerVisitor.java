@@ -204,8 +204,9 @@ public class MethodFlattenerVisitor implements ASTVisitor<Integer> {
 		this.totalLocalVars++;
 
 		// Initialization block
-		Name initValue = stmt.getInitialValue().accept(this.exprFlatenner);
 		this.statements.add(new LabelStmt(getForInit()));
+		Name initValue = stmt.getInitialValue().accept(this.exprFlatenner);
+		
 		this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE, loopId,
 				initValue, null));
 
