@@ -35,6 +35,7 @@ public class NamesDefinedTest {
 				parallelizableLoops.add(loopId);
 			}
 		}
+		System.out.println("LOOPS WHICH PASS NAMES DEF TEST: " + parallelizableLoops);
 		return parallelizableLoops;
 	}
 	
@@ -64,6 +65,7 @@ public class NamesDefinedTest {
 		if (stmt.getClass().equals(QuadrupletStmt.class)) {
 			dest = ((QuadrupletStmt)stmt).getDestination();
 			arg1 = ((QuadrupletStmt)stmt).getArg1();
+			arg2 = ((QuadrupletStmt)stmt).getArg2();
 		} else if (stmt.getClass().equals(CmpStmt.class)) {
 			arg1 = ((CmpStmt)stmt).getArg1();
 			arg2 = ((CmpStmt)stmt).getArg2();

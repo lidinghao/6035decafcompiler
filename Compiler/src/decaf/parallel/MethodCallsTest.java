@@ -7,6 +7,7 @@ import java.util.List;
 import decaf.codegen.flatir.CallStmt;
 import decaf.codegen.flatir.LIRStatement;
 import decaf.codegen.flatir.LabelStmt;
+import decaf.codegen.flattener.ProgramFlattener;
 import decaf.dataflow.cfg.MethodIR;
 
 // Finds loops which don't make method calls (but callout is okay)
@@ -28,6 +29,7 @@ public class MethodCallsTest {
 				parallelizableLoops.add(loopId);
 			}
 		}
+		System.out.println("LOOPS WHICH PASS METHOD CALLS TEST: " + parallelizableLoops);
 		return parallelizableLoops;
 	}
 	
@@ -41,6 +43,9 @@ public class MethodCallsTest {
 			LIRStatement stmt = methodStmts.get(i);
 			if (stmt.getClass().equals(CallStmt.class)) {
 				String methodLabel = ((CallStmt)stmt).getMethodLabel();
+				if (methodLabel.equals(ProgramFlattener.exceptionHandlerLabel)) {
+					continue;
+				}
 				// If methodLabel does not start with '"', it is method call
 				if (!methodLabel.startsWith("\"")) {
 					return false;

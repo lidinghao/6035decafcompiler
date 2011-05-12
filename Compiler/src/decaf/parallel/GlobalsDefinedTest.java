@@ -30,6 +30,7 @@ public class GlobalsDefinedTest {
 				parallelizableLoops.add(loopId);
 			}
 		}
+		System.out.println("LOOPS WHICH PASS GLOBAL TEST: " + parallelizableLoops);
 		return parallelizableLoops;
 	}
 	

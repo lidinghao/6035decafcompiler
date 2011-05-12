@@ -37,6 +37,7 @@ public class ArrayIndexResolverTest {
 				parallelizableLoops.add(loopId);
 			}
 		}
+		System.out.println("LOOPS WHICH PASS ARRAY RESOLVER TEST: " + parallelizableLoops);
 		return parallelizableLoops;
 	}
 	
