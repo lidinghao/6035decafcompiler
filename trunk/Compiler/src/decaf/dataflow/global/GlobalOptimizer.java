@@ -9,6 +9,7 @@ public class GlobalOptimizer {
 	private GlobalConstantPropagationOptimizer constant;
 	private GlobalCopyPropagationOptimizer copy;
 	private GlobalDeadCodeOptimizer dc;
+	private GlobalConstProp newConst;
 	private HashMap<String, MethodIR> mMap;
 
 	public GlobalOptimizer(HashMap<String, MethodIR> mMap) {
@@ -25,12 +26,14 @@ public class GlobalOptimizer {
 			copy.performGlobalCopyProp();
 		} 
 		if(opts[3]) { // CONST
-			constant = new GlobalConstantPropagationOptimizer(mMap);
-			constant.performGlobalConstantProp();
+//			constant = new GlobalConstantPropagationOptimizer(mMap);
+//			constant.performGlobalConstantProp();
+			newConst = new GlobalConstProp(mMap);
+			newConst.performConstProp();
 		}
 		if(opts[4]) { // DC
 			dc = new GlobalDeadCodeOptimizer(mMap);
-			dc.performDeadCodeElimination();
+//			dc.performDeadCodeElimination();
 		}
 	}
 	
