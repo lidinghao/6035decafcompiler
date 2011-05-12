@@ -1,5 +1,7 @@
 package decaf.ralloc;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,6 +33,15 @@ public class ASMGenerator {
 	public ASMGenerator(ProgramFlattener pf, WebColorer wc, PrintStream out) {
 		this.pf = pf;
 		this.out = out;
+		this.wc = wc;
+		this.callee = new ArrayList<Register>();
+		this.liveAtCaller = new ArrayList<Name>();
+	}
+	
+	public ASMGenerator(ProgramFlattener pf, WebColorer wc, String filename) throws FileNotFoundException {
+		File f = new File(filename);
+		this.out = new PrintStream(f);
+		this.pf = pf;
 		this.wc = wc;
 		this.callee = new ArrayList<Register>();
 		this.liveAtCaller = new ArrayList<Name>();
