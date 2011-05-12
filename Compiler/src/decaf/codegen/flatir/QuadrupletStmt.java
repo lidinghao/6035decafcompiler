@@ -6,6 +6,7 @@ import decaf.ralloc.ASMGenerator;
 
 public class QuadrupletStmt extends LIRStatement {
 	public boolean USERIGIDHASH = false;
+	public static boolean NOREGS = false;
 	private static int ID = 0;
 	private QuadrupletOp operator;
 	private int myId;
@@ -450,25 +451,17 @@ public class QuadrupletStmt extends LIRStatement {
 
 	private void asmConditionalQuadruplet(PrintStream out, QuadrupletOp op) {
 		// DO CMP
-		if (this.arg1.getMyRegister() == null && this.arg2.getMyRegister() == null) {
-			out.println("\tmov\t" + ASMGenerator.getLocationForName(this.arg2, out, false) + ", " + Register.RCX);
-			out.println("\tcmp\t" + ASMGenerator.getLocationForName(this.arg1, out, false) + ", " + Register.RCX);
-		}
-		else {
-			out.println("\tcmp\t" + ASMGenerator.getLocationForName(this.arg1, out, false) + ", " + ASMGenerator.getLocationForName(this.arg2, out, false));
-		}	
+//		if (this.arg1.getMyRegister() == null && this.arg2.getMyRegister() == null) {
+//			out.println("\tmov\t" + ASMGenerator.getLocationForName(this.arg2, out, false) + ", " + Register.RCX);
+//			out.println("\tcmp\t" + ASMGenerator.getLocationForName(this.arg1, out, false) + ", " + Register.RCX);
+//		}
+//		else {
+//			out.println("\tcmp\t" + ASMGenerator.getLocationForName(this.arg1, out, false) + ", " + ASMGenerator.getLocationForName(this.arg2, out, false));
+//		}	
 		
-		String dest;
-		boolean rcx = false;
-		if (this.dest.getMyRegister() == null) {
-			dest = Register.RCX.toString();
-			rcx = true;
-		}
-		else {
-			dest = this.dest.getRegister();
-		}
+		CmpStmt.genCmp(arg1, arg2, out);
 		
-		out.println("\tmov\t" + "$0" + ", " + dest);
+		out.println("\tmov\t" + "$0" + ", " + Register.RCX);
 		
 		String instr = "\tcmov";
 		switch (op) {
@@ -493,11 +486,9 @@ public class QuadrupletStmt extends LIRStatement {
 		}
 		
 
-		out.println(instr + "$1" + ", " + dest);		
+		out.println(instr + "$1" + ", " + Register.RCX);		
 		
-		if (rcx) { // Store back in rcx
-			out.println("\tmov\t" + Register.RCX + ", " + ASMGenerator.getLocationForName(this.dest, out, false));
-		}
+		out.println("\tmov\t" + Register.RCX + ", " + ASMGenerator.getLocationForName(this.dest, out, false));
 	}
 
 	private void asmMove(Name from, Name dest, PrintStream out) {
@@ -534,6 +525,20 @@ public class QuadrupletStmt extends LIRStatement {
 	}
 
 	private void asmMoveQuadruplet(PrintStream out) {
-		this.asmMove(arg1, dest, out);
+		if (QuadrupletStmt.NOREGS) {
+			if (this.dest.getMyRegister() != null) {
+				out.println("\tmov\t" + ASMGenerator.getLocationForName(this.arg1, out, true) + ", " + ASMGenerator.getLocationForName(this.dest, out, true));
+			}
+			else if (this.arg1.getMyRegister() == null) {
+				out.println("\tmov\t" + ASMGenerator.getLocationForName(this.arg1, out, true) + ", " + Register.RCX);
+				out.println("\tmov\t" + Register.RCX + ", " + ASMGenerator.getLocationForName(this.dest, out, true));
+			}
+			else {
+				out.println("\tmov\t" + ASMGenerator.getLocationForName(this.arg1, out, true) + ", " + ASMGenerator.getLocationForName(this.dest, out, true));
+			}
+		}
+		else {
+			this.asmMove(arg1, dest, out);
+		}
 	}
 }

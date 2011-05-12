@@ -94,27 +94,31 @@ public class CmpStmt extends LIRStatement {
 	@Override
 	public void generateRegAllocAssembly(PrintStream out) {
 		out.println("\t// " + this.toString());
+		genCmp(this.arg1, this.arg2, out);
 		
+		out.println("\t// ");
+	}
+	
+	public static void genCmp(Name a1, Name a2, PrintStream out) {
 		String arg1;
 		String arg2;
 		
-		if (this.arg1.getClass().equals(ConstantName.class) || this.arg1.getRegister() == null) {
-			out.println("\tmov\t" + ASMGenerator.getLocationForName(this.arg1, out, false) + ", " + Register.RCX);
+		if (a1.getClass().equals(ConstantName.class) || a1 == null) {
+			out.println("\tmov\t" + ASMGenerator.getLocationForName(a1, out, false) + ", " + Register.RCX);
 			arg1 = Register.RCX.toString();
 		}
 		else {
-			arg1 = this.arg1.getRegister();
+			arg1 = a1.getRegister();
 		}
 		
-		if (this.arg2.getClass().equals(ConstantName.class) || this.arg2.getRegister() == null) {
-			out.println("\tmov\t" + ASMGenerator.getLocationForName(this.arg2, out, false) + ", " + Register.RAX);
+		if (a2.getClass().equals(ConstantName.class) || a2.getRegister() == null) {
+			out.println("\tmov\t" + ASMGenerator.getLocationForName(a2, out, false) + ", " + Register.RAX);
 			arg2 = Register.RAX.toString();
 		}
 		else {
-			arg2 = this.arg2.getRegister();
+			arg2 = a2.getRegister();
 		}
 		
 		out.println("\tcmp\t" + arg2 + ", " + arg1);
-		out.println("\t// ");
 	}
 }
