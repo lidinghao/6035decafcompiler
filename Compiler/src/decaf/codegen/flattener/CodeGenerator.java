@@ -3,6 +3,7 @@ package decaf.codegen.flattener;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.List;
 
 import decaf.codegen.flatir.DataStmt;
@@ -14,17 +15,24 @@ public class CodeGenerator {
 	private ProgramFlattener pf;
 	private PrintStream out;
 	private ClassDecl cd;
+	private List<String> dataStmtsSeen;
 	
 	public CodeGenerator(ProgramFlattener pf, ClassDecl cd, String filename) throws FileNotFoundException {
 		File f = new File(filename);
 		this.out = new PrintStream(f);
 		this.pf = pf;
 		this.cd = cd;
+		this.dataStmtsSeen = new ArrayList<String>();
 	}
 	
 	public void generateCode() {
 		out.println(".data");
 		for (DataStmt s: pf.getDataStmtList()) {
+			if (this.dataStmtsSeen.contains(s.toString())) {
+				continue;
+			}
+			
+			this.dataStmtsSeen.add(s.toString());
 			s.generateAssembly(out);
 		}
 		
