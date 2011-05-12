@@ -32,6 +32,7 @@ public class LoopParallelizer {
 	private ProgramFlattener pf;
 	private List<String> parallelLoops;
 	private static String ForInitLabelRegex = "[a-zA-z_]\\w*.for\\d+.init";
+	private static String ForTestLabelRegex = "[a-zA-z_]\\w*.for\\d+.test";
 	private static String ForEndLabelRegex = "[a-zA-z_]\\w*.for\\d+.end";
 	private static int NumThreads = 4;
 	private static int BaseBlockId = 1000;
@@ -84,7 +85,7 @@ public class LoopParallelizer {
 		tempLoopMin.setBlockId(BaseBlockId);
 		
 		// Get the loop max boundary, look at cmp statement after the for test label
-		int forTestLabelIndex = getForLabelStmtIndexInMethod(loopId, ForEndLabelRegex);
+		int forTestLabelIndex = getForLabelStmtIndexInMethod(loopId, ForTestLabelRegex);
 		CmpStmt forCmp = (CmpStmt)methodStmts.get(forTestLabelIndex+1);
 		Name loopMax = forCmp.getArg2();
 		VarName globalLoopMax = new VarName("$glmax" + loopId);
