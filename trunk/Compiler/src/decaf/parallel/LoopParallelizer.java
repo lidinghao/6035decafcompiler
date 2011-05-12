@@ -12,12 +12,14 @@ import decaf.codegen.flatir.JumpCondOp;
 import decaf.codegen.flatir.JumpStmt;
 import decaf.codegen.flatir.LIRStatement;
 import decaf.codegen.flatir.LabelStmt;
+import decaf.codegen.flatir.LeaveStmt;
 import decaf.codegen.flatir.Name;
 import decaf.codegen.flatir.QuadrupletOp;
 import decaf.codegen.flatir.QuadrupletStmt;
 import decaf.codegen.flatir.Register;
 import decaf.codegen.flatir.RegisterName;
 import decaf.codegen.flatir.VarName;
+import decaf.codegen.flattener.ProgramFlattener;
 import decaf.dataflow.cfg.MethodIR;
 
 // Given a loopId, this handles the job of creating a method out of the loop which takes
@@ -26,8 +28,9 @@ import decaf.dataflow.cfg.MethodIR;
 // Also, this creates two globals for each loopId which maintains the loop iteration boundaries
 // before the loop method is called
 public class LoopParallelizer {
-	HashMap<String, MethodIR> mMap;
-	List<String> parallelizableLoops;
+	private HashMap<String, MethodIR> mMap;
+	private ProgramFlattener pf;
+	private List<String> parallelLoops;
 	private static String ForInitLabelRegex = "[a-zA-z_]\\w*.for\\d+.init";
 	private static String ForEndLabelRegex = "[a-zA-z_]\\w*.for\\d+.end";
 	private static int NumThreads = 4;
@@ -36,9 +39,13 @@ public class LoopParallelizer {
 	// Minimum number of iterations to allow parallelization (if we know the number of iterations)
 	private static int MinimumIters = 1000;
 	
-	public LoopParallelizer(HashMap<String, MethodIR> mMap, List<String> parallelLoops) {
+	public LoopParallelizer(HashMap<String, MethodIR> mMap, List<String> parallelLoops, ProgramFlattener pf) {
 		this.mMap = mMap;
-		this.parallelizableLoops = parallelLoops;
+		this.pf = pf;
+		this.parallelLoops = parallelLoops;
+	}
+	
+	public void parallelize() {
 		for (String loopId : parallelLoops) {
 			parallelizeLoop(loopId);
 			BaseBlockId++;
@@ -136,10 +143,11 @@ public class LoopParallelizer {
 		forCmp.setArg2(tempLoopMax);
 		loopMethodStmts.addAll(0,conditionalBoundaryStmts);
 	
-		// Add method header statements
+		// Add method header and footer statements
 		loopMethodStmts.add(0, new QuadrupletStmt(QuadrupletOp.MOVE, threadId, new RegisterName(Register.RDI), null));
 		loopMethodStmts.add(0, new EnterStmt());
 		loopMethodStmts.add(0, new LabelStmt(loopId));
+		loopMethodStmts.add(new LeaveStmt());
 		
 		// Add the call to the pthread method in the original method statements
 		List<LIRStatement> pthreadCall = new ArrayList<LIRStatement>();
@@ -157,6 +165,7 @@ public class LoopParallelizer {
 		
 		// Remove the loop statements from the method
 		methodStmts.removeAll(loopMethodStmts);
+		pf.getLirMap().put(loopId, loopMethodStmts);
 	}
 	
 	private int getForLabelStmtIndexInMethod(String loopId, String label) {

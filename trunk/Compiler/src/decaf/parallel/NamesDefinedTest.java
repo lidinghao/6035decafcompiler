@@ -4,9 +4,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import decaf.codegen.flatir.CmpStmt;
 import decaf.codegen.flatir.LIRStatement;
 import decaf.codegen.flatir.LabelStmt;
 import decaf.codegen.flatir.Name;
+import decaf.codegen.flatir.PopStmt;
+import decaf.codegen.flatir.PushStmt;
 import decaf.codegen.flatir.QuadrupletStmt;
 import decaf.codegen.flatir.VarName;
 import decaf.dataflow.cfg.MethodIR;
@@ -44,7 +47,7 @@ public class NamesDefinedTest {
 		for (int i = forBodyLabelIndex + 1; i < forEndLabelIndex; i++) {
 			LIRStatement stmt = methodStmts.get(i);
 			if (stmt.getClass().equals(QuadrupletStmt.class)) {
-				if (!validStmt((QuadrupletStmt)stmt, loopId)) {
+				if (!validStmt(stmt, loopId)) {
 					return false;
 				}
 			}
@@ -54,13 +57,43 @@ public class NamesDefinedTest {
 	
 	// Return true if we assign to a Name whose blockId is allowed by the loop,
 	// False otherwise
-	private boolean validStmt(QuadrupletStmt stmt, String loopId) {
+	private boolean validStmt(LIRStatement stmt, String loopId) {
 		List<Integer> loopIdBlockIds = blockIdsForLoop(loopId);
-		Name dest = stmt.getDestination();
-		if (dest.getClass().equals(VarName.class)) {
-			int blockId = ((VarName)dest).getBlockId();
-			if (!loopIdBlockIds.contains(blockId)) {
-				return false;
+		
+		Name dest = null, arg1 = null, arg2 = null;
+		if (stmt.getClass().equals(QuadrupletStmt.class)) {
+			dest = ((QuadrupletStmt)stmt).getDestination();
+			arg1 = ((QuadrupletStmt)stmt).getArg1();
+		} else if (stmt.getClass().equals(CmpStmt.class)) {
+			arg1 = ((CmpStmt)stmt).getArg1();
+			arg2 = ((CmpStmt)stmt).getArg2();
+		} else if (stmt.getClass().equals(PopStmt.class)) {
+			arg1 = ((PopStmt)stmt).getName();
+		} else if (stmt.getClass().equals(PushStmt.class)) {
+			arg1 = ((PushStmt)stmt).getName();
+		}
+		if (dest != null) {
+			if (dest.getClass().equals(VarName.class)) {
+				int blockId = ((VarName)dest).getBlockId();
+				if (!loopIdBlockIds.contains(blockId) && blockId != -1) {
+					return false;
+				}
+			}
+		}
+		if (arg1 != null) {
+			if (arg1.getClass().equals(VarName.class)) {
+				int blockId = ((VarName)arg1).getBlockId();
+				if (!loopIdBlockIds.contains(blockId) && blockId != -1) {
+					return false;
+				}
+			}
+		}
+		if (arg2 != null) {
+			if (arg2.getClass().equals(VarName.class)) {
+				int blockId = ((VarName)arg2).getBlockId();
+				if (!loopIdBlockIds.contains(blockId) && blockId != -1) {
+					return false;
+				}
 			}
 		}
 		return true;
