@@ -25,12 +25,16 @@ public class GlobalsDefinedTest {
 	public List<String> getLoopIDsWhichPass() {
 		List<String> uniqueLoopIds = getAllLoopIds();
 		List<String> parallelizableLoops = new ArrayList<String>();
+		List<String> unParallelizableLoops = new ArrayList<String>();
 		for (String loopId : uniqueLoopIds) {
 			if (passesGlobalsDefinedTest(loopId)) {
 				parallelizableLoops.add(loopId);
+			} else {
+				unParallelizableLoops.add(loopId);
 			}
 		}
-		System.out.println("LOOPS WHICH PASS GLOBAL TEST: " + parallelizableLoops);
+		System.out.println("LOOPS WHICH PASS GLOBALS DEF TEST: " + parallelizableLoops);
+		System.out.println("LOOPS WHICH FAIL GLOBALS DEF TEST: " + unParallelizableLoops);
 		return parallelizableLoops;
 	}
 	

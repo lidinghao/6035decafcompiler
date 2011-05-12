@@ -30,12 +30,16 @@ public class NamesDefinedTest {
 	public List<String> getLoopIDsWhichPass() {
 		List<String> uniqueLoopIds = getAllLoopIds();
 		List<String> parallelizableLoops = new ArrayList<String>();
+		List<String> unParallelizableLoops = new ArrayList<String>();
 		for (String loopId : uniqueLoopIds) {
 			if (passesNamesDefinedTest(loopId)) {
 				parallelizableLoops.add(loopId);
+			} else {
+				unParallelizableLoops.add(loopId);
 			}
 		}
 		System.out.println("LOOPS WHICH PASS NAMES DEF TEST: " + parallelizableLoops);
+		System.out.println("LOOPS WHICH FAIL NAMES DEF TEST: " + unParallelizableLoops);
 		return parallelizableLoops;
 	}
 	
@@ -45,10 +49,28 @@ public class NamesDefinedTest {
 		String[] loopInfo = loopId.split("\\.");
 		List<LIRStatement> methodStmts = mMap.get(loopInfo[0]).getStatements();
 		
+		//System.out.println("NAME DEF TEST: " + loopId);
+		
+		boolean ignore = false;
+		String forLabel;
 		for (int i = forBodyLabelIndex + 1; i < forEndLabelIndex; i++) {
 			LIRStatement stmt = methodStmts.get(i);
+			if (stmt.getClass().equals(LabelStmt.class)) {
+				forLabel = ((LabelStmt)stmt).getLabelString();
+				if (forLabel.matches(ForInitLabelRegex)) {
+					// Ignore nested for init and test blocks, only care about statements from body to end
+					// We will globalize the non-loop-local variables used in init and test later
+					ignore = true;
+				} else if (forLabel.matches(ForBodyLabelRegex)) {
+					ignore = false;
+				}
+				continue;
+			}
+			if (ignore) {
+				continue;
+			}
 			if (stmt.getClass().equals(QuadrupletStmt.class)) {
-				if (!validStmt(stmt, loopId)) {
+				if (validStmt(stmt, loopId).size() != 0) {
 					return false;
 				}
 			}
@@ -56,11 +78,11 @@ public class NamesDefinedTest {
 		return true;
 	}
 	
-	// Return true if we assign to a Name whose blockId is allowed by the loop,
-	// False otherwise
-	private boolean validStmt(LIRStatement stmt, String loopId) {
+	// Return empty list if we assign or use a Name whose blockId is allowed by the loop,
+	// Returns the list of faulty Names otherwise
+	public List<Name> validStmt(LIRStatement stmt, String loopId) {
 		List<Integer> loopIdBlockIds = blockIdsForLoop(loopId);
-		
+		List<Name> invalid = new ArrayList<Name>();
 		Name dest = null, arg1 = null, arg2 = null;
 		if (stmt.getClass().equals(QuadrupletStmt.class)) {
 			dest = ((QuadrupletStmt)stmt).getDestination();
@@ -75,27 +97,28 @@ public class NamesDefinedTest {
 			arg1 = ((PushStmt)stmt).getName();
 		}
 		if (dest != null) {
-			if (dest.getClass().equals(VarName.class)) {
-				int blockId = ((VarName)dest).getBlockId();
-				if (!loopIdBlockIds.contains(blockId) && blockId != -1) {
-					return false;
-				}
+			if (!validArg(dest, loopIdBlockIds)) {
+				invalid.add(dest);
 			}
 		}
 		if (arg1 != null) {
-			if (arg1.getClass().equals(VarName.class)) {
-				int blockId = ((VarName)arg1).getBlockId();
-				if (!loopIdBlockIds.contains(blockId) && blockId != -1) {
-					return false;
-				}
+			if (!validArg(arg1, loopIdBlockIds)) {
+				invalid.add(arg1);
 			}
 		}
 		if (arg2 != null) {
-			if (arg2.getClass().equals(VarName.class)) {
-				int blockId = ((VarName)arg2).getBlockId();
-				if (!loopIdBlockIds.contains(blockId) && blockId != -1) {
-					return false;
-				}
+			if (!validArg(arg2, loopIdBlockIds)) {
+				invalid.add(arg2);
+			}
+		}
+		return invalid;
+	}
+	
+	public boolean validArg(Name arg, List<Integer> loopIdBlockIds) {
+		if (arg.getClass().equals(VarName.class)) {
+			int blockId = ((VarName)arg).getBlockId();
+			if (!loopIdBlockIds.contains(blockId) && blockId != -1) {
+				return false;
 			}
 		}
 		return true;
@@ -118,6 +141,10 @@ public class NamesDefinedTest {
 				if (forLabel.matches(ForInitLabelRegex)) {
 					// Get next statement, which defines the loop variable
 					Name dest = ((QuadrupletStmt)methodStmts.get(i+1)).getDestination();
+					while (!dest.getClass().equals(VarName.class)) {
+						i++;
+						dest = ((QuadrupletStmt)methodStmts.get(i+1)).getDestination();
+					}
 					// Add block id of loop variable
 					int blockId = ((VarName)dest).getBlockId();
 					loopBlockIds.add(blockId);

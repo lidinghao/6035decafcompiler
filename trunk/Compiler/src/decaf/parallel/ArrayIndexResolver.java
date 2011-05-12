@@ -1,7 +1,6 @@
 package decaf.parallel;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.BitSet;
 import java.util.HashMap;
 import java.util.List;
@@ -13,40 +12,34 @@ import decaf.codegen.flatir.LabelStmt;
 import decaf.codegen.flatir.Name;
 import decaf.codegen.flatir.QuadrupletOp;
 import decaf.codegen.flatir.QuadrupletStmt;
+import decaf.codegen.flatir.VarName;
 import decaf.dataflow.cfg.MethodIR;
-import decaf.dataflow.global.GlobalConstantPropagationOptimizer;
+import decaf.ralloc.ReachingDefinitions;
 
 // Resolves array indices to Integer[] which follow the template 
 // needed for parallelization distance vector analysis
 public class ArrayIndexResolver {
 	HashMap<String, MethodIR> mMap;
-	// Map from QuadrupletStmt to BitSet representing all the 
-	// QuadrupletStmt IDs which reach that point
-	private HashMap<LIRStatement, BitSet> reachingDefForStmts;
-	// Map from Name to QuadrupletStmt which assign to that Name
-	private HashMap<Name, ArrayList<QuadrupletStmt>> nameToQStmts;
+	ReachingDefinitions rd;
 	private static String ForInitLabelRegex = "[a-zA-z_]\\w*.for\\d+.init";
 	private static String ForEndLabelRegex = "[a-zA-z_]\\w*.for\\d+.end";
 	
 	public ArrayIndexResolver(HashMap<String, MethodIR> mMap) {
 		this.mMap = mMap;
-		GlobalConstantPropagationOptimizer gcp = new GlobalConstantPropagationOptimizer(mMap);
-		// Generates the Map of QStmt -> BitSet representing 
-		// all the QStmts IDs which reach at that point
-		gcp.generateReachingDefsForQStmts();
-		this.reachingDefForStmts = gcp.getReachingDefForStmts();
-		this.nameToQStmts = gcp.getReachingDefGenerator().getNameToQStmts();
+		this.rd = new ReachingDefinitions(mMap);
+		rd.analyze();
 	}
 	
 	// Resolve index in the stmt
 	// Return null if index cannot be deterministically resolved
-	public Integer[] resolveIndex(LIRStatement stmt, Name index, List<Name> loopVars) {
+	public Integer[] resolveIndex(LIRStatement stmt, Name index, List<Name> loopVars, String methodName) {
 		// If index is Array, return null
 		if (index.getClass().equals(ArrayName.class)) {
 			return null;
 		}
+		System.out.println("Resolving index... " + stmt);
 		
-		BitSet reachingDefs = reachingDefForStmts.get(stmt);
+		BitSet reachingDefs = stmt.getReachingDefInSet();
 		List<Name> newLoopVars = null;
 		if (loopVars == null) {
 			loopVars = loopVariablesForStmt(stmt);
@@ -54,12 +47,18 @@ public class ArrayIndexResolver {
 			// If new Loop vars is empty, return null
 			newLoopVars = loopVariablesForStmt(stmt);
 			if (newLoopVars.size() == 0) {
+				System.out.println("Null - loop vars is empty");
 				return null;
 			}
 			// Ensure that the loop variables we are looking at are the same
 			if (newLoopVars.size() == loopVars.size()) {
 				for (int i = 0; i < newLoopVars.size(); i++) {
-					if (newLoopVars.get(i) != loopVars.get(i)) {
+					VarName newLoopVar = (VarName)newLoopVars.get(i);
+					VarName origLoopVar = (VarName)loopVars.get(i);
+					if (!newLoopVar.getId().equals(origLoopVar.getId())) {
+						System.out.println("NEW LOOP VARS: " + newLoopVar.hashString());
+						System.out.println("ORIG LOOP VARS: " + origLoopVar.hashString());
+						System.out.println("Null - loop vars are different");
 						return null;
 					}
 				}
@@ -78,20 +77,29 @@ public class ArrayIndexResolver {
 		}
 
 		// If the index is a loop var, trivial case
-		if (loopVars.contains(index)) {
-			int indexOfLoopVar;
-			if (newLoopVars != null) {
-				indexOfLoopVar = newLoopVars.indexOf(index);
-			} else {
-				indexOfLoopVar = loopVars.indexOf(index);
+		if (index.getClass().equals(VarName.class)) {
+			for (Name lVar : loopVars) {
+				VarName varName = (VarName)lVar;
+				if (varName.getId().equals(((VarName)index).getId())) {
+					int indexOfLoopVar = loopVars.indexOf(lVar);
+					coeffs[indexOfLoopVar] = 1;
+					return coeffs;
+				}
 			}
-			coeffs[indexOfLoopVar] = 1;
-			return coeffs;
 		}
 		
-		List<QuadrupletStmt> defsForIndex = nameToQStmts.get(index);
-		if (defsForIndex == null) {
+		List<QuadrupletStmt> defsForIndex = new ArrayList<QuadrupletStmt>();
+		for (LIRStatement def : rd.getUniqueDefinitions().get(methodName)) {
+			if (!(def.equals(stmt))) {
+				if (((QuadrupletStmt)def).getDestination().equals(index)) {
+					defsForIndex.add((QuadrupletStmt)def);
+				}
+			}
+		}
+		System.out.println("Definitions for index: " + defsForIndex);
+		if (defsForIndex.size() == 0) {
 			// No definitions for index... probably a global
+			System.out.println("Null - No definitions for index...");
 			return null;
 		}
 		QuadrupletStmt reachingDef = null;
@@ -100,9 +108,11 @@ public class ArrayIndexResolver {
 		for (QuadrupletStmt def : defsForIndex) {
 			if (reachingDefs.get(def.getMyId())) {
 				reachingDef = def;
+				System.out.println("Reaching def: " + def);
 				numReachingDefs++;
 			}
 			if (numReachingDefs > 1) {
+				System.out.println("Null - more than one reaching def");
 				return null;
 			}
 		}
@@ -113,6 +123,7 @@ public class ArrayIndexResolver {
 				reachingDef.getOperator() != QuadrupletOp.SUB &&
 				reachingDef.getOperator() != QuadrupletOp.MINUS &&
 				reachingDef.getOperator() != QuadrupletOp.MOVE) {
+			System.out.println("Null - unsupported quadruplet operator");
 			return null;
 		}
 		
@@ -153,8 +164,9 @@ public class ArrayIndexResolver {
 			if (arg2 != null) {
 				if (arg2.getClass().equals(ConstantName.class)) {
 					int arg2Val = Integer.parseInt(((ConstantName)arg2).getValue());
-					Integer[] arg1Coeffs = resolveIndex(reachingDef, arg1, loopVars);
+					Integer[] arg1Coeffs = resolveIndex(reachingDef, arg1, loopVars, methodName);
 					if (arg1Coeffs == null) {
+						System.out.println("Null - arg1coeffs null");
 						return null;
 					}
 					if (reachingDef.getOperator() == QuadrupletOp.ADD) {
@@ -177,8 +189,9 @@ public class ArrayIndexResolver {
 			int arg1Val = Integer.parseInt(((ConstantName)arg1).getValue());
 			if (arg2 != null) {
 				// arg2 must be non-constant
-				Integer[] arg2Coeffs = resolveIndex(reachingDef, arg2, loopVars);
+				Integer[] arg2Coeffs = resolveIndex(reachingDef, arg2, loopVars, methodName);
 				if (arg2Coeffs == null) {
+					System.out.println("Null - arg2coeffs null");
 					return null;
 				}
 
@@ -199,13 +212,15 @@ public class ArrayIndexResolver {
 			}
 		}
 		// 3. One or two non-constants
-		Integer[] arg1Coeffs = resolveIndex(reachingDef, arg1, loopVars);
+		Integer[] arg1Coeffs = resolveIndex(reachingDef, arg1, loopVars, methodName);
 		if (arg1Coeffs == null) {
+			System.out.println("Null - arg1coeffs null");
 			return null;
 		}
 		if (arg2 != null) {
-			Integer[] arg2Coeffs = resolveIndex(reachingDef, arg2, loopVars);
+			Integer[] arg2Coeffs = resolveIndex(reachingDef, arg2, loopVars, methodName);
 			if (arg2Coeffs == null) {
+				System.out.println("Null - arg2coeffs null");
 				return null;
 			}
 			if (reachingDef.getOperator() == QuadrupletOp.ADD) {
@@ -244,8 +259,17 @@ public class ArrayIndexResolver {
 				if (stmt.getClass().equals(LabelStmt.class)) {
 					forLabel = ((LabelStmt)stmt).getLabelString();
 					if (forLabel.matches(ForInitLabelRegex)) {
-						// Get next statement, which defines the loop variable
-						loopVars.add(((QuadrupletStmt)methodStmts.get(i+1)).getDestination());
+						// Check next statements till something assigns to VarName which indicates
+						// it is a loop variable
+						int initIndex = i+1;
+						QuadrupletStmt forInit = (QuadrupletStmt)methodStmts.get(initIndex);
+						Name dest = forInit.getDestination();
+						while (!dest.getClass().equals(VarName.class)) {
+							initIndex++;
+							forInit = (QuadrupletStmt)methodStmts.get(initIndex);
+							dest = forInit.getDestination();
+						}
+						loopVars.add(dest);
 					} else if (forLabel.matches(ForEndLabelRegex)) {
 						// Remove last loop variable in list
 						loopVars.remove(loopVars.size()-1);

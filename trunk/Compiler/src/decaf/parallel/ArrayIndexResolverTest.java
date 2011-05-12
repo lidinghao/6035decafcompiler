@@ -32,12 +32,16 @@ public class ArrayIndexResolverTest {
 	public List<String> getLoopIDsWhichPass() {
 		List<String> uniqueLoopIds = getAllLoopIds();
 		List<String> parallelizableLoops = new ArrayList<String>();
+		List<String> unParallelizableLoops = new ArrayList<String>();
 		for (String loopId : uniqueLoopIds) {
 			if (passesArrayResolverTest(loopId)) {
 				parallelizableLoops.add(loopId);
+			} else {
+				unParallelizableLoops.add(loopId);
 			}
 		}
 		System.out.println("LOOPS WHICH PASS ARRAY RESOLVER TEST: " + parallelizableLoops);
+		System.out.println("LOOPS WHICH FAIL ARRAY RESOLVER TEST: " + unParallelizableLoops);
 		return parallelizableLoops;
 	}
 	
@@ -46,13 +50,15 @@ public class ArrayIndexResolverTest {
 	public boolean passesArrayResolverTest(String loopId) {
 		int forBodyLabelIndex = getForLabelStmtIndexInMethod(loopId, ForBodyLabelRegex);
 		int forEndLabelIndex = getForLabelStmtIndexInMethod(loopId, ForEndLabelRegex);
-		List<Integer[]> arrayResolvesForDests = new ArrayList<Integer[]>();
-		List<Integer[]> arrayResolvesForArgs = new ArrayList<Integer[]>();
+		HashMap<String, List<Integer[]>> arrayResolvesForDests = new HashMap<String, List<Integer[]>>();
+		HashMap<String, List<Integer[]>> arrayResolvesForArgs = new HashMap<String, List<Integer[]>>();
 		QuadrupletStmt qStmt;
 		CmpStmt cStmt;
 		PopStmt popStmt;
 		PushStmt pushStmt;
 		Integer[] res;
+		
+		System.out.println("ARRAY RESOLVER TEST FOR " + loopId);
 		
 		String[] loopInfo = loopId.split("\\.");
 		List<LIRStatement> methodStmts = mMap.get(loopInfo[0]).getStatements();
@@ -85,46 +91,73 @@ public class ArrayIndexResolverTest {
 			if (dest != null) {
 				if (dest.isArray()) {
 					Name index = ((ArrayName)dest).getIndex();
-					res = arrIndexResolver.resolveIndex(stmt, index, null);
+					res = arrIndexResolver.resolveIndex(stmt, index, null, loopInfo[0]);
 					System.out.println("##############");
 					System.out.println("Loop vars for stmt: " + stmt);
 					System.out.println(arrIndexResolver.loopVariablesForStmt(stmt));
 					System.out.println("Index resolve for stmt: " + stmt + ", for index " + index);
 					System.out.println(Arrays.toString(res));
 					if (res == null) {
+						System.out.println("NULL");
 						return false;
 					}
-					arrayResolvesForDests.add(res);
+					String arrIndex = ((ArrayName)dest).getId();
+					List<Integer[]> arrRes;
+					if (arrayResolvesForDests.containsKey(arrIndex)) {
+						arrRes = arrayResolvesForDests.get(arrIndex);
+					} else {
+						arrRes = new ArrayList<Integer[]>();
+						arrayResolvesForDests.put(arrIndex, arrRes);
+					}
+					arrRes.add(res);
 				}
 			}
 			if (arg1 != null) {
 				if (arg1.isArray()) {
 					Name index = ((ArrayName)arg1).getIndex();
-					res = arrIndexResolver.resolveIndex(stmt, index, null);
+					res = arrIndexResolver.resolveIndex(stmt, index, null, loopInfo[0]);
 					System.out.println("##############");
 					System.out.println("Loop vars for stmt: " + stmt);
 					System.out.println(arrIndexResolver.loopVariablesForStmt(stmt));
 					System.out.println("Index resolve for stmt: " + stmt + ", for index " + index);
 					System.out.println(Arrays.toString(res));
 					if (res == null) {
+						System.out.println("NULL");
 						return false;
 					}
-					arrayResolvesForArgs.add(res);
+					String arrIndex = ((ArrayName)arg1).getId();
+					List<Integer[]> arrRes;
+					if (arrayResolvesForArgs.containsKey(arrIndex)) {
+						arrRes = arrayResolvesForArgs.get(arrIndex);
+					} else {
+						arrRes = new ArrayList<Integer[]>();
+						arrayResolvesForArgs.put(arrIndex, arrRes);
+					}
+					arrRes.add(res);
 				}
 			}
 			if (arg2 != null) {
 				if (arg2.isArray()) {
 					Name index = ((ArrayName)arg2).getIndex();
-					res = arrIndexResolver.resolveIndex(stmt, index, null);
+					res = arrIndexResolver.resolveIndex(stmt, index, null, loopInfo[0]);
 					System.out.println("##############");
 					System.out.println("Loop vars for stmt: " + stmt);
 					System.out.println(arrIndexResolver.loopVariablesForStmt(stmt));
 					System.out.println("Index resolve for stmt: " + stmt + ", for index " + index);
 					System.out.println(Arrays.toString(res));
 					if (res == null) {
+						System.out.println("NULL");
 						return false;
 					}
-					arrayResolvesForArgs.add(res);
+					String arrIndex = ((ArrayName)arg2).getId();
+					List<Integer[]> arrRes;
+					if (arrayResolvesForArgs.containsKey(arrIndex)) {
+						arrRes = arrayResolvesForArgs.get(arrIndex);
+					} else {
+						arrRes = new ArrayList<Integer[]>();
+						arrayResolvesForArgs.put(arrIndex, arrRes);
+					}
+					arrRes.add(res);
 				}
 			}
 		}
@@ -133,43 +166,49 @@ public class ArrayIndexResolverTest {
 		// array name indices
 		AccessPattern accPattern;
 		// Calculate the index of the loop variable corresponding to the given loopId
-		int loopVarIndex = arrIndexResolver.loopVariablesForStmt(
-				methodStmts.get(forBodyLabelIndex)).size()-1;
-		for (Integer[] destRes : arrayResolvesForDests) {
-			for (Integer[] argRes : arrayResolvesForArgs) {
-				// Standardize since one index may be more nested than the other and
-				// thus, the resolution arrays may be of different sizes
-				if (destRes.length < argRes.length) {
-					Integer[] newDestRes = new Integer[argRes.length];
-					int i = 0;
-					for (i = 0; i < destRes.length-1; i++) {
-						newDestRes[i] = destRes[i];
-					}
-					for (; i < argRes.length-1; i++) {
-						// Place filler 0 to represent no use of loop variable
-						newDestRes[i] = 0;
-					}
-					newDestRes[i] = destRes[destRes.length-1];
-					destRes = newDestRes;
-					
-				} else  if (destRes.length > argRes.length) {
-					Integer[] newArgRes = new Integer[destRes.length];
-					int i = 0;
-					for (i = 0; i < argRes.length-1; i++) {
-						newArgRes[i] = destRes[i];
-					}
-					for (; i < destRes.length-1; i++) {
-						// Place filler 0 to represent no use of loop variable
-						newArgRes[i] = 0;
-					}
-					newArgRes[i] = argRes[argRes.length-1];
-					argRes = newArgRes;
-					
+		int loopVarIndex = arrIndexResolver.loopVariablesForStmt(methodStmts.get(forEndLabelIndex-1)).size()-1;
+		for (String arrId : arrayResolvesForDests.keySet()) {
+			for (Integer[] destRes : arrayResolvesForDests.get(arrId)) {
+				if (arrayResolvesForArgs.get(arrId) == null) {
+					continue;
 				}
-				accPattern = Analyze.getAccessPattern(destRes, argRes);
-				
-				if (!isParallelizable(accPattern, loopVarIndex)) {
-					return false;
+				for (Integer[] argRes : arrayResolvesForArgs.get(arrId)) {
+					// Standardize since one index may be more nested than the other and
+					// thus, the resolution arrays may be of different sizes
+					if (destRes.length < argRes.length) {
+						Integer[] newDestRes = new Integer[argRes.length];
+						int i = 0;
+						for (i = 0; i < destRes.length-1; i++) {
+							newDestRes[i] = destRes[i];
+						}
+						for (; i < argRes.length-1; i++) {
+							// Place filler 0 to represent no use of loop variable
+							newDestRes[i] = 0;
+						}
+						newDestRes[i] = destRes[destRes.length-1];
+						destRes = newDestRes;
+						
+					} else  if (destRes.length > argRes.length) {
+						Integer[] newArgRes = new Integer[destRes.length];
+						int i = 0;
+						for (i = 0; i < argRes.length-1; i++) {
+							newArgRes[i] = destRes[i];
+						}
+						for (; i < destRes.length-1; i++) {
+							// Place filler 0 to represent no use of loop variable
+							newArgRes[i] = 0;
+						}
+						newArgRes[i] = argRes[argRes.length-1];
+						argRes = newArgRes;
+						
+					}
+					accPattern = Analyze.getAccessPattern(destRes, argRes);
+					System.out.println("DEST RES: " + Arrays.toString(destRes));
+					System.out.println("ARG RES: " + Arrays.toString(argRes));
+					if (!isParallelizable(accPattern, loopVarIndex)) {
+						System.out.println("FALSE!");
+						return false;
+					}
 				}
 			}
 		}
@@ -179,6 +218,9 @@ public class ArrayIndexResolverTest {
 	// Returns true if the loop at index is parallelizable
 	// The distance vector has metrics in order of the loops nested level
 	private boolean isParallelizable(AccessPattern pattern, int index) {
+		if (pattern == null) {
+			return false;
+		}
 		if (pattern.distanceExists) {
 			Integer[] distanceVector = pattern.distance;
 			int numGtThanZero = 0;
