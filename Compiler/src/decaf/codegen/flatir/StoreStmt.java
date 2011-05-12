@@ -76,7 +76,7 @@ public class StoreStmt extends LIRStatement {
 
 	@Override
 	public void generateRegAllocAssembly(PrintStream out) {
-		out.println("\t; " + this.toString());
+		out.println("\t// " + this.toString());
 		
 		if (this.variable.getMyRegister() == null) return; // // spilled values have no notion of store
 		
