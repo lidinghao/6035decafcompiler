@@ -59,6 +59,12 @@ public class WebGenerator {
 		Web.ID = 0;
 		
 		this.reachingDef.analyze();
+		
+		for (CFGBlock block: this.reachingDef.getCfgBlocksState().keySet()) {
+			System.out.println("REAACHING DEFS!!! ---------------------------->");
+			System.out.println(block);
+			System.out.println(this.reachingDef.getCfgBlocksState().get(block));
+		}
 		this.liveAnalysis.analyze();
 		
 		for (String methodName: this.mMap.keySet()) {

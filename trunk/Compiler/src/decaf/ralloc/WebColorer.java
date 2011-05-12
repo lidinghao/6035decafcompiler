@@ -69,7 +69,7 @@ public class WebColorer {
 				System.out.println("SPLIT LIST: " + this.getWebIdentifiers(this.splitList));
 				
 				splitWebs(methodName);
-				dc.dcLoadStores();
+//				dc.dcLoadStores();
 //				break;
 				i++;
 			}
