@@ -368,7 +368,7 @@ public class QuadrupletStmt extends LIRStatement {
 
 	@Override
 	public void generateRegAllocAssembly(PrintStream out) {
-		out.println("\t; " + this.toString());
+		out.println("\t// " + this.toString());
 		switch(this.operator) {
 			case MOVE:
 				asmMoveQuadruplet(out);
@@ -393,7 +393,7 @@ public class QuadrupletStmt extends LIRStatement {
 				asmArithmeticQuadruplet(out, this.operator);
 				break;
 		}
-		out.println("\t;");
+		out.println("\t//");
 	}
 	
 	private void asmDivModQuadruplet(PrintStream out, QuadrupletOp op) {
@@ -442,7 +442,7 @@ public class QuadrupletStmt extends LIRStatement {
 		}
 		
 		out.println("\tmov\t" + ASMGenerator.getLocationForName(this.arg1, out, false) + ", " + dest);
-		out.println(instr + ASMGenerator.getLocationForName(this.arg1, out, false) + ", " + dest);
+		out.println(instr + ASMGenerator.getLocationForName(this.arg2, out, false) + ", " + dest);
 		if (rcx) { // Store back in rcx
 			out.println("\tmov\t" + Register.RCX + ", " + ASMGenerator.getLocationForName(this.dest, out, false));
 		}
@@ -507,6 +507,9 @@ public class QuadrupletStmt extends LIRStatement {
 		else if (this.arg1.getMyRegister() == null) {
 			out.println("\tmov\t" + ASMGenerator.getLocationForName(this.arg1, out, false) + ", " + Register.RCX);
 			out.println("\tmov\t" + Register.RCX + ", " + ASMGenerator.getLocationForName(this.dest, out, false));
+		}
+		else {
+			out.println("\tmov\t" + ASMGenerator.getLocationForName(this.arg1, out, false) + ", " + ASMGenerator.getLocationForName(this.dest, out, false));
 		}
 	}
 

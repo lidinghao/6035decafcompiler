@@ -61,7 +61,7 @@ public class PushStmt extends LIRStatement {
 
 	@Override
 	public void generateRegAllocAssembly(PrintStream out) {
-		out.println("\t; " + this.toString());
+		out.println("\t// " + this.toString());
 		out.println("\tpush\t" + ASMGenerator.getLocationForName(this.name, out, false));
 	}
 }
