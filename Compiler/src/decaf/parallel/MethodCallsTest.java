@@ -24,12 +24,16 @@ public class MethodCallsTest {
 	public List<String> getLoopIDsWhichPass() {
 		List<String> uniqueLoopIds = getAllLoopIds();
 		List<String> parallelizableLoops = new ArrayList<String>();
+		List<String> unParallelizableLoops = new ArrayList<String>();
 		for (String loopId : uniqueLoopIds) {
 			if (passesMethodCallsTest(loopId)) {
 				parallelizableLoops.add(loopId);
+			} else {
+				unParallelizableLoops.add(loopId);
 			}
 		}
 		System.out.println("LOOPS WHICH PASS METHOD CALLS TEST: " + parallelizableLoops);
+		System.out.println("LOOPS WHICH FAIL METHOD CALLS TEST: " + unParallelizableLoops);
 		return parallelizableLoops;
 	}
 	
