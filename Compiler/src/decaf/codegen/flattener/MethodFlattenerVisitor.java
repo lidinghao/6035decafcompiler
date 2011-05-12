@@ -13,8 +13,6 @@ import decaf.codegen.flatir.LIRStatement;
 import decaf.codegen.flatir.LabelStmt;
 import decaf.codegen.flatir.LeaveStmt;
 import decaf.codegen.flatir.Name;
-import decaf.codegen.flatir.PopStmt;
-import decaf.codegen.flatir.PushStmt;
 import decaf.codegen.flatir.QuadrupletOp;
 import decaf.codegen.flatir.QuadrupletStmt;
 import decaf.codegen.flatir.Register;
@@ -206,8 +204,8 @@ public class MethodFlattenerVisitor implements ASTVisitor<Integer> {
 		this.totalLocalVars++;
 
 		// Initialization block
-		this.statements.add(new LabelStmt(getForInit()));
 		Name initValue = stmt.getInitialValue().accept(this.exprFlatenner);
+		this.statements.add(new LabelStmt(getForInit()));
 		this.statements.add(new QuadrupletStmt(QuadrupletOp.MOVE, loopId,
 				initValue, null));
 
