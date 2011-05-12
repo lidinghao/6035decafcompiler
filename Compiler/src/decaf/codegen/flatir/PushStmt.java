@@ -2,6 +2,8 @@ package decaf.codegen.flatir;
 
 import java.io.PrintStream;
 
+import decaf.ralloc.ASMGenerator;
+
 public class PushStmt extends LIRStatement {
 	private Name name; // Can be register, memory or immediate
 	
@@ -60,6 +62,6 @@ public class PushStmt extends LIRStatement {
 	@Override
 	public void generateRegAllocAssembly(PrintStream out) {
 		out.println("\t; " + this.toString());
-		out.println("\tpush\t" + this.name.getRegister());
+		out.println("\tpush\t" + ASMGenerator.getLocationForName(this.name, out, false));
 	}
 }

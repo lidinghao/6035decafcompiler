@@ -27,5 +27,5 @@ public enum Register {
 	public static Register[] argumentRegs = { RDI, RSI, RDX, RCX, R8, R9 };
 	public static Register[] calleeSaved = { RBX, R12, R13, R14, R15 }; // No need to save RBP
 	public static Register[] callerSaved = { R10, R11, RDI, RSI, RDX, RCX, R8, R9, RAX }; // Save only live ones
-	public static Register[] availableRegs = { RBX, R12, R13, R14, R15, R10, R11, RDI, RSI, RCX, R8, R9, RDX, RAX }; // Use in this order 
+	public static Register[] availableRegs = { RBX, R12, R13, R14, R15, R10, R11, RDI, RSI, R8, R9, RDX, RCX, RAX }; // Use in this order 
 }

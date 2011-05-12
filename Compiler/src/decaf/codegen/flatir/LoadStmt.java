@@ -3,6 +3,8 @@ package decaf.codegen.flatir;
 import java.io.PrintStream;
 import java.util.List;
 
+import decaf.ralloc.ASMGenerator;
+
 public class LoadStmt extends LIRStatement {
 	private Name variable;
 	private int myId;
@@ -93,38 +95,10 @@ public class LoadStmt extends LIRStatement {
 	@Override
 	public void generateRegAllocAssembly(PrintStream out) {
 		out.println("\t;" + this.toString());
-		String from = "";
 		
-		if (this.variable.isGlobal()) {
-			if (this.variable.isArray()) {
-				ArrayName arr = (ArrayName) this.variable;
-				
-				from = arr.getId() + "(, " + arr.getIndex().getRegister() + ", 8)";
-			}
-			else {
-				VarName var = (VarName) this.variable;
-				if (var.isString()) {
-					from = "$." + var.getId();
-				}
-				else {
-					from = var.getId();
-				}
-			}
-		}
-		else {
-			from = this.variable.getLocation().getASMRepresentation();
-		}
+		if (this.variable.getMyRegister() == null) return; // spilled values have no notion of load
 		
-		String to = "";
-		
-		if (this.explicitLoad != null) {
-			to = this.explicitLoad.toString();
-		}
-		else {
-			to = this.variable.getRegister();
-		}
-		
-		out.println("\tmov\t" + from + ", " + to);
+		out.println("\tmov\t" + ASMGenerator.getLocationForName(this.variable, out, true) + ", " + this.variable.getRegister());
 	}
 
 	public void setExplicitLoadRegister(Register explicitLoad) {
