@@ -224,4 +224,39 @@ public class ASMGenerator {
 			}
 		}
 	}
+	
+	public static String getLocationForName(Name name, PrintStream out, boolean skipRegister) {
+		if (name.isGlobal() && !name.isArray()) {
+			VarName var = (VarName) name;
+			if (var.isString()) return var.getLocation().getASMRepresentation();
+		}
+		
+		if (name.getMyRegister() != null && !skipRegister) {
+			return name.getRegister();
+		}
+		
+		if (name.isArray()) {
+			return getArrayName((ArrayName)name, out);
+		}
+		
+		return name.getLocation().getASMRepresentation();
+	}
+
+	private static String getArrayName(ArrayName name, PrintStream out) {
+		if (name.getMyRegister() != null) return name.getRegister();
+		
+		if (name.getIndex().isArray()) {
+			getArrayName((ArrayName)name.getIndex(), out);
+		}
+		
+		if (name.getIndex().getMyRegister() != null) {
+			name.setOffsetRegister(name.getIndex().getMyRegister());
+			return name.getLocation().getASMRepresentation();
+		}
+		else {
+			out.println("\tmov\t" + name.getIndex().getLocation().getASMRepresentation() + ", " + Register.RCX);
+			name.setOffsetRegister(Register.RCX);
+			return name.getLocation().getASMRepresentation();
+		}
+	}
 }
