@@ -42,7 +42,6 @@ public class LoopParallelizer {
 	private static int BaseBlockId = 1000;
 	private static int BaseMethodId = 1000;
 	// Minimum number of iterations to allow parallelization (if we know the number of iterations)
-	private static int MinimumIters = 1000;
 	private static int BaseGlobalId = 1;
 	
 	public LoopParallelizer(HashMap<String, MethodIR> mMap, List<String> parallelLoops, ProgramFlattener pf) {
@@ -80,10 +79,10 @@ public class LoopParallelizer {
 		List<LIRStatement> loopMethodStmts = new ArrayList<LIRStatement>();
 		List<DataStmt> dataStmts = new ArrayList<DataStmt>();
 		
-		VarName globalLoopMax = new VarName("$glmax" + loopId);
-		dataStmts.add(new DataStmt("$glmax" + loopId));
-		VarName globalLoopMin = new VarName("$glmin" + loopId);
-		dataStmts.add(new DataStmt("$glmin" + loopId));
+		VarName globalLoopMax = new VarName(".glmax" + loopId);
+		dataStmts.add(new DataStmt(".glmax" + loopId));
+		VarName globalLoopMin = new VarName(".glmin" + loopId);
+		dataStmts.add(new DataStmt(".glmin" + loopId));
 		Name loopMax = null, loopMin = null;
 		HashMap<Name, VarName> localToGlobal = new HashMap<Name, VarName>();
 		boolean minBoundFound = false;
@@ -122,8 +121,8 @@ public class LoopParallelizer {
 				List<Name> invalidNames = ndt.validStmt(stmt, loopId);
 				if (invalidNames.size() != 0) {
 					for (Name in : invalidNames) {
-						localToGlobal.put(in, new VarName("$glpar"+BaseGlobalId));
-						dataStmts.add(new DataStmt("$glpar"+BaseGlobalId));
+						localToGlobal.put(in, new VarName(".glpar"+BaseGlobalId));
+						dataStmts.add(new DataStmt(".glpar"+BaseGlobalId));
 						BaseGlobalId++;
 					}
 				}
@@ -141,18 +140,18 @@ public class LoopParallelizer {
 		}
 		
 		// Temporary bounds in loop method
-		VarName tempLoopMin = new VarName("$tlmin" + loopId);
+		VarName tempLoopMin = new VarName(".tlmin" + loopId);
 		tempLoopMin.setBlockId(BaseBlockId);
-		VarName tempLoopMax = new VarName("$tlmax" + loopId);
+		VarName tempLoopMax = new VarName(".tlmax" + loopId);
 		tempLoopMax.setBlockId(BaseBlockId);
 		
 		// Thread id parameter
-		VarName threadId = new VarName("$tid" + loopId);
+		VarName threadId = new VarName(".tid" + loopId);
 		threadId.setBlockId(-2);
 		
 		// Add the conditional logic to determine loop boundaries based on thread id
 		List<LIRStatement> conditionalBoundaryStmts = new ArrayList<LIRStatement>();
-		VarName boundDiff = new VarName("$tldiff" + loopId);
+		VarName boundDiff = new VarName(".tldiff" + loopId);
 		boundDiff.setBlockId(BaseBlockId);
 		QuadrupletStmt boundDiffCalc = new QuadrupletStmt(QuadrupletOp.SUB, boundDiff, globalLoopMax, globalLoopMin);
 		conditionalBoundaryStmts.add(boundDiffCalc);
@@ -173,11 +172,12 @@ public class LoopParallelizer {
 		BaseMethodId++;
 		methodStmts.addAll(forBodyLabelIndex, pthreadCall);
 		
+		System.out.println("ABCDEF Method has end label: " + (getForLabelStmtIndexInMethod(loopId, ForEndLabelRegex) != -1));
 		forBodyLabelIndex = getForLabelStmtIndexInMethod(loopId, ForBodyLabelRegex);
 		forEndLabelIndex = getForLabelStmtIndexInMethod(loopId, ForEndLabelRegex);
 		List<LIRStatement> temp = new ArrayList<LIRStatement>();
 		// Remove the loop statements starting from the body label from the method
-		for (int i = forBodyLabelIndex; i <= forEndLabelIndex; i++) {
+		for (int i = forBodyLabelIndex; i < forEndLabelIndex; i++) {
 			temp.add(methodStmts.get(i));
 		}
 		methodStmts.removeAll(temp);
@@ -250,7 +250,7 @@ public class LoopParallelizer {
 		}
 		
 		// Calculate chunk size and temp loop min
-		VarName chunkSize = new VarName("$tchunk" + loopId);
+		VarName chunkSize = new VarName(".tchunk" + loopId);
 		chunkSize.setBlockId(BaseBlockId);
 		QuadrupletStmt chunkSizeCalc = new QuadrupletStmt(QuadrupletOp.DIV, chunkSize, boundDiff, new ConstantName(NumThreads));
 		QuadrupletStmt tempLoopMinCalc = new QuadrupletStmt(QuadrupletOp.MUL, tempLoopMin, chunkSize, threadId);
@@ -265,7 +265,7 @@ public class LoopParallelizer {
 		conditionalBoundaryStmts.add(new QuadrupletStmt(QuadrupletOp.MOVE, tempLoopMax, globalLoopMax, null));
 		conditionalBoundaryStmts.add(tempAssignEnd);
 		conditionalBoundaryStmts.add(notLastThread);
-		VarName maxIndex = new VarName("$timax" + loopId);
+		VarName maxIndex = new VarName(".timax" + loopId);
 		QuadrupletStmt threadIdPlusOne = new QuadrupletStmt(QuadrupletOp.ADD, maxIndex, threadId, new ConstantName(1));
 		QuadrupletStmt tempLoopMaxCalc = new QuadrupletStmt(QuadrupletOp.MUL, tempLoopMax, chunkSize, maxIndex);
 		conditionalBoundaryStmts.add(threadIdPlusOne);
