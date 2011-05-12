@@ -13,7 +13,7 @@ import decaf.dataflow.cfg.MethodIR;
 public class MethodCallsTest {
 	HashMap<String, MethodIR> mMap;
 	private static String ForBodyLabelRegex = "[a-zA-z_]\\w*.for\\d+.body";
-	private static String ForEndLabelRegex = "[a-zA-z_]\\w*.for\\d+.end";
+	private static String ForIncrLabelRegex = "[a-zA-z_]\\w*.for\\d+.incr";
 	
 	public MethodCallsTest(HashMap<String, MethodIR> mMap) {
 		this.mMap = mMap;	
@@ -33,11 +33,11 @@ public class MethodCallsTest {
 	
 	public boolean passesMethodCallsTest(String loopId) {
 		int forBodyLabelIndex = getForLabelStmtIndexInMethod(loopId, ForBodyLabelRegex);
-		int forEndLabelIndex = getForLabelStmtIndexInMethod(loopId, ForEndLabelRegex);
+		int forIncrLabelIndex = getForLabelStmtIndexInMethod(loopId, ForIncrLabelRegex);
 		String[] loopInfo = loopId.split("\\.");
 		List<LIRStatement> methodStmts = mMap.get(loopInfo[0]).getStatements();
 		
-		for (int i = forBodyLabelIndex + 1; i < forEndLabelIndex; i++) {
+		for (int i = forBodyLabelIndex + 1; i < forIncrLabelIndex; i++) {
 			LIRStatement stmt = methodStmts.get(i);
 			if (stmt.getClass().equals(CallStmt.class)) {
 				String methodLabel = ((CallStmt)stmt).getMethodLabel();
