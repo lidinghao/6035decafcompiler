@@ -52,7 +52,7 @@ public class BlockVarDCOptimizer {
 		for (LIRStatement stmt: block.getStatements()) {
 			newStmts.add(stmt);
 			
-			System.out.println("START: " + stmt + "  ==>  " + this.lastDefUsed);
+//			System.out.println("START: " + stmt + "  ==>  " + this.lastDefUsed);
 			
 			if (stmt.getClass().equals(QuadrupletStmt.class)) {
 				QuadrupletStmt qStmt = (QuadrupletStmt) stmt;
@@ -109,7 +109,7 @@ public class BlockVarDCOptimizer {
 				}
 			}
 			
-			System.out.println("END: " + stmt + "  ==>  " + this.lastDefUsed);
+//			System.out.println("END: " + stmt + "  ==>  " + this.lastDefUsed);
 		}
 	}
 	
