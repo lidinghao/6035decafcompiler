@@ -73,6 +73,9 @@ public class ASMGenerator {
 					if (lStmt.getLabelString().matches(CallBeginRegex)) {
 						i = processMethodCall(methodName, i);
 					}
+					else {
+						s.generateRegAllocAssembly(out);
+					}
 				}
 
 				// Callee save handling
@@ -115,12 +118,16 @@ public class ASMGenerator {
 		while (true) {
 			s = this.pf.getLirMap().get(methodName).get(i);
 			i++;
-
+			if (s.getClass().equals(CallStmt.class)) {
+				s.generateRegAllocAssembly(out);
+				passedCall = true;
+			}
 			if (s.getClass().equals(LabelStmt.class)) {
 				LabelStmt lStmt = (LabelStmt) s;
 				if (lStmt.getLabelString().matches(CallEndRegex)) {
-					if (!restored)
+					if (!restored) {
 						restoreCaller();
+					}
 					s.generateRegAllocAssembly(out);
 					break;
 				} else if (lStmt.getLabelString().matches(CallBeginRegex)) {
@@ -146,8 +153,6 @@ public class ASMGenerator {
 							invalidated.add(r.getMyRegister()); // Cant reuse r now
 						}
 					}
-				} else if (s.getClass().equals(CallStmt.class)) {
-					passedCall = true;
 				}
 
 				s.generateRegAllocAssembly(out);
@@ -181,16 +186,23 @@ public class ASMGenerator {
 	}
 
 	private void saveCaller() {
-		out.println("\t; caller save");
+		out.println("\t// caller save");
 
 		for (Name var : this.liveAtCaller) {
 			out.println("\tmov\t" + var.getRegister() + ", "
-					+ this.getLocation(var));
+					+ getLocationForName(var, out, true));
 		}
+		out.println("\t//");
 	}
 
 	private void restoreCaller() {
+		out.println("\t// caller restore");
 
+		for (int i = this.liveAtCaller.size()-1; i >=0 ; i--) {
+			Name var = this.liveAtCaller.get(i);
+			out.println("\tmov\t" + getLocationForName(var, out, true) + ", " + var.getRegister());
+		}
+		out.println("\t//");
 	}
 
 	private void generateCallerSave(List<Web> liveWebs) {
@@ -202,8 +214,6 @@ public class ASMGenerator {
 						this.liveAtCaller.add(w.getVariable());
 					}
 				}
-			} else {
-				System.out.println("ERROR! NO REG TO WEB!");
 			}
 		}
 	}

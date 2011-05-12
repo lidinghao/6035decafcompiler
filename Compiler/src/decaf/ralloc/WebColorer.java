@@ -22,6 +22,7 @@ public class WebColorer {
 	private HashMap<Integer, Set<Integer>> webGraph;
 	private HashMap<Integer, Register> registersAssigned;
 	private HashMap<String, List<Register>> registersUsed;
+	private HashMap<String, HashMap<Integer, Register>> methodRegAllocations;
 	
 	public WebColorer(HashMap<String, MethodIR> mMap) {
 		this.mMap = mMap;
@@ -30,8 +31,8 @@ public class WebColorer {
 		this.spillList = new ArrayList<Integer>();
 		this.webGraph = new HashMap<Integer, Set<Integer>>();
 		this.registersAssigned = new HashMap<Integer, Register>();
-		this.setRegistersUsed(new HashMap<String, List<Register>>());
 		this.registersUsed = new HashMap<String, List<Register>>();
+		this.methodRegAllocations = new HashMap<String, HashMap<Integer, Register>>();
 	}
 	
 	private void reset() {
@@ -42,8 +43,6 @@ public class WebColorer {
 	}
 	
 	public void colorWebs() {
-		reset();
-		
 		for (String methodName: this.mMap.keySet()) {
 			if (methodName.equals(ProgramFlattener.exceptionHandlerLabel)) continue;
 
@@ -68,45 +67,64 @@ public class WebColorer {
 			}
 			
 			selectWebs(methodName);
-			assignRegisters(methodName);
+			saveAssignments(methodName);
 		}
+		
+		assignRegistersToMethods();
 	}
 	
-	private void assignRegisters(String methodName) {
-		for (Web web: this.webGen.getWebMap().get(methodName)) {
-			int id = web.getId();
-			if (this.spillList.contains(id)) {
-				web.setRegister(null);
+	private void assignRegistersToMethods() {
+		for (String methodName: this.webGen.getWebMap().keySet()) {
+			if (methodName.equals(ProgramFlattener.exceptionHandlerLabel)) continue;
+			
+			for (Web web: this.webGen.getWebMap().get(methodName)) {
+				int id = web.getId();
+				if (this.methodRegAllocations.get(methodName).containsKey(id)) {
+					web.setRegister(this.methodRegAllocations.get(methodName).get(id));
+				}
+				else {
+					web.setRegister(null);
+				}
 			}
-			else {
-				web.setRegister(this.registersAssigned.get(id));
+			
+			Set<Register> registers = new HashSet<Register>();
+			for (Register r: this.methodRegAllocations.get(methodName).values()) {
+				registers.add(r);
 			}
+			
+			List<Register> list = new ArrayList<Register>();
+			list.addAll(registers);
+			this.registersUsed.put(methodName, list);
 		}
+	}
+
+	private void saveAssignments(String methodName) {
+		HashMap<Integer, Register> assign = new HashMap<Integer, Register>();
+		this.methodRegAllocations.put(methodName, assign);
 		
-		Set<Register> registers = new HashSet<Register>();
-		for (Register r: this.registersAssigned.values()) {
-			registers.add(r);
+		for (Integer id: this.registersAssigned.keySet()) {
+			assign.put(id, this.registersAssigned.get(id));
 		}
-		
-		List<Register> list = new ArrayList<Register>();
-		list.addAll(registers);
-		this.registersUsed.put(methodName, list);
 	}
 
 	private boolean selectWebs(String methodName) {
 		//preColorWebs(methodName);
 		
-		List<Register> used = new ArrayList<Register>();
 		while (!this.coloringStack.isEmpty()) {
 			int webId = this.coloringStack.pop();
 			
-			if (this.spillList.contains(webId)) continue; // spill instead
+			if (this.spillList.contains(webId)) {
+				this.registersAssigned.put(webId, null);
+				continue; // spill instead
+			}
 			
 			if (this.registersAssigned.containsKey(webId)) {
 				continue;
 			}
 			
 			Web web = getWebFromId(methodName, webId);
+			List<Register> used = new ArrayList<Register>();
+			
 			for (Web neighbor: web.getInterferingWebs()) { // Want original state of graph now!
 				int wid = neighbor.getId();
 				if (this.registersAssigned.containsKey(wid)) {
@@ -124,7 +142,6 @@ public class WebColorer {
 			}
 			
 			if (!assigned) {
-				System.out.println("ERROR!!");
 				return false;
 			}
 		}
@@ -172,6 +189,7 @@ public class WebColorer {
 	}
 
 	private Web getWebFromId(String methodName, int id) {
+		System.out.println(methodName + "        " + id);
 		for (Web web: this.webGen.getWebMap().get(methodName)) {
 			if (web.getId() == id) return web;
 		}
@@ -199,8 +217,6 @@ public class WebColorer {
 				remove.add(webId);
 			}
 		}
-		
-		System.out.println("REMOVING FROM SIMPLIFY: " + remove);
 		
 		for (int webId: remove) {
 			removeFromGraph(webId);
