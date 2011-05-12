@@ -25,6 +25,7 @@ public class CodeGenerator {
 	public void generateCode() {
 		out.println(".data");
 		for (DataStmt s: pf.getDataStmtList()) {
+			System.out.println("DATA STMT: " + s.toString());
 			s.generateAssembly(out);
 		}
 		
