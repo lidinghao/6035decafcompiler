@@ -94,11 +94,12 @@ public class LoadStmt extends LIRStatement {
 
 	@Override
 	public void generateRegAllocAssembly(PrintStream out) {
-		out.println("\t;" + this.toString());
+		out.println("\t//" + this.toString());
 		
 		if (this.variable.getMyRegister() == null) return; // spilled values have no notion of load
 		
 		out.println("\tmov\t" + ASMGenerator.getLocationForName(this.variable, out, true) + ", " + this.variable.getRegister());
+		out.println("\t//");
 	}
 
 	public void setExplicitLoadRegister(Register explicitLoad) {

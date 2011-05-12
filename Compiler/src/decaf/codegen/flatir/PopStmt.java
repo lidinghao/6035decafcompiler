@@ -61,7 +61,7 @@ public class PopStmt extends LIRStatement {
 
 	@Override
 	public void generateRegAllocAssembly(PrintStream out) {
-		out.println("\t; " + this.toString());
+		out.println("\t// " + this.toString());
 		
 		out.println("\tpop\t" + ASMGenerator.getLocationForName(this.name, out, false));
 	}
