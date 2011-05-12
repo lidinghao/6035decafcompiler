@@ -2,6 +2,8 @@ package decaf.codegen.flatir;
 
 import java.io.PrintStream;
 
+import decaf.ralloc.ASMGenerator;
+
 public class CmpStmt extends LIRStatement {
 	private Name arg1;
 	private Name arg2;
@@ -92,6 +94,13 @@ public class CmpStmt extends LIRStatement {
 	@Override
 	public void generateRegAllocAssembly(PrintStream out) {
 		out.println("\t; " + this.toString());
-		out.println("\tcmp\t" + this.arg1.getRegister() + ", " + this.arg2.getRegister());
+		
+		if (this.arg1.getMyRegister() == null && this.arg2.getMyRegister() == null) {
+			out.println("\tmov\t" + ASMGenerator.getLocationForName(this.arg2, out, false) + ", " + Register.RCX);
+			out.println("\tcmp\t" + ASMGenerator.getLocationForName(this.arg1, out, false) + ", " + Register.RCX);
+		}
+		else {
+			out.println("\tcmp\t" + ASMGenerator.getLocationForName(this.arg1, out, false) + ", " + ASMGenerator.getLocationForName(this.arg2, out, false));
+		}		
 	}
 }

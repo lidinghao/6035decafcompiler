@@ -2,6 +2,8 @@ package decaf.codegen.flatir;
 
 import java.io.PrintStream;
 
+import decaf.ralloc.ASMGenerator;
+
 public class PopStmt extends LIRStatement {
 	private Name name; // Can be register or memory
 	
@@ -60,6 +62,7 @@ public class PopStmt extends LIRStatement {
 	@Override
 	public void generateRegAllocAssembly(PrintStream out) {
 		out.println("\t; " + this.toString());
-		out.println("\tpop\t" + this.name.getRegister());
+		
+		out.println("\tpop\t" + ASMGenerator.getLocationForName(this.name, out, false));
 	}
 }

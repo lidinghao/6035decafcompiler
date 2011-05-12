@@ -2,6 +2,8 @@ package decaf.codegen.flatir;
 
 import java.io.PrintStream;
 
+import decaf.ralloc.ASMGenerator;
+
 public class StoreStmt extends LIRStatement {
 	private Name variable;
 	private int myId;
@@ -74,29 +76,10 @@ public class StoreStmt extends LIRStatement {
 
 	@Override
 	public void generateRegAllocAssembly(PrintStream out) {
-		out.println("\t;" + this.toString());
-		String to = "";
+		out.println("\t; " + this.toString());
 		
-		if (this.variable.isGlobal()) {
-			if (this.variable.isArray()) {
-				ArrayName arr = (ArrayName) this.variable;
-				
-				to = arr.getId() + "(, " + arr.getIndex().getRegister() + ", 8)";
-			}
-			else {
-				VarName var = (VarName) this.variable;
-				if (var.isString()) {
-					to = "$." + var.getId();
-				}
-				else {
-					to = var.getId();
-				}
-			}
-		}
-		else {
-			to = this.variable.getLocation().getASMRepresentation();
-		}
+		if (this.variable.getMyRegister() == null) return; // // spilled values have no notion of store
 		
-		out.println("\tmov\t" + this.variable.getRegister() + ", " + to);
+		out.println("\tmov\t" + this.variable.getRegister() + ", " + ASMGenerator.getLocationForName(this.variable, out, true));
 	}
 }
