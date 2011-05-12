@@ -7,6 +7,7 @@ import java.util.List;
 import decaf.codegen.flatir.CallStmt;
 import decaf.codegen.flatir.CmpStmt;
 import decaf.codegen.flatir.ConstantName;
+import decaf.codegen.flatir.DataStmt;
 import decaf.codegen.flatir.EnterStmt;
 import decaf.codegen.flatir.JumpCondOp;
 import decaf.codegen.flatir.JumpStmt;
@@ -77,9 +78,12 @@ public class LoopParallelizer {
 		String[] loopInfo = loopId.split("\\.");
 		List<LIRStatement> methodStmts = mMap.get(loopInfo[0]).getStatements();
 		List<LIRStatement> loopMethodStmts = new ArrayList<LIRStatement>();
+		List<DataStmt> dataStmts = new ArrayList<DataStmt>();
 		
 		VarName globalLoopMax = new VarName("$glmax" + loopId);
+		dataStmts.add(new DataStmt("$glmax" + loopId));
 		VarName globalLoopMin = new VarName("$glmin" + loopId);
+		dataStmts.add(new DataStmt("$glmin" + loopId));
 		Name loopMax = null, loopMin = null;
 		HashMap<Name, VarName> localToGlobal = new HashMap<Name, VarName>();
 		boolean minBoundFound = false;
@@ -119,6 +123,7 @@ public class LoopParallelizer {
 				if (invalidNames.size() != 0) {
 					for (Name in : invalidNames) {
 						localToGlobal.put(in, new VarName("$glpar"+BaseGlobalId));
+						dataStmts.add(new DataStmt("$glpar"+BaseGlobalId));
 						BaseGlobalId++;
 					}
 				}
@@ -169,10 +174,13 @@ public class LoopParallelizer {
 		methodStmts.addAll(forBodyLabelIndex, pthreadCall);
 		
 		forBodyLabelIndex = getForLabelStmtIndexInMethod(loopId, ForBodyLabelRegex);
+		forEndLabelIndex = getForLabelStmtIndexInMethod(loopId, ForEndLabelRegex);
+		List<LIRStatement> temp = new ArrayList<LIRStatement>();
 		// Remove the loop statements starting from the body label from the method
 		for (int i = forBodyLabelIndex; i <= forEndLabelIndex; i++) {
-			methodStmts.remove(i);
+			temp.add(methodStmts.get(i));
 		}
+		methodStmts.removeAll(temp);
 		
 		// Replace LabelStmt in loop which began with the original method to instead begin with loopId
 		for (LIRStatement stmt : loopMethodStmts) {
@@ -184,7 +192,7 @@ public class LoopParallelizer {
 				LabelStmt jumpLabel = ((JumpStmt)stmt).getLabel();
 				String labelStr = jumpLabel.getLabelString();
 				if (!labelStr.equals(ProgramFlattener.exceptionHandlerLabel)) {
-					((LabelStmt)stmt).setLabel(labelStr.replaceFirst(loopInfo[0], loopId));
+					((LabelStmt)jumpLabel).setLabel(labelStr.replaceFirst(loopInfo[0], loopId));
 				}
 			}
 		}
@@ -272,6 +280,7 @@ public class LoopParallelizer {
 		loopMethodStmts.add(new LeaveStmt());
 		
 		pf.getLirMap().put(loopId, loopMethodStmts);
+		pf.getDataStmtList().addAll(dataStmts);
 	}
 	
 	private int getForLabelStmtIndexInMethod(String loopId, String label) {
