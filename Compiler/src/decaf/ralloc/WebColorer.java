@@ -8,12 +8,15 @@ import java.util.Set;
 import java.util.Stack;
 
 import decaf.codegen.flatir.LIRStatement;
+import decaf.codegen.flatir.QuadrupletOp;
+import decaf.codegen.flatir.QuadrupletStmt;
 import decaf.codegen.flatir.Register;
+import decaf.codegen.flatir.RegisterName;
 import decaf.codegen.flattener.ProgramFlattener;
 import decaf.dataflow.cfg.MethodIR;
 
 public class WebColorer {
-	public static int regCount = Register.availableRegs.length - 2;
+	public static int regCount = Register.availableRegs.length - 3;
 	public static int combinedWebId = -1;
 	private HashMap<String, MethodIR> mMap;
 	private WebGenerator webGen;
@@ -108,7 +111,7 @@ public class WebColorer {
 	}
 
 	private boolean selectWebs(String methodName) {
-		//preColorWebs(methodName);
+		preColorWebs(methodName);
 		
 		while (!this.coloringStack.isEmpty()) {
 			int webId = this.coloringStack.pop();
@@ -147,6 +150,38 @@ public class WebColorer {
 		}
 		
 		return true;
+	}
+
+	private void preColorWebs(String methodName) {
+		for (Web w: this.getWebGen().getWebMap().get(methodName)) {
+			for (LIRStatement def: w.getDefinitions()) {
+				if (def.getClass().equals(QuadrupletStmt.class)) {
+					QuadrupletStmt qStmt = (QuadrupletStmt) def;
+					
+					if (qStmt.getOperator() == QuadrupletOp.MOVE && qStmt.getArg1().getClass().equals(RegisterName.class)) {
+						List<Register> used = new ArrayList<Register>();
+						
+						for (Web neighbor: w.getInterferingWebs()) { // Want original state of graph now!
+							int wid = neighbor.getId();
+							if (this.registersAssigned.containsKey(wid)) {
+								used.add(this.registersAssigned.get(wid));
+							}
+						}
+						
+						Register r = ((RegisterName)qStmt.getArg1()).getMyRegister();
+						
+						if (used.contains(r)) {
+							this.registersAssigned.put(w.getId(), null);
+							this.spillList.add(w.getId());
+						}
+						else {
+							this.registersAssigned.put(w.getId(), r);
+						}
+					}
+				}
+			}
+		}
+		
 	}
 
 	private void spillWebs(String methodName) {
