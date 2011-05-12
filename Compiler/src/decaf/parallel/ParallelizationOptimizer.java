@@ -37,6 +37,7 @@ public class ParallelizationOptimizer {
 				parallelizable.add(loopId);
 			}
 		}
+		System.out.println("PARALLELIZABLE LOOPS: " + parallelizable);
 		if (parallelizable.size() > 0) {
 			// The loopIds which we actually parallelize
 			List<String> parallelize = new ArrayList<String>();
@@ -46,6 +47,7 @@ public class ParallelizationOptimizer {
 				List<String> childLoopIds = getChildLoopIds(loopId);
 				parallelize.removeAll(childLoopIds);
 			}
+			System.out.println("PARALELLIZED LOOPS: " + parallelize);
 			LoopParallelizer lp = new LoopParallelizer(mMap, parallelize, pf);
 			lp.parallelize();
 		}
