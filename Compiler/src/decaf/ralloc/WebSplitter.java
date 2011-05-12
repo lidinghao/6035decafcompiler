@@ -291,7 +291,7 @@ public class WebSplitter {
 			}
 			
 			if (!added) {
-				if (!added) prevBlock.getStatements().add(epilogIndex+1, loadStmt);
+				if (!added) nextBlock.getStatements().add(epilogIndex+1, loadStmt);
 			}
 		}
 	}
@@ -358,6 +358,10 @@ public class WebSplitter {
 	}
 	
 	private int getIndexInLIR(CFGBlock block, int index) {
+		if (index >= block.getStatements().size()) {
+			index = block.getStatements().size()-1;
+		}
+		
 		LIRStatement stmt = block.getStatements().get(index);
 		for (int i = 0; i < this.mMap.get(this.currentMethod).getStatements().size(); i++) {
 			LIRStatement s = this.mMap.get(this.currentMethod).getStatements().get(i);
@@ -447,7 +451,12 @@ public class WebSplitter {
 		CFGBlock oldPrevious = null;
 		CFGBlock currentPrevious = start;
 		
-		while (!currentPrevious.equals(oldPrevious)) {
+		while (oldPrevious != null && 
+				currentPrevious.getIndex() != oldPrevious.getIndex()) {
+//			System.out.println("CURRENT != PREV (old then new)");
+//			System.out.println(oldPrevious);
+//			System.out.println(currentPrevious);
+//			System.out.println("**********");
 			oldPrevious = currentPrevious;
 			
 			// Find parent common node
@@ -460,8 +469,13 @@ public class WebSplitter {
 		CFGBlock oldNext = null;
 		CFGBlock currentNext = start;
 		
-		while (!currentNext.equals(oldNext)) {
+		while (oldNext != null && 
+				currentNext.getIndex() != oldNext.getIndex()) {
 			oldNext = currentNext;
+			System.out.println("CURRENT != NEXT (old then new)");
+			System.out.println(oldNext);
+			System.out.println(currentNext);
+			System.out.println("**********");
 			
 			// Find parent common node	
 			currentNext = getNextCommonNode(currentNext);
@@ -547,7 +561,7 @@ public class WebSplitter {
 			nextPrev = currentPrevious.getPredecessors().get(0);
 		}
 		
-		if (nextPrev == null || !this.definitionReaches(nextPrev)) {
+		if (nextPrev == null || !this.definitionReaches(nextPrev) || nextPrev.getIndex() < this.previousUse.getIndex()) {
 			nextPrev = currentPrevious;
 		}
 		
@@ -640,7 +654,8 @@ public class WebSplitter {
 			next = currentNext.getSuccessors().get(0);
 		}
 		
-		if (next == null || !isLiveIn(next)) {
+		if (next == null || !isLiveIn(next) || next.getIndex() > this.nextUse.getIndex()) {
+			System.out.println("NEXT: " + next + " with LIVE: " + isLiveIn(next));
 			next = currentNext;
 		}
 		
@@ -725,13 +740,13 @@ public class WebSplitter {
 			
 			List<Web> potentialLiveWebs = findLiveWebs(stmt, next);
 			
-			if (potentialLiveWebs.size() <= WebColorer.regCount) {
+			if (potentialLiveWebs.size() < WebColorer.regCount - 4) {
 				continue; // Not enough potential live webs
 			}
 			
 			List<Web> liveWebs = doDefsReach(stmt, potentialLiveWebs);
 			
-			if (liveWebs.size() <= WebColorer.regCount) {
+			if (liveWebs.size() < WebColorer.regCount - 4) {
 				continue; // Not enough live webs
 			}
 			
@@ -754,9 +769,9 @@ public class WebSplitter {
 	private List<Web> doDefsReach(LIRStatement stmt, List<Web> potentialLiveWebs) {
 		List<LIRStatement> defs = this.reachingDefinitions.getUniqueDefinitions().get(this.currentMethod);
 		
-		System.out.println("GLOBAK DEFS: " + defs);
-		System.out.println("CHECKING FOR DEF REACH AT: " + stmt + " WITH DEF OUT: " + stmt.getReachingDefInSet());
-		System.out.println("POTENTIAL WEBS: " + potentialLiveWebs);
+//		System.out.println("GLOBAK DEFS: " + defs);
+//		System.out.println("CHECKING FOR DEF REACH AT: " + stmt + " WITH DEF OUT: " + stmt.getReachingDefInSet());
+//		System.out.println("POTENTIAL WEBS: " + potentialLiveWebs);
 		
 		List<Web> temp = new ArrayList<Web>();
 
@@ -776,7 +791,7 @@ public class WebSplitter {
 			}
 		}
 		
-		System.out.println("DEFS FOUND: " + temp + "\n");
+//		System.out.println("DEFS FOUND: " + temp + "\n");
 		
 		return temp;
 	}
@@ -785,15 +800,15 @@ public class WebSplitter {
 		List<Name> globalVars = this.livenessAnalysis.getUniqueVariables().get(this.currentMethod);
 		
 		if (next != null) {
-			stmt = next;
+			//stmt = next;
 		}
 		
 		BitSet liveVars = new BitSet(globalVars.size());
 		liveVars.clear();
 		liveVars.or(stmt.getLiveInSet());
 		
-		System.out.println("GLOBAL VARS: " + globalVars);
-		System.out.println("CHECKING FOR POTENTIAL LIVE AT: " + stmt + " WITH LIVE IN: " + stmt.getLiveInSet());
+//		System.out.println("GLOBAL VARS: " + globalVars);
+//		System.out.println("CHECKING FOR POTENTIAL LIVE AT: " + stmt + " WITH LIVE IN: " + stmt.getLiveInSet());
 		
 		List<Web> temp = new ArrayList<Web>();
 		
@@ -808,7 +823,7 @@ public class WebSplitter {
 			}
 		}
 		
-		System.out.println("POTENTIALS FOUND: " + temp + "\n");
+//		System.out.println("POTENTIALS FOUND: " + temp + "\n");
 		
 		return temp;
 	}

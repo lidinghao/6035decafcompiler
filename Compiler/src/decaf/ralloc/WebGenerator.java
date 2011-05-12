@@ -59,12 +59,7 @@ public class WebGenerator {
 		Web.ID = 0;
 		
 		this.reachingDef.analyze();
-		
-		for (CFGBlock block: this.reachingDef.getCfgBlocksState().keySet()) {
-			System.out.println("REAACHING DEFS!!! ---------------------------->");
-			System.out.println(block);
-			System.out.println(this.reachingDef.getCfgBlocksState().get(block));
-		}
+
 		this.liveAnalysis.analyze();
 		
 		for (String methodName: this.mMap.keySet()) {
@@ -189,14 +184,6 @@ public class WebGenerator {
 					}
 				}
 				
-				// Not global web with only single def and no use (DC!)
-				if (w.getDefinitions().size() == 1 && w.getUses().isEmpty()) {
-					if (!w.getVariable().isGlobal()) {
-						//temp.add(w);
-						//w.getDefinitions().get(0).setDead(true);
-					}
-				}
-				
 				// Loads/Stores only
 				boolean onlyLoads = true, onlyStores = true;
 				for (LIRStatement def: w.getDefinitions()) { // Only load defs
@@ -269,14 +256,6 @@ public class WebGenerator {
 		
 		for (int i = 0; i < block.getStatements().size(); i++) {
 			LIRStatement stmt = block.getStatements().get(i);
-			
-//			System.out.println("*************");
-//			System.out.println(stmt);
-//			System.out.println(stmt.getInSet());
-			
-//			System.out.println("STMT: " + stmt);
-//			System.out.println("LIVE: " + stmt.getLiveInSet());
-//			System.out.println("REACH: " + stmt.getReachingDefInSet() + "\n");
 			
 			updateLiveWebs(block, i);
 			
@@ -469,7 +448,7 @@ public class WebGenerator {
 			QuadrupletStmt qStmt = (QuadrupletStmt) stmt;
 			
 			// Unary
-			if (qStmt.getOperator() == QuadrupletOp.NOT || qStmt.getOperator() == QuadrupletOp.MINUS) {
+			if (qStmt.getOperator() == QuadrupletOp.NOT || qStmt.getOperator() == QuadrupletOp.MINUS || qStmt.getOperator() == QuadrupletOp.MOVE) {
 				//this.nameToWebs.remove(qStmt.getArg1()); // If last use of arg, can reuse its register
 				if (this.namesDeadAtOutStmt.contains(qStmt.getArg1())) {
 					//this.nameToWebs.remove(qStmt.getArg1()); // If last use of arg1, reuse reg
@@ -479,14 +458,12 @@ public class WebGenerator {
 			// Binary
 			else {
 				if (this.namesDeadAtOutStmt.contains(qStmt.getArg1())) {
-						//this.nameToWebs.remove(qStmt.getArg1()); // If last use of arg1, reuse reg
-						temp.add(qStmt.getArg1());
+					//this.nameToWebs.remove(qStmt.getArg1()); // If last use of arg1, reuse reg
+					temp.add(qStmt.getArg1());
 				}
-				if (qStmt.getOperator() != QuadrupletOp.MOVE) { // Can ALWAYS do arg2s
-					if (this.namesDeadAtOutStmt.contains(qStmt.getArg2())) {
-						//this.nameToWebs.remove(qStmt.getArg2());
-						temp.add(qStmt.getArg2());
-					}
+				if (this.namesDeadAtOutStmt.contains(qStmt.getArg2())) {
+					//this.nameToWebs.remove(qStmt.getArg2());
+					temp.add(qStmt.getArg2());
 				}
 			}
 		}
@@ -538,34 +515,13 @@ public class WebGenerator {
 			//if (name.equals(skip)) continue; // Don't interfere with own webs
 			
 			for (Web w: this.nameToWebs.get(name)) {
-				//System.out.println("TRY: "+ name+ " with " + w.getVariable());
 				if (this.namesDeadAtOutStmt.contains(web.getVariable())
 						|| this.namesDeadAtOutStmt.contains(name)) continue;
-				
-//				System.out.println("SKIP AT: " + stmt + " ==> " + this.namesDeadAtOutStmt);
-//				System.out.println("ADDING: " + web.getIdentifier() + " TO " + w.getIdentifier());
-				
-				//System.out.println("INTERFERING: "+ name+ " with " + w.getVariable());
-				//System.out.println("***************");
-				
+//				
 				w.addInterferingWeb(web);
 			}
 			
 		}
-		
-//		for (int i = 0; i < this.liveAnalysis.getUniqueVariables().get(this.currentMethod).size(); i++) {
-//			if (!stmt.getInSet().get(i)) continue; // Not live
-//			
-//			Name name = this.liveAnalysis.getUniqueVariables().get(this.currentMethod).get(i);
-//			
-//			//if (name == skip || !this.nameToWebs.containsKey(name)) continue; // Skip own shit, or undefined
-//			if (!this.nameToWebs.containsKey(name)) continue; // Skip undefined
-//			
-//			for (Web w: this.nameToWebs.get(name)) {
-//				//System.out.println("ADD : " + w.getIdentifier() + ", "+  web.getIdentifier());
-//				w.addInterferingWeb(web);
-//			}
-//		}
 	}
 
 	private void setReachingDefinitions(CFGBlock block) {
