@@ -417,7 +417,7 @@ public class WebSplitter {
 	 * @return
 	 */
 	private float calculateHeuristic(int distance, int depth, int neighbors) {
-		return (float) (-0.75 * distance + depth - neighbors);
+		return (float) (-2 * distance);// - depth + neighbors);
 	}
 
 	private void generateSplitPoints() {
