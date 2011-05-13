@@ -36,7 +36,7 @@ public class PostDataFlowOptimizer {
 	
 	public void optimize() {
 		int i = 0;
-		while (i < 100) {
+		while (i < 25) {
 			updateBlockState();			
 //			System.out.println("BEFORE LOOP STRENGTH REDUCTION");
 //			this.cb.printCFG(System.out);
@@ -45,14 +45,14 @@ public class PostDataFlowOptimizer {
 //			loopStrRed.performStrengthReductionOptimization();
 //			cb.generateCFGs();
 			
-			System.out.println("BEFORE LOOP INVARIANTS");
+//			System.out.println("BEFORE LOOP INVARIANTS");
 			this.cb.printCFG(System.out);
 			
 			this.loopInvariants = new LoopInvariantOptimizer(this.mMap);
 			loopInvariants.performLoopInvariantOptimization();
 			cb.generateCFGs();
 			
-			System.out.println("AFTER LOOP INVARIANTS");
+//			System.out.println("AFTER LOOP INVARIANTS");
 			this.cb.printCFG(System.out);
 			
 			if (!isChanged()) {
@@ -65,7 +65,7 @@ public class PostDataFlowOptimizer {
 		this.arrOpt = new ArrayAccessOptimizer(this.mMap);
 		arrOpt.optimize(CLI.opts);
 		
-		System.out.println("BEFORE SJE");
+//		System.out.println("BEFORE SJE");
 		this.cb.printCFG(System.out);
 
 		this.sje = new StaticJumpEvaluator(pf, cb);

@@ -56,6 +56,7 @@ public class WebGenerator {
 	}
 	
 	public void generateWebs() {	
+		QuadrupletStmt.USERIGIDHASH = true;
 		Web.ID = 0;
 		
 		this.reachingDef.analyze();
@@ -117,7 +118,7 @@ public class WebGenerator {
 							// Check for common use
 							for (LIRStatement u1: w1.getUses()) {
 								for (LIRStatement u2: w2.getUses()) {
-									if (u1 == u2) { 								
+									if (u1 == u2) { 
 										a = w1;
 										b = w2;
 										break outter;

@@ -184,7 +184,7 @@ public class CFGBuilder {
 				}
 				
 				if (toRemove != null) {
-					System.out.println("REMOVING: " + toRemove.getIndex());
+//					System.out.println("REMOVING: " + toRemove.getIndex());
 					this.cfgMap.get(methodName).remove(toRemove);
 				}
 			}

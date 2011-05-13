@@ -104,16 +104,16 @@ public class CmpStmt extends LIRStatement {
 		String arg2;
 		
 		if (a1.getClass().equals(ConstantName.class) || a1 == null) {
-			out.println("\tmov\t" + ASMGenerator.getLocationForName(a1, out, false) + ", " + Register.RCX);
-			arg1 = Register.RCX.toString();
+			out.println("\tmov\t" + ASMGenerator.getLocationForName(a1, out, false) + ", " + Register.R10);
+			arg1 = Register.R10.toString();
 		}
 		else {
 			arg1 = a1.getRegister();
 		}
 		
 		if (a2.getClass().equals(ConstantName.class) || a2.getRegister() == null) {
-			out.println("\tmov\t" + ASMGenerator.getLocationForName(a2, out, false) + ", " + Register.RAX);
-			arg2 = Register.RAX.toString();
+			out.println("\tmov\t" + ASMGenerator.getLocationForName(a2, out, false) + ", " + Register.R11);
+			arg2 = Register.R11.toString();
 		}
 		else {
 			arg2 = a2.getRegister();

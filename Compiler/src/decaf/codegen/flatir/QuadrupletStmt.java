@@ -5,7 +5,7 @@ import java.io.PrintStream;
 import decaf.ralloc.ASMGenerator;
 
 public class QuadrupletStmt extends LIRStatement {
-	public boolean USERIGIDHASH = false;
+	public static boolean USERIGIDHASH = false;
 	public static boolean NOREGS = false;
 	private static int ID = 0;
 	private QuadrupletOp operator;
@@ -435,7 +435,7 @@ public class QuadrupletStmt extends LIRStatement {
 		String dest;
 		boolean rcx = false;
 		if (this.dest.getMyRegister() == null) {
-			dest = Register.RCX.toString();
+			dest = Register.R10.toString();
 			rcx = true;
 		}
 		else {
@@ -445,7 +445,7 @@ public class QuadrupletStmt extends LIRStatement {
 		out.println("\tmov\t" + ASMGenerator.getLocationForName(this.arg1, out, false) + ", " + dest);
 		out.println(instr + ASMGenerator.getLocationForName(this.arg2, out, false) + ", " + dest);
 		if (rcx) { // Store back in rcx
-			out.println("\tmov\t" + Register.RCX + ", " + ASMGenerator.getLocationForName(this.dest, out, false));
+			out.println("\tmov\t" + Register.R10 + ", " + ASMGenerator.getLocationForName(this.dest, out, false));
 		}
 	}
 
@@ -461,7 +461,7 @@ public class QuadrupletStmt extends LIRStatement {
 		
 		CmpStmt.genCmp(arg1, arg2, out);
 		
-		out.println("\tmov\t" + "$0" + ", " + Register.RCX);
+		out.println("\tmov\t" + "$0" + ", " + Register.R10);
 		
 		String instr = "\tcmov";
 		switch (op) {
@@ -485,19 +485,20 @@ public class QuadrupletStmt extends LIRStatement {
 				break;
 		}
 		
-
-		out.println(instr + "$1" + ", " + Register.RCX);		
-		
-		out.println("\tmov\t" + Register.RCX + ", " + ASMGenerator.getLocationForName(this.dest, out, false));
+		out.println("\tmov\t" + "$1" + ", " + Register.R11);
+		out.println(instr + Register.R11 + ", " + Register.R10);		
+		out.println("\tmov\t" + Register.R10 + ", " + ASMGenerator.getLocationForName(this.dest, out, false));
 	}
 
 	private void asmMove(Name from, Name dest, PrintStream out) {
+		System.out.println("MOVE: "+ from + " to " + dest);
 		if (this.dest.getMyRegister() != null) {
+			System.out.println("woot");
 			out.println("\tmov\t" + ASMGenerator.getLocationForName(this.arg1, out, false) + ", " + ASMGenerator.getLocationForName(this.dest, out, false));
 		}
 		else if (this.arg1.getMyRegister() == null) {
-			out.println("\tmov\t" + ASMGenerator.getLocationForName(this.arg1, out, false) + ", " + Register.RCX);
-			out.println("\tmov\t" + Register.RCX + ", " + ASMGenerator.getLocationForName(this.dest, out, false));
+			out.println("\tmov\t" + ASMGenerator.getLocationForName(this.arg1, out, false) + ", " + Register.R10);
+			out.println("\tmov\t" + Register.R10 + ", " + ASMGenerator.getLocationForName(this.dest, out, false));
 		}
 		else {
 			out.println("\tmov\t" + ASMGenerator.getLocationForName(this.arg1, out, false) + ", " + ASMGenerator.getLocationForName(this.dest, out, false));
@@ -511,9 +512,9 @@ public class QuadrupletStmt extends LIRStatement {
 				out.println("\tneg\t" + ASMGenerator.getLocationForName(this.dest, out, false) );
 			}
 			else if (this.arg1.getMyRegister() == null) {
-				out.println("\tmov\t" + ASMGenerator.getLocationForName(this.arg1, out, false) + ", " + Register.RCX);
-				out.println("\tneg\t" + Register.RCX);
-				out.println("\tmov\t" + Register.RCX + ", " + ASMGenerator.getLocationForName(this.dest, out, false));
+				out.println("\tmov\t" + ASMGenerator.getLocationForName(this.arg1, out, false) + ", " + Register.R10);
+				out.println("\tneg\t" + Register.R10);
+				out.println("\tmov\t" + Register.R10 + ", " + ASMGenerator.getLocationForName(this.dest, out, false));
 			}
 
 		} 
@@ -530,7 +531,7 @@ public class QuadrupletStmt extends LIRStatement {
 				out.println("\tmov\t" + ASMGenerator.getLocationForName(this.arg1, out, true) + ", " + ASMGenerator.getLocationForName(this.dest, out, true));
 			}
 			else if (this.arg1.getMyRegister() == null) {
-				out.println("\tmov\t" + ASMGenerator.getLocationForName(this.arg1, out, true) + ", " + Register.RCX);
+				out.println("\tmov\t" + ASMGenerator.getLocationForName(this.arg1, out, true) + ", " + Register.R10);
 				out.println("\tmov\t" + Register.RCX + ", " + ASMGenerator.getLocationForName(this.dest, out, true));
 			}
 			else {
