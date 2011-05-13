@@ -25,6 +25,12 @@ public class CodeGenerator {
 		this.dataStmtsSeen = new ArrayList<String>();
 	}
 	
+	public CodeGenerator(ProgramFlattener pf, ClassDecl cd, PrintStream out) {
+		this.out = out;
+		this.pf = pf;
+		this.cd = cd;
+	}
+
 	public void generateCode() {
 		out.println(".data");
 		for (DataStmt s: pf.getDataStmtList()) {

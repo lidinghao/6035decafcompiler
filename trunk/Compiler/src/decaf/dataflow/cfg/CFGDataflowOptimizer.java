@@ -28,15 +28,15 @@ public class CFGDataflowOptimizer {
 	
 	public void optimizeCFGDataflow() {
 		int i = 0;
-		while (i < 100) {
+		while (i < 25) {
 			updateGlobalBlockState();
 			
 			bo.optimizeBlocks(opts);
 			
 			go.optimizeBlocks(opts);			
 			
-			System.out.println("GLOBAL PASS " + i);
-			pf.printLIR(System.out);
+//			System.out.println("GLOBAL PASS " + i);
+//			pf.printLIR(System.out);
 			
 			if (!isGlobalChanged()) {
 				break;

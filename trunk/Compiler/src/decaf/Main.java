@@ -3,25 +3,30 @@ package decaf;
 import java.io.*;
 import java.util.HashMap;
 
+import decaf.codegen.flatir.LIRStatement;
 import decaf.codegen.flattener.CodeGenerator;
 import decaf.codegen.flattener.LocationResolver;
 import decaf.codegen.flattener.ProgramFlattener;
+import decaf.dataflow.block.BlockConsPropagationOptimizer;
 import decaf.dataflow.block.BlockOptimizer;
+import decaf.dataflow.block.BlockVarDCOptimizer;
 import decaf.dataflow.cfg.CFGBlock;
 import decaf.dataflow.cfg.CFGBuilder;
 import decaf.dataflow.cfg.CFGDataflowOptimizer;
 import decaf.dataflow.cfg.MethodIR;
-import decaf.dataflow.global.BoundCheckCSEOptimizer;
-import decaf.dataflow.global.BoundCheckDFAnalyzer;
-import decaf.dataflow.global.GlobalCSEOptimizer;
+import decaf.dataflow.global.ConstReachingDef;
 import decaf.dataflow.global.GlobalOptimizer;
-import decaf.dataflow.global.LoopOptimizer;
 import decaf.ir.ast.ClassDecl;
 import decaf.ir.semcheck.*;
-import decaf.ralloc.ExplicitGlobalLoadOptimizer;
-import decaf.ralloc.ExplicitGlobalLoader;
-import decaf.ralloc.GlobalsDefDFAnalyzer;
+import decaf.memory.NaiveLoadAdder;
+import decaf.optimize.ArrayAccessOptimizer;
+import decaf.optimize.PostDataFlowOptimizer;
+import decaf.optimize.StaticJumpEvaluator;
+import decaf.ralloc.ASMGenerator;
+import decaf.ralloc.LivenessAnalysis;
+import decaf.ralloc.LocalLoadStoreDC;
 import decaf.ralloc.Web;
+import decaf.ralloc.WebColorer;
 import decaf.ralloc.WebGenerator;
 import decaf.test.Error;
 import antlr.Token;
@@ -139,7 +144,7 @@ class Main {
 				}
 				
 				// Generate CFGs for methods
-				CFGBuilder cb = new CFGBuilder(pf.getLirMap());
+				CFGBuilder cb = new CFGBuilder(pf);
 				cb.generateCFGs();
 
 				
@@ -163,70 +168,54 @@ class Main {
 					
 					System.out.println("AFTER CFG DATAFLOW OPTIMIZATIONS");
 					pf.printLIR(System.out);
+					
+					PostDataFlowOptimizer pdfo = new PostDataFlowOptimizer(pf, cb);
+					pdfo.optimize();
+					
+					System.out.println("AFTER POST DATAFLOW OPTIMIZATIONS");
+					pf.printLIR(System.out);
 					System.out.println();
 					cb.printCFG(System.out);
 				} 
 				
+				// Must gen after static jump eval
+//				cb.setMergeBoundChecks(true);
+//				cb.generateCFGs();
+//				mMap = MethodIR.generateMethodIRs(pf, cb);
+//				
+//				System.out.println("INITIALIZING WEB COLORER");
+//				WebColorer wc = new WebColorer(mMap);
+//				wc.colorWebs();
+//				
+//				pf.printLIR(System.out);
+//				
+//				for (Web w: wc.getWebGen().getWebMap().get("main")) {
+//					System.out.println(w.getIdentifier() + " ==> " + w.getRegister());
+//					System.out.println(w);
+//				}
+//				
 				// Resolve names to locations (and sets stack size)
 				LocationResolver lr = new LocationResolver(pf, cd);
 				lr.resolveLocations();
 				
-				// Merge bound checks in CFG
-				cb.setMergeBoundChecks(true);
-				cb.generateCFGs();
-				mMap = MethodIR.generateMethodIRs(pf, cb);
-				
-				ExplicitGlobalLoader gl = new ExplicitGlobalLoader(mMap);
-				gl.execute();
-				
-				ExplicitGlobalLoadOptimizer glo = new ExplicitGlobalLoadOptimizer(mMap);
-				glo.execute();
-				
-				GlobalsDefDFAnalyzer gDef = glo.getDf();
-				gDef.analyze();
-				System.out.println(gDef.getUniqueGlobals().get("main"));
-				for (CFGBlock blk: cb.getCfgMap().get("main")) {
-					if (gDef.getCfgBlocksState().containsKey(blk)) {
-						System.out.println(blk);
-						System.out.println(gDef.getCfgBlocksState().get(blk));
-						System.out.println();
-					}
-				}
-				
-				
-				BoundCheckCSEOptimizer bc = new BoundCheckCSEOptimizer(mMap);
-				bc.performCSE();
-				System.out.println(bc.getBCAnalyzer().getUniqueIndices().get("main"));
-				for (CFGBlock blk: cb.getCfgMap().get("main")) {
-					if (bc.getBCAnalyzer().getCfgBlocksState().containsKey(blk)) {
-						System.out.println(blk);
-						System.out.println(bc.getBCAnalyzer().getCfgBlocksState().get(blk));
-						System.out.println();
-					}
-				}
-				
-				
-				System.out.println();
-				LoopOptimizer loopOptimizer = new LoopOptimizer(mMap);
-				loopOptimizer.performLoopOptimization();
-				System.out.println();
-				
-				//cb.printCFG(System.out);
-				
-//				WebGenerator wg = new WebGenerator(mMap);
-//				wg.generateWebs();
-//				for (Web w: wg.getWebMap().get("main")) {
-//					System.out.println(w + "\n");
-//				}
+//				lr.printLocations(System.out);
 				
 				if (CLI.debug) {
 					System.out.println("Name -> Locations Mapping:");
 					lr.printLocations(System.out);
 				}
 				
-				// Generate code to file
+//				 Generate code to file
 				CodeGenerator cg = new CodeGenerator(pf, cd, CLI.outfile);
-				cg.generateCode();				
+				cg.generateCode();
+//				
+//				ConstReachingDef crd = new ConstReachingDef(mMap);
+//				crd.analyze();
+				
+				//System.out.println("RALLOC ASM: \n");
+//				
+//				ASMGenerator asm = new ASMGenerator(pf, wc, CLI.outfile);
+//				asm.generateAssembly();
 			}
 		} catch (Exception e) {
 			// print the error:

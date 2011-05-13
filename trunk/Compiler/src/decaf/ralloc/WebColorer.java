@@ -161,14 +161,15 @@ public class WebColorer {
 					if (qStmt.getOperator() == QuadrupletOp.MOVE && qStmt.getArg1().getClass().equals(RegisterName.class)) {
 						List<Register> used = new ArrayList<Register>();
 						
+						Register r = ((RegisterName)qStmt.getArg1()).getMyRegister();
+						if (r == Register.RAX) continue;
+						
 						for (Web neighbor: w.getInterferingWebs()) { // Want original state of graph now!
 							int wid = neighbor.getId();
 							if (this.registersAssigned.containsKey(wid)) {
 								used.add(this.registersAssigned.get(wid));
 							}
 						}
-						
-						Register r = ((RegisterName)qStmt.getArg1()).getMyRegister();
 						
 						if (used.contains(r)) {
 							this.registersAssigned.put(w.getId(), null);
