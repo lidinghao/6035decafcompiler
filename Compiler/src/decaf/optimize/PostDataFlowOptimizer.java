@@ -63,13 +63,13 @@ public class PostDataFlowOptimizer {
 		}
 		
 		this.arrOpt = new ArrayAccessOptimizer(this.mMap);
-		//arrOpt.optimize(CLI.opts);
+		arrOpt.optimize(CLI.opts);
 		
 //		System.out.println("BEFORE SJE");
 		this.cb.printCFG(System.out);
 
 		this.sje = new StaticJumpEvaluator(pf, cb);
-//		sje.staticEvaluateJumps();
+		sje.staticEvaluateJumps();
 		this.mMap = MethodIR.generateMethodIRs(pf, cb);
 	}
 
