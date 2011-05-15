@@ -65,7 +65,7 @@ public class NaiveLoadOptimizer {
 		
 		// Dead code loads
 		LoadsDC dc = new LoadsDC(this.mMap);
-		dc.removeDeadLoads();
+		//dc.removeDeadLoads();
 	}
 
 	private void optimizeMethod(String methodName) {

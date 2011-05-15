@@ -16,7 +16,7 @@ import decaf.codegen.flattener.ProgramFlattener;
 import decaf.dataflow.cfg.MethodIR;
 
 public class WebColorer {
-	public static int regCount = Register.availableRegs.length - 3;
+	public static int regCount = 3;
 	public static int combinedWebId = -1;
 	private HashMap<String, MethodIR> mMap;
 	private WebGenerator webGen;
@@ -46,12 +46,12 @@ public class WebColorer {
 	}
 	
 	public void colorWebs() {
+		this.webGen.generateWebs(); 
+		
 		for (String methodName: this.mMap.keySet()) {
 			if (methodName.equals(ProgramFlattener.exceptionHandlerLabel)) continue;
 
 			reset();
-			
-			this.webGen.generateWebs(); 
 			
 			buildGraph(methodName); // Build
 			
@@ -60,6 +60,8 @@ public class WebColorer {
 				int newSize = this.webGraph.keySet().size();
 				
 				while (oldSize != newSize) {
+					this.webGen.printInterferenceGraph(System.out);
+					
 					simplifyGraph(methodName); // Remove low degree nodes, add to stack
 					oldSize = newSize;
 					newSize = this.webGraph.keySet().size();

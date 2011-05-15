@@ -61,7 +61,7 @@ public class NaiveStoreOptimizer {
 		
 		// Dead code stores
 		StoresDC dc = new StoresDC(this.mMap);
-		dc.removeDeadStores();
+//		dc.removeDeadStores();
 	}
 
 	private void optimizeMethod(String methodName) {

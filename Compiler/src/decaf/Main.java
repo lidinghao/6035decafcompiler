@@ -180,16 +180,22 @@ class Main {
 				
 				// Must gen after static jump eval
 //				cb.setMergeBoundChecks(true);
+//				pf.printLIR(System.out);
+//				
+//				
 //				cb.generateCFGs();
 //				mMap = MethodIR.generateMethodIRs(pf, cb);
 //				
+//				BlockConsPropagationOptimizer bco = new BlockConsPropagationOptimizer(mMap);
+//				bco.performConsPropagation();
+////				
 //				System.out.println("INITIALIZING WEB COLORER");
 //				WebColorer wc = new WebColorer(mMap);
 //				wc.colorWebs();
 //				
 //				pf.printLIR(System.out);
 //				
-//				for (Web w: wc.getWebGen().getWebMap().get("main")) {
+//				for (Web w: wc.getWebGen().getWebMap().get("foo")) {
 //					System.out.println(w.getIdentifier() + " ==> " + w.getRegister());
 //					System.out.println(w);
 //				}
@@ -197,6 +203,8 @@ class Main {
 				// Resolve names to locations (and sets stack size)
 				LocationResolver lr = new LocationResolver(pf, cd);
 				lr.resolveLocations();
+				
+				pf.printLIR(System.out);
 				
 //				lr.printLocations(System.out);
 				

@@ -97,7 +97,9 @@ public class NaiveLoadAdder {
 			LIRStatement stmt = block.getStatements().get(i);
 			
 			if (stmt.getClass().equals(LoadStmt.class)) {
-				this.globalsInBlock.add(((LoadStmt)stmt).getVariable());
+				LoadStmt lStmt = (LoadStmt) stmt;
+				
+				this.globalsInBlock.add(lStmt.getVariable());
 			}
 			else if (stmt.getClass().equals(QuadrupletStmt.class)) {
 				QuadrupletStmt qStmt = (QuadrupletStmt) stmt;
@@ -231,6 +233,10 @@ public class NaiveLoadAdder {
 		if (!isValidName(name)) return false;
 		
 		if (this.globalsInBlock.contains(name)) return false;
+		
+		if (name.isArray()) {
+			if (processName(((ArrayName)name).getIndex(), block, index)) return true;
+		}
 		
 		List<Name> uniqueGlobals = this.df.getUniqueGlobals().get(block.getMethodName());
 		int i = uniqueGlobals.indexOf(name);
