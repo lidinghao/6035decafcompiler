@@ -40,16 +40,6 @@ public class BlockOptimizer {
 			cse.performCSE();
 		}
 		
-		if(opts[3]) { // CONST
-			// Do Const Propagation
-			cons = new BlockConsPropagationOptimizer(mMap);
-			cons.performConsPropagation();
-			
-			// Do algebriac simplification
-			alg = new BlockAlgebriacOptimizer(mMap);
-			alg.performAlgebriacSimplification();
-		} 
-		
 		if(opts[2]) { // COPY
 			// CP DynamicVarNames
 			copy = new BlockTempCPOptimizer(mMap);
@@ -58,6 +48,16 @@ public class BlockOptimizer {
 			// CP VarNames and TempNames
 			copyVar = new BlockVarCPOptimizer(mMap);
 			copyVar.performCopyPropagation();
+		} 
+		
+		if(opts[3]) { // CONST
+			// Do Const Propagation
+			cons = new BlockConsPropagationOptimizer(mMap);
+			cons.performConsPropagation();
+			
+			// Do algebriac simplification
+			alg = new BlockAlgebriacOptimizer(mMap);
+			alg.performAlgebriacSimplification();
 		} 
 		
 		if(opts[4]) { // DC

@@ -33,7 +33,7 @@ public class GlobalOptimizer {
 		}
 		if(opts[4]) { // DC
 			dc = new GlobalDeadCodeOptimizer(mMap);
-//			dc.performDeadCodeElimination();
+			dc.performDeadCodeElimination();
 		}
 	}
 	

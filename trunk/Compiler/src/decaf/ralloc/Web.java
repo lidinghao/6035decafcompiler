@@ -191,7 +191,8 @@ public class Web {
 	
 	@Override
 	public String toString() {
-		String rtn = "VAR: " + this.getIdentifier() + " - (" + this.firstStmtIndex + ", " + this.lastStmtIndex + ")\n";
+		String rtn = "VAR: " + this.getVariable() + "\n";
+		rtn += "WEBID: " + this.id + "\n";
 		rtn += "DEF: " + this.definitions.toString() + "\n";
 		rtn += "USE: " + this.uses.toString();
 		

@@ -66,6 +66,7 @@ public class BlockConsPropagationOptimizer {
 			}
 			else if (stmt.getClass().equals(CmpStmt.class)) {
 				CmpStmt cStmt = (CmpStmt) stmt;
+				
 				cStmt.setArg1(processName(cStmt.getArg1()));
 				cStmt.setArg2(processName(cStmt.getArg2()));
 			}
