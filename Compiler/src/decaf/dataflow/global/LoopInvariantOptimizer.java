@@ -38,7 +38,7 @@ public class LoopInvariantOptimizer {
 	// Set of loop id init blocks which have the test block stmts so that the same test
 	// is not added multiple times
 	private HashSet<String> loopIdInitWhichHaveTest;
-	//private HashSet<String> loopIdInitWhichHaveHoist;
+	private HashSet<String> loopIdInitWhichHaveHoist;
 	// Loop body id => CFGBlock map where the CFGBlock is the block containing the
 	// test label for the loop with the given id
 	private HashMap<String, CFGBlock> loopIdToLoopTestCFGBlock;
@@ -57,7 +57,7 @@ public class LoopInvariantOptimizer {
 		this.reachingDefGenerator = new BlockReachingDefinitionGenerator(mMap, ConfluenceOperator.AND);
 		this.livenessGenerator = new BlockLivenessGenerator(mMap);
 		this.loopIdInitWhichHaveTest = new HashSet<String>();
-		//this.loopIdInitWhichHaveHoist = new HashSet<String>();
+		this.loopIdInitWhichHaveHoist = new HashSet<String>();
 	}
 	
 	public void performLoopInvariantOptimization() {
@@ -90,7 +90,7 @@ public class LoopInvariantOptimizer {
 	// 3. Destination is either not live out of loop preheader or if it is, it is not
 	//		used before the loop invariant statement
 	private boolean canBeHoisted(LoopQuadrupletStmt lqs) {
-		System.out.println("TRYING TO HOIST " + lqs);
+		//System.out.println("TRYING TO HOIST " + lqs);
 		String loopId = lqs.getLoopBodyBlockId();
 		int stmtIndex = lqs.getStmtIndex();
 		QuadrupletStmt qStmt = lqs.getqStmt();
@@ -112,31 +112,31 @@ public class LoopInvariantOptimizer {
 					// Satisfied condition 3
 					return true;
 				} 
-//				else {
-//					// Need to check whether the destination is used in the loop body before the loop invariant statement
-//					boolean destUsed = false;
-//					LIRStatement stmt;
-//					List<LIRStatement> methodStmts = mMap.get(loopIdToMethod.get(loopId)).getStatements();
-//					int bodyLabelIndex = getForLabelStmtIndexInMethod(loopId, ForBodyLabelRegex);
-//					for (int i = bodyLabelIndex; i < stmtIndex; i++) {
-//						stmt = methodStmts.get(i);
-//						if (stmtUsesName(stmt, qStmt.getDestination())) {
-//							destUsed = true;
-//							break;
-//						}
-//					}
-//					if (!destUsed) {
-//						// Satisified condition 3
-//						lqs.setNeedConditionalCheck(true);
-//						return true;
-//					}
-//					System.out.println(lqs.getqStmt() + " cannot be hoisted because dest is used before invariant stmt");
-//				}
+				else {
+					// Need to check whether the destination is used in the loop body before the loop invariant statement
+					boolean destUsed = false;
+					LIRStatement stmt;
+					List<LIRStatement> methodStmts = mMap.get(loopIdToMethod.get(loopId)).getStatements();
+					int bodyLabelIndex = getForLabelStmtIndexInMethod(loopId, ForBodyLabelRegex);
+					for (int i = bodyLabelIndex; i < stmtIndex; i++) {
+						stmt = methodStmts.get(i);
+						if (stmtUsesName(stmt, qStmt.getDestination())) {
+							destUsed = true;
+							break;
+						}
+					}
+					if (!destUsed) {
+						// Satisified condition 3
+						lqs.setNeedConditionalCheck(true);
+						return true;
+					}
+					//System.out.println(lqs.getqStmt() + " cannot be hoisted because dest is used before invariant stmt");
+				}
 			} else {
-				System.out.println(lqs.getqStmt() + " cannot be hoisted because it doesn't satisfy condition 2");
+				//System.out.println(lqs.getqStmt() + " cannot be hoisted because it doesn't satisfy condition 2");
 			}
 		} else {
-			System.out.println(lqs.getqStmt() + " cannot be hoisted because it doesn't satisfy condition 1");
+			//System.out.println(lqs.getqStmt() + " cannot be hoisted because it doesn't satisfy condition 1");
 		}
 		return false;
 	}
@@ -209,10 +209,10 @@ public class LoopInvariantOptimizer {
 		List<LIRStatement> loopInitStmtList = loopInitBlock.getStatements();
 		List<LIRStatement> methodStmts = mMap.get((loopId.split("\\."))[0]).getStatements();
 		int testLabelIndex = getForLabelStmtIndexInMethod(loopId, ForTestLabelRegex);
-//		if (!loopIdInitWhichHaveHoist.contains(loopId)) {
-//			methodStmts.add(testLabelIndex, new LabelStmt(loopId + ".hoist"));
-//			loopIdInitWhichHaveHoist.add(loopId);
-//		}
+		if (!loopIdInitWhichHaveHoist.contains(loopId)) {
+			methodStmts.add(testLabelIndex, new LabelStmt(loopId + ".hoist"));
+			loopIdInitWhichHaveHoist.add(loopId);
+		}
 		if (lqs.getNeedConditionalCheck()) {
 			if (!loopIdInitWhichHaveTest.contains(loopId)) {
 				List<LIRStatement> testStmts = getStatementsAfterTestLabel(loopTestBlock);
